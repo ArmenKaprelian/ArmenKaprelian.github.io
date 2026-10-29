@@ -1,5 +1,5 @@
 /* The film page's chapter list. A chapter starts the film at its first frame and brings the player into view; the chapter
-   playing is marked. The 287 s cut has a keyframe on every chapter start, so a jump decodes nothing before the frame it shows.
+   playing is marked. The 244 s cut has a keyframe on every chapter start, so a jump decodes nothing before the frame it shows.
    One listener on timeupdate (about four times a second), and the list is touched only when the chapter changes. */
 (function () {
   const video = document.querySelector('.film video'), list = document.querySelector('.film .chapters');
