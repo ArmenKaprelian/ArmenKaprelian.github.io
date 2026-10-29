@@ -82,6 +82,12 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 @supports (width: 1cqw) and (height: 100dvh) { .home { --band: min(35cqw, 100dvh - 330px); } }
 .visual { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: var(--stage); }
 .visual canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; }
+/* The photo's scan lines over the stream too (the author's request of 29 October 2026), so the panel reads as one surface: the same
+   1 px line of rgba(3, 6, 14, .38) every 3 px, above the stream's canvas (painted after it at the same level) and below the photo, its
+   caption bar and the slogan card, taking no pointer events. The 3 px tiles are placed from the photo's top edge (the band line, which
+   need not be a multiple of 3 px from the panel's top), so the pitch runs on through the photo with no seam. A deliberate exception to
+   the rule that stripes belong to large type only: this is the photo's overlay extended over the panel, not stripes on the 11 px text. */
+.visual::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px) 0 calc(100% - var(--band)) / 100% 3px repeat-y; }
 
 /* The photo on the floor at the centre line, its caption bar above it. Inside its frame, bottom to top: the photo, the previews of
    the index's pages, and the scan lines. */
@@ -201,6 +207,7 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   .index .label { font-size: 18px; }
   .index .tag { grid-column: 2; padding: 3px 0 0; font-size: 10px; }
   .visual { position: relative; height: auto; padding-top: 154px; }   /* a band of the stream above the caption and the photo, tall enough for the slogan's card */
+  .visual::after { background-position: 0 154px; }   /* the scan lines placed from the photo's top, below that band */
   .photo { position: relative; right: auto; bottom: auto; width: 100%; height: auto; }
   .photo .bar { padding: 8px max(16px, var(--safe-r)) 8px max(16px, var(--safe-l)); }
   .photo .gloss { margin-left: max(16px, var(--safe-l)); }
