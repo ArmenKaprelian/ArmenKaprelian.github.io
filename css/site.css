@@ -183,8 +183,13 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 .film .chapters button:focus-visible, .film .chapters button:active { color: var(--cursor-live); outline: none; }
 @media (hover: hover) { .film .chapters button:hover { color: var(--cursor-live); } }
 
-/* The way home: HOME inside the mark's corners, dim at rest and fuchsia under the pointer or the keyboard. */
-.homelink { display: inline-block; margin: 16px 7px 0; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+/* The way home: HOME inside the mark's corners, dim at rest and fuchsia under the pointer or the keyboard. It closes the title's line
+   at the right, on the title's baseline, its right corner on the end of the rule under the title (the author's pick A of 29 October
+   2026, the standard for every subpage). The bottom margin, larger than HOME's descent, leaves the header's depth to the title alone,
+   so the rule under it stays where it was at every size and pixel density. */
+.page .head { display: flex; align-items: baseline; justify-content: space-between; column-gap: 24px; margin: 0 0 14px; }
+.page .head h1 { margin: 0; }
+.homelink { display: inline-block; flex: none; margin: 0 7px -6px; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .homelink::before { content: ""; background: var(--corners-dim); }
 
 /* The home page stacked, on phones (the author's rule of 29 October 2026) and wherever the split has too little room: tablets in
