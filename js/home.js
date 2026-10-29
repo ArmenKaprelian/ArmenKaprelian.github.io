@@ -1,20 +1,13 @@
-/* The home page's pointer effects. Over the photo, a square loupe in the focus corners follows a mouse or a pen (never a
-   finger), magnified and clear of the scan lines, and the slogan's translation shows in a green card above the caption; on a phone
-   a tap shows or hides the card. Over the index, the row under the pointer or the keyboard shows its page in the photo's frame and
-   names it in the caption, only where the photo sits beside the index (wider than 760 px); the three preview pictures load after
-   the page, and only there. */
+/* The home page's pointer effects. While a mouse or a pen is over the photo, the slogan and its translation show in a green card
+   above the caption; on a phone a tap shows or hides the card. Over the index, the row under the pointer or the keyboard shows its
+   page in the photo's frame and names it in the caption, only where the photo sits beside the index (wider than 760 px); the three
+   preview pictures load after the page, and only there. */
 (function () {
   const fig = document.querySelector('.home .photo'), index = document.querySelector('.home .index');
   if (!fig || !index) return;
   const wide = matchMedia('(min-width: 761px)');
 
-  fig.addEventListener('pointermove', e => {
-    if (e.pointerType === 'touch' || fig.dataset.show) return;
-    const r = fig.getBoundingClientRect();
-    fig.style.setProperty('--x', (e.clientX - r.left) + 'px');
-    fig.style.setProperty('--y', (e.clientY - r.top) + 'px');
-    fig.classList.add('on');
-  });
+  fig.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') fig.classList.add('on'); });
   fig.addEventListener('pointerleave', () => fig.classList.remove('on'));
   fig.addEventListener('pointerup', e => { if (e.pointerType === 'touch') fig.classList.toggle('tapped'); });   // a tap shows or hides the slogan's card
 

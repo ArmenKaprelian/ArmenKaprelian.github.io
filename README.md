@@ -12,7 +12,7 @@ Served by GitHub Pages from the public repository `ArmenKaprelian.github.io` sin
 | `css/site.css` | The only stylesheet. Colours and type are the atlas's tokens. `--split` sets the image panel's share of the width; `--band` (the photo's and the index's height) is 0.7 of the panel's width, so it changes with `--split`. |
 | `js/stream.js` | The data stream over the home image. Its speeds, strengths and reach are the constants at its top. |
 | `js/stream-data.js` | The stream's lines. Generated: run `python3 -I tools/stream_data.py`. |
-| `js/home.js` | The home page's pointer effects: the loupe over the photo (magnified, clear of the scan lines), the slogan's translation card (on a phone, a tap), and the preview of each index row's page in the photo's frame. |
+| `js/home.js` | The home page's pointer effects: the slogan's translation card over the photo (on a phone, a tap) and the preview of each index row's page in the photo's frame. |
 | `js/film.js` | The film page's chapter list: a chapter starts the film there, and the chapter playing shows in green. |
 | `img/` | The home photo (`home-pipeline-1982.webp`), the headshot (`headshot.jpg`, a square crop of the original), and the index's three preview pictures (`preview-atlas.webp`, `preview-film.webp`, `preview-resume.webp`, 1000 by 700). The pages without a picture show title cards written in `index.html`. |
 | `film/` | The film page: the 287 s cut with its chapter list and the 46 s teaser (720p, both players the window's width), and their poster frames. The 287 s file is encoded from the lab's 1080p render (x264 CRF 23, preset slow, `-movflags +faststart`) with a keyframe forced at every chapter start, so a chapter jump decodes nothing before its frame; the teaser is the lab's 720p copy. Both players load only the file's index before play (`preload="metadata"`), so the bar works before playback starts. |
@@ -37,7 +37,7 @@ The atlas's design rules (`dataviz-lab/design/principles.md`) apply: IBM Plex Mo
 
 ## Phones and Safari
 
-Every page sets `viewport-fit=cover` and pads by the safe-area insets (`--safe-l`, `--safe-r`, `--safe-b` in `css/site.css`), so nothing sits under the notch or the home indicator. The home page's full-height panel uses `100dvh` with `100vh` before it for older browsers. `-webkit-text-size-adjust` stops iOS from enlarging text on rotation. Hover states apply only where the device can hover; a tap shows the live colour while the finger is down. The stream and the loupe follow a mouse or a pen, never a finger; on a phone a tap on the photo shows the slogan's card. The film plays inline (`playsinline`). Checked at 375 px: no page scrolls sideways.
+Every page sets `viewport-fit=cover` and pads by the safe-area insets (`--safe-l`, `--safe-r`, `--safe-b` in `css/site.css`), so nothing sits under the notch or the home indicator. The home page's full-height panel uses `100dvh` with `100vh` before it for older browsers. `-webkit-text-size-adjust` stops iOS from enlarging text on rotation. Hover states apply only where the device can hover; a tap shows the live colour while the finger is down. The stream follows a mouse or a pen, never a finger; on a phone a tap on the photo shows the slogan's card. The film plays inline (`playsinline`). Checked at 375 px: no page scrolls sideways.
 
 ## Image credits
 

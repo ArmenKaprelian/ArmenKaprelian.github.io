@@ -68,8 +68,8 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 .visual canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; }
 
 /* The photo on the floor at the centre line, its caption bar above it. Inside its frame, bottom to top: the photo, the previews of
-   the index's pages, the scan lines, and the loupe's clear copy and corners. */
-.photo { position: absolute; right: 0; bottom: 0; z-index: 2; margin: 0; height: var(--band); aspect-ratio: 10 / 7; cursor: crosshair; }
+   the index's pages, and the scan lines. */
+.photo { position: absolute; right: 0; bottom: 0; z-index: 2; margin: 0; height: var(--band); aspect-ratio: 10 / 7; }
 .photo > img, .photo .pv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .photo .pv { opacity: 0; transition: opacity .15s linear; }
 .photo .lines { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px 3px); }
@@ -80,12 +80,6 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 .photo .card .k { font-size: 12px; font-weight: 500; letter-spacing: .08em; color: var(--dim); }
 .photo .card .big { font-size: calc(var(--band) * .072); line-height: 1.12; font-weight: 700; letter-spacing: .02em; color: var(--ink); overflow-wrap: anywhere; }
 .photo .card .sub { max-width: 52ch; font-size: 14px; color: var(--muted); }
-.photo .clear { --zoom: 1.6; --half: calc(66px / var(--zoom)); display: none; pointer-events: none; transform-origin: var(--x) var(--y); transform: scale(var(--zoom));
-  clip-path: inset(calc(var(--y) - var(--half)) calc(100% - var(--x) - var(--half)) calc(100% - var(--y) - var(--half)) calc(var(--x) - var(--half))); }
-.photo .loupe { position: absolute; display: none; pointer-events: none; width: 132px; height: 132px; left: calc(var(--x) - 66px); top: calc(var(--y) - 66px);
-  background: var(--mk-tl) top left / 14px no-repeat, var(--mk-tr) top right / 14px no-repeat,
-              var(--mk-br) bottom right / 14px no-repeat, var(--mk-bl) bottom left / 14px no-repeat; }
-.photo.on .clear, .photo.on .loupe { display: block; }
 .photo .above { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; flex-direction: column; align-items: flex-start; }
 /* The slogan, its translation and the pun, while a mouse or a pen is over the photo (or after a tap on a phone): the slogan as the
    card's title in the reading green, as on the atlas's cards (the author's pick of 29 October 2026). */
