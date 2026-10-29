@@ -30,6 +30,7 @@ Served by GitHub Pages from the public repository `ArmenKaprelian.github.io` sin
 - **A new résumé:** replace `resume/kaprelian-resume.pdf`, keeping the name. The published copy leaves out the phone number: the current one is the 30 July 2026 PDF with the number's text removed from the file itself (not covered) and the line re-centred, identical elsewhere pixel for pixel. For a new one, drop the phone line from the Overleaf source before exporting.
 - **The atlas after a lab publish:** in the lab, build the publish set (`motion/tools/publish-set.py`), then run `python3 -I tools/import_atlas.py` here. It copies only what the atlas loads and adds the document skeleton claude.ai adds on its own host.
 - **The stream's figures after a new data release:** run `python3 -I tools/stream_data.py`.
+- **Before every push:** run the lab's check in both engines, `python3 -I motion/tools/site-check.py` in the dataviz lab (about 45 s). It loads every page in Chromium and in WebKit (Safari's engine family) at phone, tablet, laptop and desktop sizes and must report zero findings. WebKit here is not iOS, so after a push that changes a page's layout, look at it once on an iPhone too.
 
 ## Rules carried over from the atlas
 
