@@ -1,8 +1,8 @@
 /* The home page's data stream. Rows of figures from the atlas's series (js/stream-data.js, generated) drift slowly
-   leftward over the image panel, dimmed so the image stays visible. A scan line passes down the panel and lifts the
-   rows it crosses; the rows near the pointer brighten to the reading green, and every row shifts a few pixels with the
-   pointer's position across the page. One canvas at about 30 frames a second, paused while the panel is off screen
-   or the tab is hidden. Under reduced motion it draws one still frame and runs no loop.
+   leftward over the image panel, dimmed so the image stays visible. The rows near the pointer brighten to the reading
+   green, and every row shifts a few pixels with the pointer's position across the page. One canvas at about 30 frames
+   a second, paused while the panel is off screen or the tab is hidden. Under reduced motion it draws one still frame
+   and runs no loop.
    Only what shows is drawn: a row behind the photo (which has no transparency) is skipped, or drawn only left of the
    photo where the photo is narrower than the panel; a row's text is drawn into its strip the first time the row shows,
    and its green strip the first time the pointer comes near. The rows are laid out once, after the font loads, and a
@@ -21,7 +21,6 @@
   const SIZE = 11, PITCH = 22, TRACK = 0.88;            // 11 px Plex Mono, rows 22 px apart, 8 percent tracking
   const FONT = `500 ${SIZE}px "IBM Plex Mono", monospace`;
   const GAP = 34, MARK = 8;                              // the space between items and the mark in it
-  const SCAN_SPEED = 36, SCAN_REACH = 40;                // px per second; how far the scan line's lift reaches
   const NEAR_REACH = 56;                                 // how far the pointer's highlight reaches
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -90,7 +89,6 @@
     ptr.x += (ptr.tx - ptr.x) * 0.08;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
-    const scanY = reduce.matches ? -999 : ((t * SCAN_SPEED) % (H + 2 * SCAN_REACH)) - SCAN_REACH;
     for (const r of rows) {
       if (r.y >= H) break;
       const top = r.y - PITCH / 2;
@@ -98,17 +96,15 @@
       if (end <= 0) continue;
       const shift = (ptr.x - 0.5) * r.depth;
       let x = -((r.off + r.speed * (reduce.matches ? 0 : t)) % r.w) + shift;
-      const lift = Math.max(0, 1 - Math.abs(r.y - scanY) / SCAN_REACH) * 0.32;
       const near = ptr.on ? Math.max(0, 1 - Math.abs(r.y - ptr.y) / NEAR_REACH) : 0;
       if (!r.ink) r.ink = strip(r, INK);
       if (near > 0.01 && !r.green) r.green = strip(r, GREEN);
       for (let xx = x; xx < end; xx += r.w) {
-        ctx.globalAlpha = Math.min(1, r.alpha + lift) * (1 - near);
+        ctx.globalAlpha = r.alpha * (1 - near);
         if (ctx.globalAlpha > 0.01) ctx.drawImage(r.ink, xx, top, r.w, PITCH);
         if (near > 0.01) { ctx.globalAlpha = Math.min(1, r.alpha + 0.55 * near); ctx.drawImage(r.green, xx, top, r.w, PITCH); }
       }
     }
-    if (scanY > -SCAN_REACH) { ctx.globalAlpha = 0.28; ctx.fillStyle = GREEN; ctx.fillRect(0, Math.round(scanY), W, 1); }
     ctx.globalAlpha = 1;
   }
   const frame = () => { if (ready) draw(performance.now()); };
