@@ -1,0 +1,111 @@
+/* The site's one stylesheet. Colours, type and the focus corners are the Visibility Atlas's own tokens
+   (dataviz-lab/motion/css/theme.css and design/principles.md), so the site and the atlas read as one system.
+   The atlas never loads this file: it keeps its own page, styles and scripts under /atlas/. */
+
+:root {
+  --stage: #03060E;          /* the atlas's near-black navy */
+  --panel: #091023;
+  --ink: #ECEEF1;            /* text */
+  --muted: #B4C0D0;          /* the second voice */
+  --dim: #7D889C;            /* rules, numbers, captions */
+  --cursor: #FF45C8; --cursor-live: #FF8FDF;   /* fuchsia: what you act on */
+  --context: #4DFF7F;        /* green: what you read */
+  --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
+  --split: 50%;              /* the image panel's share of the width: half and half (layout C4, the author's pick of 28 October 2026) */
+  --mk-tl-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tr-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-br-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-bl-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: dark;
+  --safe-l: env(safe-area-inset-left, 0px);    /* the notch and the home indicator, with viewport-fit=cover (zero elsewhere) */
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* iOS enlarges text on rotation without it */
+html, body { margin: 0; background: var(--stage); color: var(--ink); font-family: var(--font); }
+body { font-size: 15px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+
+/* The striped display style: large type cut by 1 px gaps at a 3 px pitch, the atlas's title treatment. */
+@supports (mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000)) {
+  .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); }
+}
+
+/* The focus corners: the atlas mark's four brackets around a link under the pointer or the keyboard. Hover applies only where the
+   device can hover, so a tap on a phone leaves no stuck state; a press shows the live colour for as long as the finger is down. */
+.cornered { position: relative; text-decoration: none; }
+.cornered:focus-visible, .cornered:active { color: var(--cursor-live); outline: none; }
+.cornered:focus-visible::before {
+  content: ""; position: absolute; inset: -3px -7px; pointer-events: none;
+  background: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat,
+              var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
+}
+@media (hover: hover) {
+  .cornered:hover { color: var(--cursor-live); }
+  .cornered:hover::before {
+    content: ""; position: absolute; inset: -3px -7px; pointer-events: none;
+    background: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat,
+                var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
+  }
+}
+
+hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
+
+/* Home: the image panel at the left, the content at the right. */
+.home { display: grid; grid-template-columns: var(--split) 1fr; min-height: 100vh; min-height: 100dvh; }   /* dvh where the browser has it, so Safari's toolbars never cover the panel */
+.visual { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: var(--stage); }
+.visual figure { margin: 0; position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column-reverse; }   /* the photo on the floor, its caption above it */
+.visual img { display: block; width: 100%; height: auto; }
+.visual figcaption { position: relative; z-index: 2; padding: 6px 14px 6px max(14px, var(--safe-l)); font-size: 11px; line-height: 1.5; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); background: rgba(3, 6, 14, .88); }
+.visual .lines { position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px 3px); }
+.visual canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; }
+
+.content { padding: 13px max(18px, var(--safe-r)) max(48px, calc(var(--safe-b) + 24px)) 18px; }
+.content h1 { margin: 0 0 14px; font-size: 40px; line-height: 1.05; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.content .lede { margin: 14px 0; max-width: 62ch; color: var(--muted); }
+.content .lede p { margin: 0 0 10px; }
+.content .portrait { display: block; width: min(420px, 60%); height: auto; aspect-ratio: 1; object-fit: cover; margin: 14px 0; }
+
+.menu { list-style: none; counter-reset: item; margin: 14px 0; padding: 0; }
+.menu li { counter-increment: item; display: flex; gap: 14px; font-size: 17px; line-height: 1.6; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+.menu li::before { content: counter(item) "."; min-width: 2ch; color: var(--dim); font-weight: 400; }
+.menu .soon { color: var(--dim); font-size: 12px; letter-spacing: .08em; align-self: center; }
+
+/* Subpages: one reading column, no image panel and no stream. */
+.page { max-width: 820px; padding: 13px max(18px, var(--safe-r)) max(48px, calc(var(--safe-b) + 24px)) max(18px, var(--safe-l)); }
+.page h1 { margin: 0 0 14px; font-size: 40px; line-height: 1.05; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.page .body { margin: 14px 0; color: var(--muted); }
+.page .body p { margin: 0 0 12px; max-width: 66ch; }
+.page .label { font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.page .links { list-style: none; margin: 0; padding: 0; }
+.page .links li { display: flex; flex-wrap: wrap; column-gap: 14px; line-height: 1.9; }
+.page .links .label { min-width: 9ch; line-height: inherit; }
+.page .links a { overflow-wrap: anywhere; }   /* a long address wraps rather than widening a phone's page */
+.page .note { font-size: 12px; color: var(--dim); }
+.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--panel); margin: 14px 0 8px; }
+
+/* The way home: HOME inside the mark's corners, dim at rest and fuchsia under the pointer or the keyboard. */
+.homelink { display: inline-block; margin: 16px 7px 0; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.homelink::before { content: ""; position: absolute; inset: -3px -7px; pointer-events: none;
+  background: var(--mk-tl-dim) top left / 8px no-repeat, var(--mk-tr-dim) top right / 8px no-repeat,
+              var(--mk-br-dim) bottom right / 8px no-repeat, var(--mk-bl-dim) bottom left / 8px no-repeat; }
+
+/* Phones: the image becomes a band across the top, the photo whole at the screen's width. */
+@media (max-width: 760px) {
+  .home { display: block; }
+  .visual { position: relative; height: auto; }
+  .visual figure { position: static; display: block; }
+  .visual figcaption { padding: 8px max(16px, var(--safe-r)) 8px max(16px, var(--safe-l)); }
+  .content, .page { padding: 14px max(16px, var(--safe-r)) max(40px, calc(var(--safe-b) + 24px)) max(16px, var(--safe-l)); }
+  .content h1, .page h1 { font-size: 30px; }
+  .content .portrait { width: 100%; max-width: 420px; }
+}
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
