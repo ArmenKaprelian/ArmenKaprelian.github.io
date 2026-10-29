@@ -89,7 +89,28 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 .page .links .label { min-width: 9ch; line-height: inherit; }
 .page .links a { overflow-wrap: anywhere; }   /* a long address wraps rather than widening a phone's page */
 .page .note { font-size: 12px; color: var(--dim); }
-.film video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: var(--panel); margin: 14px 0 8px; }
+/* The film page: the players span the window, narrowed only as far as a whole frame needs to fit the screen's height. */
+.page.film { max-width: none; }
+.film video { display: block; width: min(100%, calc((100vh - 32px) * 16 / 9)); width: min(100%, calc((100dvh - 32px) * 16 / 9)); height: auto; aspect-ratio: 16 / 9; background: var(--panel); margin: 14px 0 8px; }
+.film .chapters { list-style: none; margin: 14px 0; padding: 0; columns: 4 17rem; column-gap: 28px; font-size: 13px; }
+.film .chapters li { break-inside: avoid; }
+.film .chapters button { font: inherit; color: var(--muted); background: none; border: 0; padding: 2px 0; margin: 0; text-align: left; cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; }
+.film .chapters .t { display: inline-block; min-width: 6ch; color: var(--dim); }
+.film .chapters button[aria-current="true"], .film .chapters button[aria-current="true"] .t { color: var(--context); }   /* the chapter playing, in the reading green */
+.film .chapters button:focus-visible, .film .chapters button:active { color: var(--cursor-live); outline: none; }
+.film .chapters button:focus-visible::before {
+  content: ""; position: absolute; inset: -1px -7px; pointer-events: none;
+  background: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat,
+              var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
+}
+@media (hover: hover) {
+  .film .chapters button:hover { color: var(--cursor-live); }
+  .film .chapters button:hover::before {
+    content: ""; position: absolute; inset: -1px -7px; pointer-events: none;
+    background: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat,
+                var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
+  }
+}
 
 /* The way home: HOME inside the mark's corners, dim at rest and fuchsia under the pointer or the keyboard. */
 .homelink { display: inline-block; margin: 16px 7px 0; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -106,6 +127,7 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   .content, .page { padding: 14px max(16px, var(--safe-r)) max(40px, calc(var(--safe-b) + 24px)) max(16px, var(--safe-l)); }
   .content h1, .page h1 { font-size: 30px; }
   .content .portrait { width: 100%; max-width: 420px; }
+  .film .chapters button { padding: 5px 0; }   /* taller rows for a finger */
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
