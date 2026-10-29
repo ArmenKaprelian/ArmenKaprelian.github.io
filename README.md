@@ -8,7 +8,7 @@ Served by GitHub Pages from the public repository `ArmenKaprelian.github.io` sin
 
 | Path | What it is |
 |---|---|
-| `index.html` | The home page, layout A "Index" (29 October 2026): the image panel with the data stream and the photo at the left; the name, the headshot beside the bio, and the seven-row index at the right. The photo's top edge is the index's top rule, and the top block sits on the stream's 22 px rows. On phones the name, the bio and the index come first, the stream and the photo below. |
+| `index.html` | The home page, layout A "Index" (29 October 2026): the image panel with the data stream and the photo at the left; the name, the headshot beside the bio, and the seven-row index at the right. The photo's top edge is the index's top rule, and the top block sits on the stream's 22 px rows. Below 1200 px wide or 600 px tall (phones, tablets, phones in landscape) the page stacks: the name, the bio and the index first, the stream and the photo below. On screens up to 1400 by 860 px the headshot stays at 132 px so the bio fits above the index. |
 | `css/site.css` | The only stylesheet. Colours and type are the atlas's tokens. `--split` sets the image panel's share of the width; `--band` (the photo's and the index's height) is 0.7 of the panel's width, so it changes with `--split`. |
 | `js/stream.js` | The data stream over the home image. Its speeds, strengths and reach are the constants at its top. |
 | `js/stream-data.js` | The stream's lines. Generated: run `python3 -I tools/stream_data.py`. |
@@ -37,7 +37,7 @@ The atlas's design rules (`dataviz-lab/design/principles.md`) apply: IBM Plex Mo
 
 ## Phones and Safari
 
-Every page sets `viewport-fit=cover` and pads by the safe-area insets (`--safe-l`, `--safe-r`, `--safe-b` in `css/site.css`), so nothing sits under the notch or the home indicator. The home page's full-height panel uses `100dvh` with `100vh` before it for older browsers. `-webkit-text-size-adjust` stops iOS from enlarging text on rotation. Hover states apply only where the device can hover; a tap shows the live colour while the finger is down. The stream follows a mouse or a pen, never a finger; on a phone a tap on the photo shows the slogan's card. The film plays inline (`playsinline`). Checked at 375 px: no page scrolls sideways.
+Every page sets `viewport-fit=cover` and pads by the safe-area insets (`--safe-l`, `--safe-r`, `--safe-b` in `css/site.css`), so nothing sits under the notch or the home indicator. The home page's full-height panel uses `100dvh` with `100vh` before it for older browsers. `-webkit-text-size-adjust` stops iOS from enlarging text on rotation. Hover states apply only where the device can hover; a tap shows the live colour while the finger is down. The stream follows a mouse or a pen, never a finger; on a phone a tap on the photo shows the slogan's card. The film plays inline (`playsinline`). Checked at 375 px: no page scrolls sideways. On 29 October 2026 the home page was also checked at phone and tablet sizes in both orientations and at seven laptop and desktop sizes, and rendered in WebKitGTK 2.52 (Safari's engine family) beside Chromium: the same layout, no script errors.
 
 ## Image credits
 
