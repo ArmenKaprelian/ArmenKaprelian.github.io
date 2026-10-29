@@ -147,10 +147,10 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 
 /* The index: seven rows, each a number, the page and a dim note of what it opens; the whole row is the link. */
 .index { display: grid; grid-auto-rows: minmax(0, 80px); padding: 0 max(44px, var(--safe-r)) 0 40px; }
-.index a { display: grid; grid-template-columns: 4ch minmax(0, 1fr) auto; align-items: center; border-top: 1px solid rgba(125, 136, 156, .38); color: var(--ink); text-decoration: none; outline: none; -webkit-tap-highlight-color: transparent; }
+.index a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; border-top: 1px solid rgba(125, 136, 156, .38); color: var(--ink); text-decoration: none; outline: none; -webkit-tap-highlight-color: transparent; }
 .index a:first-child { border-top: 2px solid var(--dim); }
 .index a:last-child { border-bottom: 2px solid var(--dim); }   /* a rule under CONTACT as over RÉSUMÉ (the author's request of 29 October 2026) */
-.index .n { font-size: 13px; color: var(--dim); }
+.index .n { padding-right: 1ch; font-size: clamp(20px, 1.65vw, 28px); font-weight: 500; line-height: 1; letter-spacing: .08em; color: var(--dim); }   /* "1." at the page names' size, as on benschulman.com (the author's pick of 29 October 2026; "01" at 13 px before) */
 .index .label { position: relative; justify-self: start; font-size: clamp(20px, 1.65vw, 28px); font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
 .index .tag { padding-left: 16px; font-size: 11px; letter-spacing: .08em; color: var(--dim); white-space: nowrap; }
 .index a:focus-visible .label, .index a:active .label { color: var(--cursor-live); }
@@ -202,8 +202,8 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   .content .lede .lead { grid-column: 2; grid-row: 1; margin: 0; font-size: 15px; position: relative; top: -5px; }   /* the capitals on the headshot's top edge */
   .content .lede .lead + p { grid-column: 1 / -1; grid-row: 2; margin-top: 22px; }
   .index { grid-auto-rows: 60px; padding: 22px max(16px, var(--safe-r)) 30px max(16px, var(--safe-l)); }
-  .index a { grid-template-columns: 4ch minmax(0, 1fr); align-content: center; }
-  .index .n { grid-row: 1 / 3; }
+  .index a { grid-template-columns: auto minmax(0, 1fr); align-content: center; }
+  .index .n { grid-row: 1; font-size: 18px; }   /* on the page name's line, at its size */
   .index .label { font-size: 18px; }
   .index .tag { grid-column: 2; padding: 3px 0 0; font-size: 10px; }
   .visual { --above: 154px; position: relative; height: auto; padding-top: var(--above); }   /* a band of the stream above the caption and the photo, tall enough for the slogan's card */
