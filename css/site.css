@@ -57,26 +57,88 @@ a { color: inherit; }
 
 hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 
-/* Home: the image panel at the left, the content at the right. */
-.home { display: grid; grid-template-columns: var(--split) 1fr; min-height: 100vh; min-height: 100dvh; }   /* dvh where the browser has it, so Safari's toolbars never cover the panel */
+/* Home, layout A "Index" (the author's pick of 29 October 2026). The image panel at the left, the content at the right, and one
+   line across the page: the photo's top edge is the index's top rule, and the photo's height (--band, 0.7 of the panel's width,
+   capped so the top block keeps its rows) is the index's height. The name, the headshot and the bio sit on the stream's 22 px rows,
+   which start 4 px from the top. Widths come from the page (cqw), so a scroll bar never makes the photo wider than its panel. */
+.home { --band: min(35vw, 100vh - 330px); container-type: inline-size; display: grid; grid-template-columns: var(--split) 1fr; min-height: 100vh; min-height: 100dvh; }   /* dvh where the browser has it, so Safari's toolbars never cover the panel */
+@supports (height: 100dvh) { .home { --band: min(35vw, 100dvh - 330px); } }
+@supports (width: 1cqw) and (height: 100dvh) { .home { --band: min(35cqw, 100dvh - 330px); } }
 .visual { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: var(--stage); }
-.visual figure { margin: 0; position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column-reverse; }   /* the photo on the floor, its caption above it */
-.visual img { display: block; width: 100%; height: auto; }
-.visual figcaption { position: relative; z-index: 2; padding: 6px 14px 6px max(14px, var(--safe-l)); font-size: 11px; line-height: 1.5; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); background: rgba(3, 6, 14, .88); }
-.visual .lines { position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: repeating-linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px 3px); }
 .visual canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; }
 
-.content { padding: 13px max(18px, var(--safe-r)) max(48px, calc(var(--safe-b) + 24px)) 18px; }
-.content h1 { margin: 0 0 14px; font-size: 40px; line-height: 1.05; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
-.content .lede { margin: 14px 0; max-width: 62ch; color: var(--muted); }
-.content .lede p { margin: 0 0 10px; }
-.content .portrait { display: block; width: min(420px, 60%); height: auto; aspect-ratio: 1; object-fit: cover; margin: 14px 0; }
+/* The photo on the floor at the centre line, its caption bar above it. Inside its frame, bottom to top: the photo, the previews of
+   the index's pages, the scan lines, and the loupe's clear copy and corners. */
+.photo { position: absolute; right: 0; bottom: 0; z-index: 2; margin: 0; height: var(--band); aspect-ratio: 10 / 7; cursor: crosshair; }
+.photo > img, .photo .pv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.photo .pv { opacity: 0; transition: opacity .15s linear; }
+.photo .lines { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px 3px); }
+.photo[data-show="resume"] .pv[data-k="resume"], .photo[data-show="atlas"] .pv[data-k="atlas"], .photo[data-show="film"] .pv[data-k="film"],
+.photo[data-show="github"] .pv[data-k="github"], .photo[data-show="research"] .pv[data-k="research"],
+.photo[data-show="writing"] .pv[data-k="writing"], .photo[data-show="contact"] .pv[data-k="contact"] { opacity: 1; }
+.photo .card { display: flex; flex-direction: column; justify-content: center; gap: calc(var(--band) * .03); padding: 0 40px; background: var(--panel); }   /* the pages without a picture, set like the film's title cards */
+.photo .card .k { font-size: 12px; font-weight: 500; letter-spacing: .08em; color: var(--dim); }
+.photo .card .big { font-size: calc(var(--band) * .072); line-height: 1.12; font-weight: 700; letter-spacing: .02em; color: var(--ink); overflow-wrap: anywhere; }
+.photo .card .sub { max-width: 52ch; font-size: 14px; color: var(--muted); }
+.photo .clear { --zoom: 1.6; --half: calc(66px / var(--zoom)); display: none; pointer-events: none; transform-origin: var(--x) var(--y); transform: scale(var(--zoom));
+  clip-path: inset(calc(var(--y) - var(--half)) calc(100% - var(--x) - var(--half)) calc(100% - var(--y) - var(--half)) calc(var(--x) - var(--half))); }
+.photo .loupe { position: absolute; display: none; pointer-events: none; width: 132px; height: 132px; left: calc(var(--x) - 66px); top: calc(var(--y) - 66px);
+  background: var(--mk-tl) top left / 14px no-repeat, var(--mk-tr) top right / 14px no-repeat,
+              var(--mk-br) bottom right / 14px no-repeat, var(--mk-bl) bottom left / 14px no-repeat; }
+.photo.on .clear, .photo.on .loupe { display: block; }
+.photo .above { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; flex-direction: column; align-items: flex-start; }
+/* The slogan, its translation and the pun, while a mouse or a pen is over the photo (or after a tap on a phone): the slogan as the
+   card's title in the reading green, as on the atlas's cards (the author's pick of 29 October 2026). */
+.photo .gloss { display: none; margin: 0 0 10px max(14px, var(--safe-l)); padding: 8px 12px 9px; max-width: calc(100% - 28px); background: rgba(9, 16, 35, .92); border: 2px solid var(--context); }
+.photo .gloss .t { font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--context); }
+.photo .gloss .q { margin-top: 3px; font-size: 14px; color: var(--ink); }
+.photo .gloss .w { font-size: 12px; color: var(--muted); }
+.photo.on:not([data-show]) .gloss, .photo.tapped .gloss { display: block; }
+.photo figcaption { align-self: stretch; display: flex; flex-wrap: wrap; column-gap: 3em; padding: 6px 14px 6px max(14px, var(--safe-l)); font-size: 11px; line-height: 1.5; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); background: rgba(3, 6, 14, .88); }
+.photo figcaption [data-k] { display: none; color: var(--cursor-live); }   /* while a preview shows, the caption names its page */
+.photo[data-show] figcaption .cap { display: none; }
+.photo[data-show="resume"] figcaption [data-k="resume"], .photo[data-show="atlas"] figcaption [data-k="atlas"], .photo[data-show="film"] figcaption [data-k="film"],
+.photo[data-show="github"] figcaption [data-k="github"], .photo[data-show="research"] figcaption [data-k="research"],
+.photo[data-show="writing"] figcaption [data-k="writing"], .photo[data-show="contact"] figcaption [data-k="contact"] { display: inline; }
 
-.menu { list-style: none; counter-reset: item; margin: 14px 0; padding: 0; }
-.menu li { counter-increment: item; display: flex; gap: 14px; font-size: 17px; line-height: 1.6; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
-.menu li::before { content: counter(item) "."; min-width: 2ch; color: var(--dim); font-weight: 400; }
-.menu .soon { color: var(--dim); font-size: 12px; letter-spacing: .08em; align-self: center; }
+/* The content: the top block on the 22 px rows, the index in the photo's band. */
+.content { display: grid; grid-template-rows: 1fr var(--band); min-height: 100vh; min-height: 100dvh; }
+.content .top { --shot: 198px; padding: 26px max(44px, var(--safe-r)) 0 40px; }
+@supports (width: round(down, 10px, 1px)) and (height: 100dvh) {   /* the headshot fills the rows left above the band, in whole rows */
+  .content .top { --shot: clamp(132px, round(down, 100dvh - var(--band) - 140px, 22px), 286px); }
+}
+.content h1 { margin: 0 0 22px; font-size: 46px; line-height: 44px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.content .top hr { margin: 0 0 20px; }
+.content .id { display: grid; grid-template-columns: var(--shot) minmax(0, 1fr); column-gap: 26px; align-items: start; }
+.content .portrait { display: block; width: var(--shot); height: var(--shot); }
+.content .lede { color: var(--muted); }
+.content .lede p { margin: 0; font-size: 13px; line-height: 22px; }
+.content .lede .lead { margin-bottom: 22px; font-size: 16px; color: var(--ink); }
+.nb { white-space: nowrap; }
+
+/* The index: seven rows, each a number, the page and a dim note of what it opens; the whole row is the link. */
+.index { display: grid; grid-template-rows: repeat(7, minmax(0, 80px)); padding: 0 max(44px, var(--safe-r)) 0 40px; }
+.index a { display: grid; grid-template-columns: 4ch minmax(0, 1fr) auto; align-items: center; border-top: 1px solid rgba(125, 136, 156, .38); color: var(--ink); text-decoration: none; outline: none; -webkit-tap-highlight-color: transparent; }
+.index a:first-child { border-top: 2px solid var(--dim); }
+.index .n { font-size: 13px; color: var(--dim); }
+.index .label { position: relative; justify-self: start; font-size: clamp(20px, 1.65vw, 28px); font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+.index .tag { padding-left: 16px; font-size: 11px; letter-spacing: .08em; color: var(--dim); white-space: nowrap; }
+.index a:focus-visible .label, .index a:active .label { color: var(--cursor-live); }
+.index a:focus-visible .tag { color: var(--muted); }
+.index a:focus-visible .label::before {
+  content: ""; position: absolute; inset: -3px -7px; pointer-events: none;
+  background: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat,
+              var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
+}
+@media (hover: hover) {
+  .index a:hover .label { color: var(--cursor-live); }
+  .index a:hover .tag { color: var(--muted); }
+  .index a:hover .label::before {
+    content: ""; position: absolute; inset: -3px -7px; pointer-events: none;
+    background: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat,
+                var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
+  }
+}
 
 /* Subpages: one reading column, no image panel and no stream. */
 .page { max-width: 820px; padding: 13px max(18px, var(--safe-r)) max(48px, calc(var(--safe-b) + 24px)) max(18px, var(--safe-l)); }
@@ -118,15 +180,29 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   background: var(--mk-tl-dim) top left / 8px no-repeat, var(--mk-tr-dim) top right / 8px no-repeat,
               var(--mk-br-dim) bottom right / 8px no-repeat, var(--mk-bl-dim) bottom left / 8px no-repeat; }
 
-/* Phones: the image becomes a band across the top, the photo whole at the screen's width. */
+/* Phones (the author's rule of 29 October 2026): the name, the headshot, the bio and the index first; the stream and the photo
+   below them, the photo whole at the screen's width on the page's floor. Each note sits under its page in the index. */
 @media (max-width: 760px) {
-  .home { display: block; }
-  .visual { position: relative; height: auto; }
-  .visual figure { position: static; display: block; }
-  .visual figcaption { padding: 8px max(16px, var(--safe-r)) 8px max(16px, var(--safe-l)); }
-  .content, .page { padding: 14px max(16px, var(--safe-r)) max(40px, calc(var(--safe-b) + 24px)) max(16px, var(--safe-l)); }
-  .content h1, .page h1 { font-size: 30px; }
-  .content .portrait { width: 100%; max-width: 420px; }
+  .home { display: flex; flex-direction: column; }
+  .content { order: -1; display: block; min-height: 0; }
+  .content .top { --shot: 110px; padding: 14px max(16px, var(--safe-r)) 0 max(16px, var(--safe-l)); }
+  .content h1 { margin-bottom: 14px; font-size: 30px; }
+  .content .id { column-gap: 16px; }
+  .content .lede { display: contents; }
+  .content .lede .lead { grid-column: 2; grid-row: 1; margin: 0; font-size: 15px; }
+  .content .lede .lead + p { grid-column: 1 / -1; grid-row: 2; margin-top: 22px; }
+  .index { grid-template-rows: none; grid-auto-rows: 60px; padding: 22px max(16px, var(--safe-r)) 30px max(16px, var(--safe-l)); }
+  .index a { grid-template-columns: 4ch minmax(0, 1fr); align-content: center; }
+  .index .n { grid-row: 1 / 3; }
+  .index .label { font-size: 18px; }
+  .index .tag { grid-column: 2; padding: 3px 0 0; font-size: 10px; }
+  .index a:last-child { border-bottom: 2px solid var(--dim); }
+  .visual { position: relative; height: auto; padding-top: 154px; }   /* a band of the stream above the caption and the photo, tall enough for the slogan's card */
+  .photo { position: relative; right: auto; bottom: auto; width: 100%; height: auto; }
+  .photo figcaption { padding: 8px max(16px, var(--safe-r)) 8px max(16px, var(--safe-l)); }
+  .photo .gloss { margin-left: max(16px, var(--safe-l)); }
+  .page { padding: 14px max(16px, var(--safe-r)) max(40px, calc(var(--safe-b) + 24px)) max(16px, var(--safe-l)); }
+  .page h1 { font-size: 30px; }
   .film .chapters button { padding: 5px 0; }   /* taller rows for a finger */
 }
 
