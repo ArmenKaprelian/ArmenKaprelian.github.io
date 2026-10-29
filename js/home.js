@@ -6,17 +6,26 @@
   const fig = document.querySelector('.home .photo'), index = document.querySelector('.home .index');
   if (!fig || !index) return;
   const wide = matchMedia('(min-width: 1200px) and (min-height: 600px)');   // the split layout's limits in css/site.css
+  const parts = fig.querySelectorAll('[data-k]');   // each page's preview and its name in the caption, keyed like the index's rows
 
   fig.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') fig.classList.add('on'); });
   fig.addEventListener('pointerleave', () => fig.classList.remove('on'));
   fig.addEventListener('pointerup', e => { if (e.pointerType === 'touch') fig.classList.toggle('tapped'); });   // a tap shows or hides the slogan's card
 
-  const show = k => { if (k && wide.matches) fig.dataset.show = k; else delete fig.dataset.show; };
-  index.querySelectorAll('a[data-k]').forEach(a => {
-    a.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') show(a.dataset.k); });
-    a.addEventListener('pointerleave', () => show(''));   // off the row, the photo returns (the author's request of 29 October 2026)
-    a.addEventListener('focus', () => show(a.dataset.k));
+  const show = k => {
+    if (!wide.matches) k = '';
+    if (k) fig.dataset.show = k; else delete fig.dataset.show;
+    parts.forEach(p => p.classList.toggle('live', p.dataset.k === k));
+  };
+  // The row under the pointer, read on every element the pointer enters inside the index. Off the rows (the index's margins and the
+  // space under its last row) the photo returns at once (the author's requests of 29 October 2026).
+  index.addEventListener('pointerover', e => {
+    if (e.pointerType === 'touch') return;
+    const a = e.target.closest('a[data-k]');
+    show(a ? a.dataset.k : '');
   });
+  index.addEventListener('pointerleave', () => show(''));
+  index.addEventListener('focusin', e => { const a = e.target.closest('a[data-k]'); if (a) show(a.dataset.k); });
   index.addEventListener('focusout', e => { if (!index.contains(e.relatedTarget)) show(''); });
   addEventListener('pageshow', () => show(''));   // coming back to the page from one of its links
 

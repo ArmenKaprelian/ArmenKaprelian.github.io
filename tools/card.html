@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1200">
+<meta name="robots" content="noindex">
+<title>Link card</title>
+<!-- The link card (img/card.jpg, 1200 by 630): what email, Slack, LinkedIn and X show when the site's address is pasted. The home
+     page in small, from the site's own stylesheet and stream: the stream and the photo at the left, the photo's top edge as the rule
+     under the name, the headshot and the bio below it (the author's pick of 29 October 2026). Remake it after the bio changes: a
+     1200 by 630 screenshot of this page, saved as a JPEG (see the README). -->
+<link rel="preload" href="../fonts/IBMPlexMono-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-500-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/IBMPlexMono-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../css/site.css">
+<style>
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  .home { --band: 420px; min-height: 0; height: 630px; }
+  .visual { height: 630px; }
+  .content { min-height: 0; height: 630px; grid-template-rows: 210px 420px; }
+  .content .top { display: flex; flex-direction: column; justify-content: flex-end; padding: 0 44px 0 40px; }
+  .content h1 { margin: 0 0 22px; font-size: 42px; }
+  .band { padding: 0 44px 0 40px; }
+  .band hr { margin: 0 0 22px; }
+  .band .id { display: grid; grid-template-columns: 198px minmax(0, 1fr); column-gap: 26px; align-items: start; }
+  .band .portrait { display: block; width: 198px; height: 198px; }
+  .band .lead { margin: 0 0 22px; font-size: 16px; line-height: 22px; color: var(--ink); }
+  .band .sub { margin: 0; font-size: 13px; line-height: 22px; color: var(--muted); max-width: 46ch; }
+</style>
+</head>
+<body>
+<main class="home">
+  <div class="visual">
+    <canvas class="stream" aria-hidden="true"></canvas>
+    <figure class="photo">
+      <img src="../img/home-pipeline-1982.webp" width="1000" height="700" alt="">
+      <div class="lines" aria-hidden="true"></div>
+      <figcaption class="above"><div class="bar"><span class="cap">Urengoy–Pomary–Uzhgorod pipeline, 1982</span></div></figcaption>
+    </figure>
+  </div>
+  <div class="content">
+    <header class="top"><h1><span class="striped">Armen G. Kaprelian</span></h1></header>
+    <div class="band">
+      <hr>
+      <div class="id">
+        <img class="portrait" src="../img/headshot.jpg" width="860" height="860" alt="">
+        <div>
+          <p class="lead">Economist.<br>I study geoeconomics in the emerging multipolar world:<br>Sanctions, export controls, international trade, and how firms adapt to them.</p>
+          <p class="sub">PhD candidate in Economics, Claremont Graduate University.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="../js/stream-data.js"></script>
+<script src="../js/stream.js"></script>
+</body>
+</html>
