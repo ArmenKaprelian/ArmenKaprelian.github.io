@@ -14,9 +14,9 @@
   const show = k => { if (k && wide.matches) fig.dataset.show = k; else delete fig.dataset.show; };
   index.querySelectorAll('a[data-k]').forEach(a => {
     a.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') show(a.dataset.k); });
+    a.addEventListener('pointerleave', () => show(''));   // off the row, the photo returns (the author's request of 29 October 2026)
     a.addEventListener('focus', () => show(a.dataset.k));
   });
-  index.addEventListener('pointerleave', () => show(''));
   index.addEventListener('focusout', e => { if (!index.contains(e.relatedTarget)) show(''); });
   addEventListener('pageshow', () => show(''));   // coming back to the page from one of its links
 
