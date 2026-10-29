@@ -40,7 +40,7 @@ def main():
     for name in SCRIPTS:
         shutil.copy2(src / "js" / f"{name}.js", DEST / "js")
 
-    # The data the atlas loads: the twins its page and scripts name, and the address files it injects by year.
+    # The data the atlas loads: the twins its page and scripts name, and the address files it fetches by year (.bin.gz since round 21).
     code = page + "".join((src / "js" / f"{n}.js").read_text(encoding="utf-8") for n in SCRIPTS)
     for f in sorted((src / "data").glob("*.js")):
         stem = f.stem
