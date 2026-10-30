@@ -27,18 +27,18 @@
   --ink: #ECEEF1;            /* text */
   --muted: #B4C0D0;          /* the second voice */
   --dim: #7D889C;            /* rules, numbers, captions */
-  --cursor: #FF45C8; --cursor-live: #FF8FDF;   /* fuchsia: what you act on */
-  --context: #4DFF7F;        /* green: what you read */
+  --cursor: #EE69C0; --cursor-live: #F49ED2;   /* fuchsia: what you act on */
+  --context: #57CE70;        /* green: what you read */
   --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
   --split: 50%;              /* the image panel's share of the width: half and half (layout C4, the author's pick of 28 October 2026) */
   --mk-tl-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mk-tr-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mk-br-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mk-bl-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23FF8FDF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --corners: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat, var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
   --corners-dim: var(--mk-tl-dim) top left / 8px no-repeat, var(--mk-tr-dim) top right / 8px no-repeat, var(--mk-br-dim) bottom right / 8px no-repeat, var(--mk-bl-dim) bottom left / 8px no-repeat;
   color-scheme: dark;
