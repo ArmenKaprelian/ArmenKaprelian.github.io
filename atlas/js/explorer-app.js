@@ -12,7 +12,7 @@
   // author's revision dropped the unitary-enterprise layer; round 24 found those firms about half of the state-related ones). Their data load on first use.
   let SHD = null, GRP = null, markShared = false; const dataPending = new Set();
   const grpLayer = () => state.layer === 'gs';
-  const blinkState = { on: false, timer: 0, base: 0, alt: 0, held: false }, runState = { on: false, timer: 0 }, catKey = { buf: '', next: 0 };   // the extras' state (round 15, item 7)
+  const runState = { on: false, timer: 0 };   // the year run's state (round 15, item 7B)
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
   // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
   if (new URLSearchParams(location.search).get('__audit') === '1') Motion.audit.on = true;
@@ -31,46 +31,29 @@
   console.log(['+--      --+', '|          |', '      o', '|          |', '+--      --+', 'Visibility Atlas · Armen G. Kaprelian', 'Built from ' + BUILD, 'github.com/ArmenKaprelian/whostaysvisible'].join('\n'));
   const CLASS_LABELS = ['≤ −50%', '−50 to −20%', '−20 to 0%', '0 to +50%', '+50 to +150%', '> +150%'];
 
-  // ---- theme -----------------------------------------------------------------------------------
+  // ---- theme: dark only (the light theme of round 15 and its button were removed in round 30, the author's request of 30 October 2026) ----
   const root = document.documentElement;
   function readTheme() {
     const css = getComputedStyle(root), tok = n => css.getPropertyValue('--' + n).trim();
-    const scheme = tok('scheme'); const dark = scheme ? scheme !== 'light' : tok('stage').toUpperCase() !== '#FFFFFF';
-    // Dark theme (round 10): the single-hue cyan ramp for ordered layers and one amber-to-orange against cyan pair for the signed
-    // layers (the Change layer, the revenue layer in both views), the industry nine and the pair read from the page's tokens (the data
-    // tables as the fallback); rounds 2 to 9 used ColorBrewer YlGnBu and PRGn. Light theme: the manuscript's navy ramps for ordered
-    // layers, the light pair (darker outward) for signed change, the light nine. The light share ramp's palest step is #E0EFFC since 27 October 2026 (#D9E8F5, 0.02 darker in OKLab L,
-    // before), so it stays visible on the darker land (a colour difference of 5.5 from #D7DCE0 against 3.6).
-    const t = { dark, stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'), panel: tok('panel'),
-             ind9: (() => { const t = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => tok('ind-' + i)); return t.every(Boolean) ? t : IND_T ? (dark ? IND_T.classes.colour_dark : IND_T.classes.colour_light) : []; })(),   // the tokens first (round 10), the pass's table as the fallback
-             cursor: tok('cursor') || '#FF45C8', cursorLive: tok('cursor-live') || '#FF8FDF', context: tok('context') || '#4DFF7F', contextLive: tok('context-live') || '#9AFFB8',   // the two accents (round 9): UI only, never data; the full neon rests, the live variant moves
+    // Round 10: the single-hue cyan ramp for ordered layers and one amber-to-orange against cyan pair for the signed layers (the Change layer,
+    // the revenue layer in both views), the industry nine and the pair read from the page's tokens (the data tables as the fallback); rounds 2
+    // to 9 used ColorBrewer YlGnBu and PRGn. dark stays true for the shared drawing code (map-layers.js), which the film also calls.
+    const t = { dark: true, stage: tok('stage'), land: tok('land'), border: tok('border'), graticule: tok('graticule'), ink: tok('ink'), muted: tok('muted'), dim: tok('dim'), grid: tok('grid'), panel: tok('panel'),
+             ind9: (() => { const t = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => tok('ind-' + i)); return t.every(Boolean) ? t : IND_T ? IND_T.classes.colour_dark : []; })(),   // the tokens first (round 10), the pass's table as the fallback
+             cursor: tok('cursor') || '#EE69C0', cursorLive: tok('cursor-live') || '#F49ED2', context: tok('context') || '#57CE70', contextLive: tok('context-live') || '#93E09E',   // the two accents (round 9): UI only, never data; the full neon rests, the live variant moves
              accent: tok('accent'), accentStrong: tok('accent-strong'), fall: tok('fall'), rise: tok('rise'), below: tok('below'), highlightBand: tok('highlight'), tick: tok('dim'), axis: tok('dim'), barMuted: tok('border'),
-             ramp6: dark ? ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'] : ['#E0EFFC', '#A9C4DE', '#78A3C9', '#4F84B4', '#2F6395', '#16436E'],
-             ramp5: dark ? ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'] : ['#78A3C9', '#4F84B4', '#2F6395', '#16436E', '#061C38'],
-             change6: (() => { const t = [1, 2, 3, 4, 5, 6].map(i => tok('div-' + i)); return t.every(Boolean) ? t : dark ? ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3'] : ['#854505', '#9D5E01', '#B27901', '#1C989E', '#0A7E83', '#196369']; })(),   // classes 1 to 6, the largest decline first; the same six serve the revenue layer (div6)
-             density: dark ? '#79CDBF' : '#16436E',
-             ghost: tok('ghost') || (dark ? '#1F3350' : '#C3C8CC'),   // one step above the land (round 10): the hand-over outline, the hairline borders
-             go: tok('go') || (dark ? '#9CC8FF' : '#22364D'),
-             tileInk: tok('tile-ink') || (dark ? '#CFE6FF' : '#22364D'),   // the tile's text, and the ghost names from 8B on (rounds 15 and 16)   // the GO TO card's ice (item 21): the ghost names take it at 30 percent, so the two stay tied (round 12, final)
-             neutral: FM ? (dark ? FM.neutral.dark : FM.neutral.light) : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? (dark ? FM.zero.dark : FM.zero.light) : (dark ? '#6B7482' : '#727C86')), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
-    // The light theme's edges (27 October 2026, the author's request that the light theme's contrast need no worry): a cell whose fill is under 3:1 against the land takes a
-    // hairline in the ink at 60 percent (3.4:1 against the land), so its edge reads where its colour does not; a dot takes the same edge, inside its disc, only where its fill
-    // is under 1.5:1 (the share ramp's two palest steps), since on a dot of 2 or 3 px a rim outweighs the colour of the mid classes. The colours stay as they are, the grey of
-    // cells with too few firms keeps none (it is meant to recede), and the dark theme has none.
-    t.edge = dark ? null : (() => { const Lland = relLum(t.land), memo = new Map(), ratio = col => { let v = memo.get(col); if (v === undefined) { const l = relLum(col); v = (Math.max(l, Lland) + 0.05) / (Math.min(l, Lland) + 0.05); memo.set(col, v); } return v; };
-      return { colour: t.ink, alpha: 0.6, low: col => !!col && col !== t.below && ratio(col) < 3, faint: col => !!col && col !== t.below && ratio(col) < 1.5 }; })();
-    MM.tileEdge = t.edge;   // the cells' tiles read it in MM.drawTiles; the video never sets it
+             ramp6: ['#1C8383', '#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'],
+             ramp5: ['#269C96', '#50B5AA', '#79CDBF', '#A1E4D3', '#C7F8E7'],
+             change6: (() => { const t = [1, 2, 3, 4, 5, 6].map(i => tok('div-' + i)); return t.every(Boolean) ? t : ['#FFB000', '#F39523', '#EA7719', '#50B5AA', '#79CDBF', '#A1E4D3']; })(),   // classes 1 to 6, the largest decline first; the same six serve the revenue layer (div6)
+             density: '#79CDBF',
+             ghost: tok('ghost') || '#1F3350',   // one step above the land (round 10): the hand-over outline, the hairline borders
+             go: tok('go') || '#9CC8FF',
+             tileInk: tok('tile-ink') || '#CFE6FF',   // the tile's text, and the ghost names from 8B on (rounds 15 and 16)   // the GO TO card's ice (item 21): the ghost names take it at 30 percent, so the two stay tied (round 12, final)
+             neutral: FM ? FM.neutral.dark : '#B5C3D1', zero: tok('zero') || (FM && FM.zero ? FM.zero.dark : '#6B7482'), treated: tok('treated') || '#E31A1C', treatedOutline: '#FFD9D9' };
     t.div6 = t.change6;   // the revenue classes of the Firms view and the Cells view's fin layer share the Change layer's pair (round 10; the blue six of rounds 3 to 9 stay in the manifests' class_colours)
     return Object.assign(t, MM.coreRamp(t));   // the bloom's pale-core tables (round 9)
   }
-  function relLum(h) { const f = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(parseInt(h.slice(1, 3), 16)) + 0.7152 * f(parseInt(h.slice(3, 5), 16)) + 0.0722 * f(parseInt(h.slice(5, 7), 16)); }   // WCAG relative luminance of #RRGGBB
-  // The remembered choice is applied before the first read (round 10): until then a viewer who had chosen light saw the canvases drawn dark until a click.
-  let explicit = null;
-  try { explicit = localStorage.getItem('atlas-theme'); } catch (e) { explicit = null; }
-  if (explicit === 'light' || explicit === 'dark') root.setAttribute('data-theme', explicit);
-  let theme = readTheme();
-  function syncThemeButton() { const light = !readTheme().dark; $('theme').textContent = light ? 'Dark theme' : 'Light theme'; $('theme').setAttribute('aria-pressed', String(light)); }
-  $('theme').addEventListener('click', () => { const next = readTheme().dark ? 'light' : 'dark'; root.setAttribute('data-theme', next); try { localStorage.setItem('atlas-theme', next); } catch (e) { /* no storage */ } theme = readTheme(); syncThemeButton(); redrawAll(); });
+  const theme = readTheme();
 
   // ---- data ------------------------------------------------------------------------------------
   const bmp = MM.buildBasemap(BM);
@@ -315,7 +298,7 @@
     Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight && !motion) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame or a wheel step   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
-    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { if (state.mode !== 'firms' && grpLayer()) drawGroupFills(c); drawRegionFill(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
+    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { if (state.mode !== 'firms' && grpLayer()) drawGroupFills(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     const L = state.layer;
@@ -364,7 +347,7 @@
       const key = layersKey(c); if (key !== lastFieldKey) { drawCellsField(c); lastFieldKey = key; }
       if (key !== lastMarksKey || cellPulse || found) { drawCellsMarks(c); lastMarksKey = key; } else drawLog.push('ghost');
     }
-    if (!flight) { drawLegend(); drawScaleBar(); }
+    if (!flight) { drawLegend(); syncZoomFactor(); }
   }
 
   // ---- firms view: loader, renderer, hover ------------------------------------------------------------
@@ -445,7 +428,7 @@
   // zooms. A name fades by its width against the map's (full until a third, gone at three widths), so none lies over the dots at city zoom; beyond three times
   // its size it is drawn from a bitmap made once. Below the fit the names shrink with the land. Only 17 of the 22 names fit at the fit at 1,600 px, and a
   // collision at the fit is a collision at every zoom, so a hidden name enters at the first zoom where it fits, once the names that blocked it have left the
-  // view or faded. In the tile's ice at 30 percent, drawn as light on the dark theme (8C) and plainly on the light theme, never over the authorship mark.
+  // view or faded. In the tile's ice at 30 percent, drawn as light on the dark ground (8C), never over the authorship mark.
   // Drawn above the cells, the dots and the listed marks and below the Cells view's pulse dots, the hover ring, the tile and the panels: on the map canvas
   // after the cells layers, on the marks canvas after the marks in the Firms view; 22 text calls at most, no new canvas.
   const cloudBitmaps = new Map();   // label -> the name drawn once at twice its resting size, per colour
@@ -483,7 +466,7 @@
     ghostDrawn = 0; Motion.audit.scene = scene;
     const kf = kFit(), W = stage.width, H = stage.height, s = c.k / kf, L = groundLayout(kf), shown = [], ink = theme.tileInk;
     ctx.save();
-    if (theme.dark) ctx.globalCompositeOperation = 'lighter';
+    ctx.globalCompositeOperation = 'lighter';
     if (markBox && s > 1.001) { ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.rect(markBox.x, markBox.y, markBox.x1 - markBox.x, markBox.y1 - markBox.y); ctx.clip('evenodd'); }   // the names pass around the authorship mark
     const place = g => { const [px, py] = Motion.project(c, g.city.x, g.city.y); return { g, x: px + g.dx * s, y: py + g.dy * s, w: g.w * s, h: g.h * s }; };
     const inView = b => !(b.x + b.w < 0 || b.x > W || b.y + b.h < 0 || b.y > H);
@@ -507,8 +490,8 @@
   const GL_R = [Math.round(bmp.cities[0].x * 1000), Math.round(bmp.cities[0].y * 1000)];
   const GL_VS = `
 attribute vec2 a_pos; attribute float a_n; attribute vec4 a_cls;
-uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_edge[16]; uniform float u_w;
-varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square; varying float v_rimw;
+uniform vec2 u_shift; uniform vec2 u_off; uniform float u_kk; uniform vec2 u_size; uniform float u_sc; uniform vec4 u_rule; uniform float u_which; uniform vec3 u_pal[16]; uniform float u_w;
+varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
   vec2 rel = a_pos + u_shift;
   float dx = u_off.x + rel.x * u_kk, dy = u_off.y - rel.y * u_kk;
@@ -519,19 +502,15 @@ void main() {
   gl_Position = vec4(dx / u_size.x * 2.0 - 1.0, 1.0 - dy / u_size.y * 2.0, 0.0, 1.0);
   gl_PointSize = size;
   v_col = vec4(col * 0.9, 0.9) * u_w; v_r = rd; v_half = size * 0.5; v_square = r < 1.75 ? 1.0 : 0.0;
-  v_rimw = (u_edge[int(cls + 0.5)] > 0.5 && r >= 2.0) ? min(1.0, 0.35 * r) * u_sc : 0.0;   // the light theme's edge, inside the disc, from 2 px radius
 }`;
   const GL_FS = `
 precision mediump float;
-varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square; varying float v_rimw;
-uniform vec4 u_rim;
+varying vec4 v_col; varying float v_r; varying float v_half; varying float v_square;
 void main() {
   vec2 d = (gl_PointCoord - 0.5) * (v_half * 2.0);
   float e = v_square > 0.5 ? v_r - max(abs(d.x), abs(d.y)) : v_r - length(d);
   float cov = clamp(e + 0.5, 0.0, 1.0);
-  vec4 c = v_col;
-  if (v_rimw > 0.0) { float t = clamp(e - v_rimw + 0.5, 0.0, 1.0); c.rgb = mix(u_rim.rgb * c.a, c.rgb, mix(1.0 - u_rim.a, 1.0, t)); }
-  gl_FragColor = c * cov;
+  gl_FragColor = v_col * cov;
 }`;
   let gl = null, glKind = null, glProg = null, glLoc = null, glIdx = null, glLost = false, field2d = null, glError = null, glLoseExt = null, pfGL = null, sqGL = null;
   const glYears = new Map();   // year -> { pos, n, a, f, rv, cls, count }
@@ -551,7 +530,7 @@ void main() {
     const sq = PixelField.createSquaresGL(g); if (!sq.ok) { glError = 'squares: ' + sq.reason; return false; }
     gl = g; glKind = kind; glProg = p; pfGL = pf; sqGL = sq; glIdx = g.createBuffer(); glLoseExt = glLoseExt || g.getExtension('WEBGL_lose_context');   // kept from a live context: a lost one returns no extensions
     glLoc = { pos: g.getAttribLocation(p, 'a_pos'), n: g.getAttribLocation(p, 'a_n'), cls: g.getAttribLocation(p, 'a_cls') };
-    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_edge', 'u_rim', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
+    for (const u of ['u_shift', 'u_off', 'u_kk', 'u_size', 'u_sc', 'u_rule', 'u_which', 'u_pal', 'u_w']) glLoc[u] = g.getUniformLocation(p, u);
     g.disable(g.DEPTH_TEST); g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA);
     return true;
   }
@@ -564,7 +543,6 @@ void main() {
   }
   function glFree(y) { const b = glYears.get(y); if (!b || !gl) return; for (const k of ['pos', 'n', 'a', 'f', 'rv', 'cls']) gl.deleteBuffer(b[k]); glYears.delete(y); }
   const glPal = L => (L === 'share' ? theme.ramp6 : L === 'fin' ? [theme.zero].concat(theme.div6) : L === 'industry' ? [theme.neutral].concat(theme.ind9) : [theme.neutral]);
-  function glEdges(L) { const pal = glPal(L), out = new Float32Array(16); for (let i = 0; i < 16; i++) out[i] = theme.edge && theme.edge.faint(pal[Math.min(i, pal.length - 1)]) ? 1 : 0; return out; }   // the light theme's edge on the faintest dots, per palette entry
   function glPalette(L) { const pal = glPal(L); const out = new Float32Array(48); for (let i = 0; i < 16; i++) { const c = hex2rgb(pal[Math.min(i, pal.length - 1)]); out[3 * i] = c[0] / 255; out[3 * i + 1] = c[1] / 255; out[3 * i + 2] = c[2] / 255; } return out; }
   // The discs at weight w (the dots' crossfade), from the index of the discs in view, largest first.
   function glDiscs(c, buf, L, idx, w) {
@@ -578,7 +556,7 @@ void main() {
     gl.uniform2f(glLoc.u_off, c.ox * sc + (Cx - camx) * kk, c.oy * sc - (Cy - camy) * kk);
     gl.uniform1f(glLoc.u_kk, kk); gl.uniform2f(glLoc.u_size, W, Hh); gl.uniform1f(glLoc.u_sc, sc);
     const rule = markRule(c.k); gl.uniform4f(glLoc.u_rule, rule[0], rule[1], rule[2], rule[3]);
-    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L)); gl.uniform1fv(glLoc.u_edge, glEdges(L)); { const rc = hex2rgb(theme.edge ? theme.edge.colour : '#000000'); gl.uniform4f(glLoc.u_rim, rc[0] / 255, rc[1] / 255, rc[2] / 255, theme.edge ? theme.edge.alpha : 0); } gl.uniform1f(glLoc.u_w, w);
+    gl.uniform1f(glLoc.u_which, L === 'share' ? 0 : L === 'fin' ? 1 : L === 'industry' ? 2 : 3); gl.uniform3fv(glLoc.u_pal, glPalette(L)); gl.uniform1f(glLoc.u_w, w);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glIdx); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.DYNAMIC_DRAW); gl.drawElements(gl.POINTS, idx.length, gl.UNSIGNED_INT, 0);
     gl.disableVertexAttribArray(glLoc.pos); gl.disableVertexAttribArray(glLoc.n); gl.disableVertexAttribArray(glLoc.cls);
   }
@@ -597,8 +575,7 @@ void main() {
   function discs2d(f, c, d, L, idx, w) {
     const ctx2 = f.ctx, rule = markRule(c.k); ctx2.save(); ctx2.setTransform(stage.scale, 0, 0, stage.scale, 0, 0);
     ctx2.globalAlpha = 0.9 * w;
-    for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill();
-      if (theme.edge && r >= 2 && theme.edge.faint(ctx2.fillStyle.toUpperCase())) { const rw = Math.min(1, 0.35 * r); ctx2.save(); ctx2.globalAlpha = 0.9 * w * theme.edge.alpha; ctx2.strokeStyle = theme.edge.colour; ctx2.lineWidth = rw; ctx2.beginPath(); ctx2.arc(px, py, r - rw / 2, 0, Math.PI * 2); ctx2.stroke(); ctx2.restore(); } }   // the light theme's edge, as on the GPU
+    for (let j = 0; j < idx.length; j++) { const i = idx[j]; const r = markRadius(rule, d.nn[i]), [px, py] = Motion.project(c, d.x[i] / 1000, d.y[i] / 1000); ctx2.fillStyle = firmColour(L, firmClass(d, i, L)); ctx2.beginPath(); if (r < 1.75) ctx2.rect(px - r, py - r, 2 * r, 2 * r); else ctx2.arc(px, py, r, 0, Math.PI * 2); ctx2.fill(); }
     ctx2.restore();
   }
   // The discs' order: the largest first, by a counting sort on the radius in tenths of a pixel, over the x-band and the y-range.
@@ -802,12 +779,11 @@ void main() {
   // and never rimmed or pulsed. The marks' size, halo, opacity and rim follow MM.listedRule by zoom (25 October 2026):
   // quietest at the national view, as drawn before at the street zoom. On a forward year change the firms newly red pulse
   // once (round 24, the author's pick E of 29 October 2026): a sweep crosses the view west to east by longitude in 1.5 s, each
-  // firm swells (MM.swellPeak) as it passes, and the year's minimum spanning tree by distance traces behind it, each edge held
-  // 0.3 s once drawn and gone over 0.6 s, so a line lasts exactly as long as the swell at its east end. Backward changes show
-  // nothing, and the Cells view keeps its dot. The pulse button beside the year slider replays the pulse for the firms added
-  // to a list in the shown year; under prefers-reduced-motion a pulse is a still highlight (the swell held at 0.6 and the whole
-  // tree drawn) for the same 2.4 s.
-  const PASS_MS = 1500, TRAIL_HOLD = 300, TRAIL_FADE = 600, PULSE_MS = PASS_MS + 900, BLOOM_MS = 1800, DECAY_MS = 1600;   // the last firm passed at 1.5 s swells for 0.9 s; BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
+  // firm swells (MM.swellPeak) as it passes. The minimum spanning tree that traced behind the sweep (round 24) was removed on the
+  // author's request of 30 October 2026 (round 30). Backward changes show nothing, and the Cells view keeps its dot. The pulse
+  // button beside the year slider replays the pulse for the firms added to a list in the shown year; under prefers-reduced-motion
+  // a pulse is a still highlight (the swell held at 0.6) for the same 2.4 s.
+  const PASS_MS = 1500, PULSE_MS = PASS_MS + 900, BLOOM_MS = 1800, DECAY_MS = 1600;   // the last firm passed at 1.5 s swells for 0.9 s; BLOOM_MS: the Cells view's dot and the found firm's ring keep 1.8 s
   let pulse = null, pulseRaf = 0, pulseTimer = 0;
   const pulseDelay = new Float32Array(TRN.n);   // each firm's start delay in the running pulse (ms), filled once per pulse: the west-to-east sweep
   // The sweep goes by longitude. The km plane is spherical LAEA about 60 N, 100 E (map-layers.js), so a firm's longitude is the inverse projection, computed once.
@@ -824,47 +800,6 @@ void main() {
     const span = l1 > l0 ? l1 - l0 : 0;
     for (let i = 0; i < TRN.n; i++) pulseDelay[i] = mask[i] && span ? PASS_MS * Motion.clamp((L[i] - l0) / span, 0, 1) : 0;
   }
-  // The trail's tree: Prim's minimum spanning tree over a mask's firms by km distance, O(n^2) on typed arrays (5 to 10 ms for 2024's 1,480), each edge
-  // kept west end first so it traces with the sweep. One per mask: a year's mask is manualMask's, so one per year, built in idle time (warmTree) for the
-  // shown year and the next, so a pulse never waits for one.
-  const trees = new WeakMap();
-  function treeOf(mask) {
-    let T = trees.get(mask); if (T) return T;
-    const L = lonOf(), idx = []; for (let i = 0; i < TRN.n; i++) if (mask[i]) idx.push(i);
-    const m = idx.length, X = new Float64Array(m), Y = new Float64Array(m), best = new Float64Array(m).fill(Infinity), from = new Int32Array(m), used = new Uint8Array(m);
-    for (let j = 0; j < m; j++) { X[j] = TRN.x[idx[j]]; Y[j] = TRN.y[idx[j]]; }
-    const a = new Int32Array(Math.max(0, m - 1)), b = new Int32Array(Math.max(0, m - 1)); let n = 0, cur = 0; if (m) used[0] = 1;
-    for (let it = 1; it < m; it++) {
-      const cx = X[cur], cy = Y[cur]; let bi = -1, bd = Infinity;
-      for (let j = 0; j < m; j++) { if (used[j]) continue; const dx = X[j] - cx, dy = Y[j] - cy, d = dx * dx + dy * dy; if (d < best[j]) { best[j] = d; from[j] = cur; } if (best[j] < bd) { bd = best[j]; bi = j; } }
-      used[bi] = 1; const p = idx[from[bi]], q = idx[bi]; if (L[p] <= L[q]) { a[n] = p; b[n] = q; } else { a[n] = q; b[n] = p; } n++; cur = bi;
-    }
-    T = { a, b, n }; trees.set(mask, T); return T;
-  }
-  function warmTree(y) { if (!TRN || y < 2015 || y > 2025) return; const m = manualMask(y); if (m.count && !trees.has(m.mask)) onIdle(() => treeOf(m.mask)); }
-  // The trail, under the marks: each edge traces from its west end as the sweep passes, then holds and fades, so the lines follow the front and leave
-  // nothing behind. Edges shorter than a swelling disc's radius are skipped (they lie inside the swells), and edges off the view; the traced ones go in
-  // four opacity steps and the tracing ones in one, each batch stroked once on a casing in the stage colour, as the Cells view's dot has.
-  function drawTrail(c, t, st) {
-    const T = treeOf(pulse.mask), k = c.k, ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width, H = stage.height;
-    const LR = MM.listedRule(markRule(k), k, kFit()), rr = LR.rMin + MM.swellPeak(LR.rMin), min2 = Math.max(36, rr * rr);
-    const live = new Path2D(), steps = [new Path2D(), new Path2D(), new Path2D(), new Path2D()], A = [1, 0.75, 0.5, 0.25];
-    for (let e = 0; e < T.n; e++) {
-      const i = T.a[e], j = T.b[e], ax = ox + TRN.x[i] * k, ay = oy - TRN.y[i] * k, bx = ox + TRN.x[j] * k, by = oy - TRN.y[j] * k, dx = bx - ax, dy = by - ay;
-      if (dx * dx + dy * dy < min2) continue;
-      if ((ax < 0 && bx < 0) || (ax > W && bx > W) || (ay < 0 && by < 0) || (ay > H && by > H)) continue;
-      if (st) { steps[1].moveTo(ax, ay); steps[1].lineTo(bx, by); continue; }   // reduced motion: the whole tree, still
-      const da = pulseDelay[i], db = pulseDelay[j]; if (t < da) continue;
-      const f = db > da ? Math.min(1, (t - da) / (db - da)) : 1;
-      if (f < 1) { live.moveTo(ax, ay); live.lineTo(ax + dx * f, ay + dy * f); continue; }
-      const age = t - db - TRAIL_HOLD; if (age >= TRAIL_FADE) continue;
-      const q = age <= 0 ? 0 : Math.min(3, Math.floor(age / TRAIL_FADE * 4)); steps[q].moveTo(ax, ay); steps[q].lineTo(bx, by);
-    }
-    kctx.save(); kctx.lineCap = 'round';
-    for (let q = 3; q >= 0; q--) { kctx.strokeStyle = theme.stage; kctx.globalAlpha = 0.6 * A[q]; kctx.lineWidth = 3.5; kctx.stroke(steps[q]); kctx.strokeStyle = theme.treated; kctx.globalAlpha = 0.85 * A[q]; kctx.lineWidth = 1.5; kctx.stroke(steps[q]); }
-    kctx.strokeStyle = theme.stage; kctx.globalAlpha = 0.6; kctx.lineWidth = 4.5; kctx.stroke(live); kctx.strokeStyle = theme.treated; kctx.globalAlpha = 1; kctx.lineWidth = 2.5; kctx.stroke(live);
-    kctx.restore();
-  }
   const setLive = on => $('yearrow').classList.toggle('live', !!on);   // the context layer's live marker while a pulse runs (round 9)
   function endPulse() { if (pulseRaf) cancelAnimationFrame(pulseRaf); pulseRaf = 0; if (pulseTimer) clearTimeout(pulseTimer); pulseTimer = 0; pulse = null; setLive(false); }
   function beginPulse(mask, count) {
@@ -879,8 +814,7 @@ void main() {
     if (!TRN || yNew < yPrev) return;
     const mask = new Uint8Array(TRN.n), yi = yNew - 2014; let any = 0;
     for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] > yPrev && TRN.red_from[i] <= yNew && TRN.filed[i][yi] !== '-') { mask[i] = 1; any++; }
-    warmTree(yNew + 1);
-    if (any) beginPulse(yNew - yPrev === 1 && yNew > 2014 ? manualMask(yNew).mask : mask, any);   // a one-year step is the year's own set (undated firms date from 2014): its cached mask, so its tree is reused
+    if (any) beginPulse(yNew - yPrev === 1 && yNew > 2014 ? manualMask(yNew).mask : mask, any);   // a one-year step is the year's own set (undated firms date from 2014): its cached mask
   }
   function pulseTick() { pulseRaf = 0; if (!pulse) return; if (performance.now() - pulse.t0 >= PULSE_MS) pulse = null; if (state.mode === 'firms') drawMarks(cam()); if (pulse) pulseRaf = requestAnimationFrame(pulseTick); }
   const manualMasks = new Map();   // per year: the dated firms listed that year and present in it (undated firms never pulse)
@@ -892,9 +826,8 @@ void main() {
   function syncPulseButton() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
-    if (state.mode === 'firms' && FIRMS_OK) warmTree(y);   // the shown year's trail tree, in idle time (round 24)
     b.hidden = !show; b.disabled = !count;
-    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}. Lines join them by distance only.` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
+    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay sweep of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = label; b.setAttribute('aria-label', label);
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
     const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added to a list in ${y}`; pl.classList.toggle('zero', on && !count); }   // at zero the counter and its sentence dim with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
@@ -994,7 +927,6 @@ void main() {
     const st = !!(pulse && pulse.static), tNow = pulse ? (pulse.at != null ? pulse.at : now - pulse.t0) : 0;
     const ox = c.ox - c.cx * k, oy = c.oy + c.cy * k, W = stage.width + MARK_MARGIN, H = stage.height + MARK_MARGIN;
     if (markShared) sharedRings(c);   // round 16: the shared pairs, under the listed marks
-    if (pulse) drawTrail(c, tNow, st);   // round 24: the pulse's trail, under the listed marks
     for (let i = 0; i < TRN.n; i++) {
       const ch = TRN.filed[i][yi]; if (ch === '-') continue;
       const pulsing = !!(pulse && pulse.mask[i]);
@@ -1197,7 +1129,9 @@ void main() {
   // One line along the bottom of the map: a fact about the region under the camera (the country, the registry region or the
   // city window, by zoom band and layer, from the loaded data: regions.json and the page's own totals) or, once in a while, a
   // tip on using the page (each once per session, never while the cursor moves, at least 12 s after the last fact change).
-  // At the left the region's simplified outline, stroked on over 0.4 s when the region changes. Nothing external, no fetch.
+  // At the left the region's simplified outline, stroked on over 0.4 s when the region changes. Nothing external, no fetch. The data wire that
+  // carried the line from round 10 (a scrolling track of dated statements, the cat facts and the lead slot) was removed in round 30 (the author's
+  // request of 30 October 2026); its reduced-motion form, this round-9 line, is now the only form.
   let obsCache = null;   // the tile's obstacle boxes (the panels), read once per layout and dropped when a panel is written, toggled or resized
   const dropObstacles = () => { obsCache = null; };
   const regIndex = new Map();   // region -> year -> row index of regions.json
@@ -1207,13 +1141,13 @@ void main() {
   function citySum(label, y) { const d = cityYear[label] && cityYear[label][y] ? cityYear[label][y].d : null; if (!d) return null; citySums[label] = citySums[label] || {}; if (!citySums[label][y]) citySums[label][y] = { n: d.sum_n, a: d.sum_a }; return citySums[label][y]; }   // the window's own totals (round 15: the sum over the cells had counted the firms of the cells whose statements are withheld, under 10 firms, and not their statements, so every window's share read 2 to 8 points low)
   const stripState = { fact: null, tip: null, lastFactAt: 0, tipTimer: 0, tipEnd: 0, glyphName: null, cur: 'A', seen: new Set(), tickRaf: 0 };
   try { const v = JSON.parse(sessionStorage.getItem('atlas-tips') || '[]'); if (Array.isArray(v)) v.forEach(i => stripState.seen.add(+i)); } catch (e) { /* no storage */ }
-  const stripOpen = () => (ui.ctx ? ui.ctx === 'open' : true);
+  const stripOpen = () => (ui.ctx ? ui.ctx === 'open' : !narrow());   // round 30 (the author's pick of 30 October 2026): on a map under 600 px wide the line starts collapsed, as the legend and the note do, and opens in two rows; a viewer's own choice is kept
   function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'); el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
   $('ctxtoggle').addEventListener('click', () => { const v = stripOpen() ? 'closed' : 'open'; writePref('atlas-context', v); ui.ctx = v; applyStrip(); syncNoteDefault(); if (v === 'open') updateContext(true); });
   const pts = (n, d) => `${fmt.signed(d)} points`;
   const shareOf = (a, n) => (n ? 100 * a / n : null);
   // The fact under the camera: {band, name, kind, text (HTML with the figures in .num spans), nums (the figures, for the tick)}
-  function factFor(band, name, full) {   // full: the wire's lead item takes the full form whatever the map's width (round 10)
+  function factFor(band, name, full) {   // full: the full form whatever the map's width
     const y = state.year, L = state.layer, ys = y + (y === 2025 ? '*' : ''), N = [], num = (v, f) => { N.push(v); return `<span class="num">${f}</span>`; };
     const nw = !full && narrow();   // the short forms: no change clause, no basis words
     const loc = s => `<span class="loc">${esc(s)}</span>`;   // the place name in tracked capitals (round 10)
@@ -1236,14 +1170,7 @@ void main() {
     if (L === 'change') { const i24 = regRow(name, 2024); if (i24 != null && i21 != null) { const s21 = shareOf(REG.a[i21], REG.n[i21]), s24 = shareOf(REG.a[i24], REG.n[i24]); return { band, name, kind: 'change', text: `${loc(name)}: ${num(s21, fmt.pct(s21))} with a statement in 2021, ${num(s24, fmt.pct(s24))} in 2024, ${num(s24 - s21, pts(0, s24 - s21))}`, nums: N, short: `${loc(name)}: ${sp(fmt.pct(s21))} in 2021, ${sp(fmt.pct(s24))} in 2024`, shortNums: [s21, s24] }; } }
     return Object.assign({ band, name, kind: 'share' }, shareLine(loc(name), n, a, n21, a21, what));
   }
-  let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it
-  const REGION_FILL = { dark: 0.06, light: 0.04 };   // the hovered region's area in the cursor colour under every data layer (the author's request of 25 October 2026)
-  const regionFillFade = k => Motion.clamp(Math.log2(8 * kFit() / k) / 2, 0, 1);   // round 28 (the author's request of 30 October 2026): full to twice the country view, gone at eight times, linear in log zoom, so the fill marks the region at the national zooms and leaves the dots once the camera is in; the outline stays (round 15 held it full to k 50 and gone at k 100)
-  function drawRegionFill(c) {   // right after the land, from the outline's cached path; the map redraws when the hovered region changes, never per pointer move
-    if (!hoverRegionName || !regIndex.has(hoverRegionName)) return;
-    const fade = regionFillFade(c.k); if (fade <= 0) return;
-    mctx.save(); Motion.camTransform(mctx, stage, c); mctx.fillStyle = theme.cursor; mctx.globalAlpha = (theme.dark ? REGION_FILL.dark : REGION_FILL.light) * fade; mctx.fill(regionPath(hoverRegionName), 'evenodd'); mctx.restore();   // the restore alone: drawBasemap strokes the graticule and the borders in km after this hook (a base() here redrew them in pixels on every hover, the glitch of 25 October)
-  }
+  let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it (its fill on the map went in round 30)
   // Round 16: the two layers' data, loaded on first use, and their drawing.
   function ensureData(id) {   // 'shared' (data/shared.js and shared-city.js) or 'groups' (data/groups.js)
     if ((id === 'shared' ? SHD : GRP) || dataPending.has(id)) return; dataPending.add(id);
@@ -1296,7 +1223,7 @@ void main() {
   function sharedRings(c) {   // the Firms view's marks (spB, the author's pick: the radius 4 px at 100 firms and 16 at 10,000, by the log of the pair's firms), from the loaded address file's counts: 100 or more firms on no list
     const d = firmYears.get(state.year); if (!d) return;
     const k = c.k / 1000, ox = c.ox - c.cx * c.k, oy = c.oy + c.cy * c.k, W = stage.width + 24, H = stage.height + 24;
-    kctx.save(); kctx.strokeStyle = theme.ink; kctx.globalAlpha = theme.dark ? 0.6 : 0.7; kctx.lineWidth = 1.5; kctx.beginPath();
+    kctx.save(); kctx.strokeStyle = theme.ink; kctx.globalAlpha = 0.6; kctx.lineWidth = 1.5; kctx.beginPath();
     for (let i = 0; i < d.n; i++) { const n = d.nn[i]; if (n < 100) continue; const px = ox + d.x[i] * k, py = oy - d.y[i] * k; if (px < -24 || px > W || py < -24 || py > H) continue;
       const r = 4 + 6 * Math.log10(n / 100); kctx.moveTo(px + r, py); kctx.arc(px, py, r, 0, 2 * Math.PI); }
     kctx.stroke(); kctx.restore();
@@ -1319,7 +1246,6 @@ void main() {
     const rn = regionAt(stage.width / 2, stage.height / 2);
     return rn && regIndex.has(rn) ? ['region', rn] : ['national', 'Russia'];
   }
-  let wireHold = false;
   function updateContext(force) {
     syncNoteDefault();
     if (!stripOpen()) return;
@@ -1329,19 +1255,16 @@ void main() {
     const prev = stripState.fact; stripState.fact = f; stripState.lastFactAt = performance.now();
     if (stripState.tip) endTip(false);
     const gname = band === 'national' ? 'Russia' : band === 'city' ? regionAt(stage.width / 2, stage.height / 2) || 'Russia' : name;
-    f.slot = `<span class="loc">${esc(gname)}</span> · <span class="num">${state.year}${state.year === 2025 ? '*' : ''}</span>`;   // the slot's essentials (the author's request of 25 October 2026): the glyph's region and the slider's year; the full fact rides the wire as the set's first item
-    setStripText(f, prev); setGlyph(gname);   // the first slot shows the hovered region at once (round 16: the author's pick of 27 October 2026, wsA)
-    if (wireHold) return;   // the blink and the year run (round 15): the slot follows the year shown, the track waits for the end
-    rebuildWire(band, name); scheduleTip();
+    setStripText(f, prev); setGlyph(gname);   // the line shows the hovered region at once (round 16: the author's pick of 27 October 2026, wsA)
+    scheduleTip();
   }
   function setStripText(f, prev) {   // crossfade the two stacked spans; when the previous fact had the same figures, the numbers count to the new values
     const ina = stripState.cur === 'A' ? $('ctxB') : $('ctxA'), out = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); stripState.cur = stripState.cur === 'A' ? 'B' : 'A';
-    const slotMode = wireScrolls() && f.kind !== 'tip' && !!f.slot;   // the scrolling wire's slot shows the essentials; the reduced-motion form shows the facts and tips themselves
-    ina.innerHTML = slotMode ? f.slot : f.text; f.full = f.text; ina.classList.toggle('tip', f.kind === 'tip');   // a tip reads in tracked capitals (round 10)
-    if (slotMode) sizeSlot(ina); else { $('ctxlead').style.width = ''; if (f.short && (ina.scrollWidth > ina.clientWidth + 1 || ina.scrollHeight > ina.clientHeight + 1)) { ina.innerHTML = f.short; f.text = f.short; f.nums = f.shortNums || []; } }   // one layout read per fact change, never per frame
+    ina.innerHTML = f.text; f.full = f.text; ina.classList.toggle('tip', f.kind === 'tip');   // a tip reads in tracked capitals (round 10)
+    if (f.short && (ina.scrollWidth > ina.clientWidth + 1 || ina.scrollHeight > ina.clientHeight + 1)) { ina.innerHTML = f.short; f.text = f.short; f.nums = f.shortNums || []; }   // one layout read per fact change, never per frame
     ina.classList.add('live'); ina.classList.remove('hid'); out.classList.add('hid'); out.classList.remove('live');
     if (stripState.tickRaf) { cancelAnimationFrame(stripState.tickRaf); stripState.tickRaf = 0; }
-    if (!slotMode && prev && prev.kind === f.kind && prev.nums.length === f.nums.length && f.nums.length && !reduceMotion()) {   // the slot's year changes under the crossfade, never ticks (a ticking year would read as a count)
+    if (prev && prev.kind === f.kind && prev.nums.length === f.nums.length && f.nums.length && !reduceMotion()) {
       const spans = ina.querySelectorAll('.num'), finals = [...spans].map(sp => sp.textContent), t0 = performance.now();
       const fmtLike = (final, v) => { const m = final.match(/^([+−-]?)([\d,]+)(\.(\d+))?(.*)$/); if (!m) return final; const dec = m[4] ? m[4].length : 0; const sign = m[1] === '−' || m[1] === '-' ? (v < 0 ? '−' : m[1] === '+' ? '+' : '') : (m[1] === '+' ? (v < 0 ? '−' : '+') : ''); return sign + fmt.int(Math.floor(Math.abs(v))).replace(/\.\d+$/, '') .replace(/^(\d)/, '$1') + (dec ? '.' + Math.abs(v).toFixed(dec).split('.')[1] : '') + m[5]; };
       const step = () => { stripState.tickRaf = 0; const u = Math.min(1, (performance.now() - t0) / 300), e = Motion.ease.outCubic(u); spans.forEach((sp, j) => { sp.textContent = u >= 1 ? finals[j] : fmtLike(finals[j], prev.nums[j] + (f.nums[j] - prev.nums[j]) * e); }); if (u < 1) stripState.tickRaf = requestAnimationFrame(step); };
@@ -1350,7 +1273,7 @@ void main() {
     setTimeout(() => { if (stripState.fact === f) ina.classList.remove('live'); }, 320);
   }
   // Tips on using the page, each once per session, shown only when the strip is open, nothing is moving, the cursor is still and 12 s have passed since the last fact change.
-  const TIPS = [   // each at most 68 characters (round 12, part D: in tracked capitals the reduced-motion slot at 768 px holds 68, and a phone's two-line form holds 68 in sentence case); round 15 (the author's item 13): plain sentences in place of the compressed notes ("THE CITY WINDOW FROM THE COUNTRY")
+  const TIPS = [   // each at most 68 characters (round 12, part D: in tracked capitals the line at 768 px holds 68, and a phone's two-line form holds 68 in sentence case); round 15 (the author's item 13): plain sentences in place of the compressed notes ("THE CITY WINDOW FROM THE COUNTRY")
     { text: 'Click a cell to fly to it, or to its city if the cell holds one.', touch: 'Tap a cell for its values, double-tap to zoom, pinch to zoom.' },
     { text: 'From a city, a click goes to the 20 km scale, then 2.5 times closer.', mouse: true },
     { text: 'In the Firms view, clicks past the 20 km scale zoom 4 times closer.', mouse: true, firms: true },
@@ -1362,268 +1285,28 @@ void main() {
     { text: 'Type a name under GO TO to find a firm on the five lists.' },
     { text: 'The link button under GO TO copies a link to the current view.' },
     { text: 'Map focused: + and − zoom, 0 fits the country, the arrows pan.', mouse: true },
-    { text: 'Hold B to blink the map between 2021 and the year shown.', mouse: true },
   ];
   const units = h => h.replace(/(\d)\s(km|m)(?![A-Za-z])/g, '$1&nbsp;<span class="u">$2</span>');   // unit symbols keep their case inside tracked capitals (round 10)
   const coarse = () => window.matchMedia('(pointer: coarse)').matches;
   function nextTip() { for (let i = 0; i < TIPS.length; i++) { const t = TIPS[i]; if (stripState.seen.has(i)) continue; if (t.firms && !FIRMS_OK) continue; if (t.mouse && coarse()) continue; return [i, coarse() && t.touch ? t.touch : t.text]; } return null; }
-  function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); if (wireScrolls()) return; stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }   // the scrolling wire carries its tips itself
+  function scheduleTip() { if (stripState.tipTimer) clearTimeout(stripState.tipTimer); stripState.tipTimer = setTimeout(() => { stripState.tipTimer = 0; maybeTip(); }, 12000); }
   function maybeTip(force) {
-    if (wireScrolls()) return force ? pinTip() : false;   // the wire: a forced tip pins the next tip item at the window's left edge (the audit's tip states)
     if (!stripOpen() || stripState.tip || (!force && (flight || press || pinch || !cursorStill || performance.now() - stripState.lastFactAt < 12000))) return false;
     const nt = nextTip(); if (!nt) return false;
     const [i, text] = nt; stripState.seen.add(i); try { sessionStorage.setItem('atlas-tips', JSON.stringify([...stripState.seen])); } catch (e) { /* no storage */ }
     stripState.tip = { i, text }; setStripText({ kind: 'tip', name: '', text: units(esc(text)), nums: [] }, null);
     stripState.tipEnd = setTimeout(() => endTip(true), 8000); return true;
   }
-  function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (wireScrolls()) { unpinTip(); return; } if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
-  // ---- the data wire (round 10, the author's item 14a) and the cat facts (item 15) -------------------------------------------------------------
-  // A cycle is 50 items in two halves of 25: each half opens with the lead fact (the band's own fact), carries the data facts below in one order (the
-  // second half reversed), two named firms on the lists that turned red that year at data slots 6 and 14 (the halves taking alternate picks of the
-  // four, chosen at floor(i n / 4) over the names sorted), each followed by its region's statement share unless that is the region shown (round 25), and a tip at every fifth slot; one slot keyed to the year and the region carries a cat fact
-  // from data/offwire.json with the prefix in the muted context colour (never a tip slot, never beside a named firm; the fact advancing by seven each
-  // loop). Every string is a template over named fields of the shipped data; tools/wire_check.py re-derives each one for the audit.
-  const WIRE_SPEED = 60, WIRE_HALF = 25, WIRE_RM_MS = 8000, OFFWIRE = D.offwire || null;
-  // Round 11 (the author's item 6): the track is a queue of cycles scrolled by one linear Web Animations entry at 60 px per second, so the scroll is continuous
-  // across context changes. A change of region (hover or camera), layer or view appends the new context's cycle, the lead first, after the last item queued;
-  // the old items run off the left edge; a further change before the queued set has entered the view replaces the queued set, never the visible one; the
-  // queue tops itself up with the next cycle of the current context (the cat fact advancing by seven places) before it runs out and drops the sets that have
-  // passed. Only a year change rebuilds at once, under a 0.3 s crossfade of the whole track. The tips and the cat slot keep their places in every cycle.
-  // Round 12, part D: at most two sets exist at any time, the committed set playing on the track and one pending set. A change of region, layer or view replaces
-  // the pending set, never the committed one, and the replaced set is dropped; a pending set is committed once the cursor has rested on its region for 600 ms or the
-  // camera has settled there, and a later change then queues behind it. Priority: a tip or a cat fact due in the playing cycle plays before a pending set takes over
-  // (the committed set keeps its items up to and including the first tip or cat past the visible ones; the rest go). The lead fact of the region under the cursor
-  // shows at once in the strip's first slot, a fixed lead zone before the scrolling track, whatever the queue holds. The items of a superseded set that are still
-  // crossing the view stay as orphans until they pass; nothing else is kept, so the track never grows and no timer outlives a change.
-  const wireState = { pad: 0, h: 0, cycle: [], key: '', cycleIndex: 0, width: 0, rmTimer: 0, rmIndex: 0, timer: 0, sets: [], orphans: [], x: 0, anim: null, animX0: 0, paused: false, pinned: false, restarts: 0, watchX: null, watchT: null, topTimer: 0, commitTimer: 0, changedAt: 0, vis: 0, builds: 0, resets: 0, commits: 0 };
-  let WIRE_CAPS = true;   // the wire's capitals (round 12, part D; round 15): every wire item and the lead in tracked capitals, firm names included; the cat facts as they are
-  const wireScrolls = () => !reduceMotion();
+  function endTip(back) { if (stripState.tipEnd) { clearTimeout(stripState.tipEnd); stripState.tipEnd = 0; } stripState.tip = null; if (back && stripState.fact) { setStripText(stripState.fact, null); scheduleTip(); } }
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const fnv = str => { let h = 2166136261; for (const b of new TextEncoder().encode(str)) { h ^= b; h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; };
-  const dateOf = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${+m[3]} ${MONTHS[+m[2] - 1]} ${m[1]}` : ''; };
-  // Anniversaries (round 12, part D, item 6): the viewer's local date at load (window.__today, an ISO day, is the audit's hook); the sentence is built from the shipped dates
-  // only: the anchor firm's listing date, the 2020 filing-exemption list's decree (Government Decree No. 35 of 22 January 2020, the one date typed in), and every other day on which
-  // firms of the national list file were listed by a dated, non-inferred designation; null on every other day. tools/wire_check.py re-derives it for the audit.
-  const TODAY = (() => { const o = window.__today; if (typeof o === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o)) return o; const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
-  function anniversaryLine(iso) {   // { text, html } or null
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); if (!m) return null; const md = m[2] + '-' + m[3], day = `${+m[3]} ${MONTHS[+m[2] - 1]}`;
-    const mk = (text, html) => ({ text, html: html || esc(text) });
-    if (AN && AN.a.listed && AN.a.listed.date && AN.a.listed.date.slice(5) === md) return mk(`${day}: ${AN.a.label} was added to a list on this day in ${AN.a.listed.date.slice(0, 4)}.`, `${esc(day)}: <span class="nm">${esc(AN.a.label)}</span> was added to a list on this day in <span class="num">${esc(AN.a.listed.date.slice(0, 4))}</span>.`);
-    if (md === '01-22') return mk(`${day}: the 2020 filing-exemption list rests on Government Decree No. 35, signed on this day in 2020.`);
-    if (!TRN || !TRN.red_date) return null;
-    const hits = []; for (let i = 0; i < TRN.n; i++) { const d = TRN.red_date[i]; if (d && d.slice(5) === md && !TRN.inferred[i] && !TRN.undated[i]) hits.push(i); }
-    if (!hits.length) return null;
-    const years = [...new Set(hits.map(i => TRN.red_date[i].slice(0, 4)))].sort(), yrs = years.length === 1 ? years[0] : years.slice(0, -1).join(', ') + ' and ' + years[years.length - 1];
-    if (hits.length === 1 && TRN.name[hits[0]]) return mk(`${day}: ${TRN.name[hits[0]]} was added to a list on this day in ${yrs}.`, `${esc(day)}: <span class="nm">${esc(TRN.name[hits[0]])}</span> was added to a list on this day in <span class="num">${esc(yrs)}</span>.`);
-    return mk(`${day}: ${fmt.int(hits.length)} firms were added to a list (treated) on this day in ${yrs}.`, `${esc(day)}: <span class="num">${fmt.int(hits.length)}</span> firms were added to a list (treated) on this day in <span class="num">${esc(yrs)}</span>.`);
-  }
-  let annivCache;   // the day's sentence, built at the first cycle (after every helper below is defined), never at script load
-  const anniv = () => { if (annivCache === undefined) annivCache = anniversaryLine(TODAY); return annivCache; };
-  const regRowsOf = y => { const out = []; for (let i = 0; i < REG.region.length; i++) if (REG.year[i] === y && REG.region[i] !== 'Russia' && REG.region[i] !== 'outside the basemap outline' && REG.region[i] !== 'region not recorded') out.push(i); return out; };
-  // Round 25 (the author's request of 29 October 2026): about a quarter of a cycle's content on the lists, half on how the body of firms responds and a quarter other.
-  // The facts run in that mix (the second half plays them reversed); the transitions, the ownership groups and the 2019 histories are series.json's.
-  function wireFacts(y, band, name) {
-    const ys = y + (y === 2025 ? '*' : ''), out = [], loc = s => `<span class="loc">${esc(s)}</span>`, num = f => `<span class="num">${f}</span>`, add = (src, html) => out.push({ kind: 'data', text: html, src });
-    const nat = band === 'national', reg = !nat && regIndex.has(name) ? name : null, t = totals[y], t21 = totals[2021], b = FM ? FM.by_year[y] : null;
-    const TS = S.transitions, trRow = prior => TS.year.findIndex((v, i) => v === y && TS.prior[i] === prior), ia = trRow('available'), ib = trRow('absent'), pctOf = (a, n) => num(fmt.pct(100 * a / n));
-    const G = S.groups, own = (g, yy) => G.year.findIndex((v, i) => v === yy && G.dimension[i] === 'ownership' && G.group[i] === g);
-    if (TRN) { let n = 0, nr = 0; const ri = reg ? TRN.regions.indexOf(reg) : -1; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i]) { n++; if (ri >= 0 && TRN.reg[i] === ri) nr++; }
-      add('treatednational.red_from', `${ys}: ${num(fmt.int(n))} firms added to a list (treated) nationally` + (reg ? `, ${num(fmt.int(nr))} in ${loc(reg)}` : '')); }
-    if (t) add('cellsyears.totals', `${ys}: ${num(fmt.int(CY.totals.n_available[CY.totals.year.indexOf(y)]))} of ${num(fmt.int(t.eligible))} eligible firms with a statement (${num(fmt.pct(t.share))})` + (y !== 2021 && t21 ? `, against ${num(fmt.pct(t21.share))} in 2021` : ''));
-    if (ia >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.N[ia]))} of the ${num(fmt.int(TS.origin[ia]))} firms with a statement in ${y - 1} had none (${pctOf(TS.N[ia], TS.origin[ia])})`);
-    if (t) add('cellsyears.totals', `${ys}: ${num(fmt.int(t.located))} of ${num(fmt.int(t.eligible))} eligible firms located (${num(fmt.pct(t.located_share))})`);
-    { const s = own('state', y), p = own('private', y), s21 = own('state', 2021), p21 = own('private', 2021);
-      if (s >= 0 && p >= 0) add('series.groups', y === 2021 || s21 < 0 || p21 < 0 ? `${ys}: ${num(fmt.pct(G.share[s]))} of the ${num(fmt.int(G.n[s]))} state-related firms had a statement, against ${num(fmt.pct(G.share[p]))} of the ${num(fmt.int(G.n[p]))} private firms`
-        : `${ys}: ${num(fmt.pct(G.share[s]))} of the ${num(fmt.int(G.n[s]))} state-related firms had a statement, against ${num(fmt.pct(G.share[s21]))} in 2021. Private firms: ${num(fmt.pct(G.share[p]))} of ${num(fmt.int(G.n[p]))}, against ${num(fmt.pct(G.share[p21]))}`); }
-    if (TRN) { let red = 0; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] <= y) red++; add('treatednational.red_from', `By ${ys}: ${num(fmt.int(red))} of the ${num(fmt.int(TRN.n))} firms on the lists (treated) are shown red. The ${num(fmt.int(TRN.undated_n))} on undated lists are red from 2014, and ${num(fmt.int(TRN.inferred_n))} dates of addition to a list are inferred`); }
-    if (ib >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.A[ib]))} of the ${num(fmt.int(TS.origin[ib]))} firms without a statement in ${y - 1} had one (${pctOf(TS.A[ib], TS.origin[ib])})`);
-    if (REG) { const iN = regRow('Russia', y); if (iN != null && REG.d1[iN] !== 255) { const d = REG.d1[iN], rows = regRowsOf(y), k = rows.filter(i => REG.d1[i] === d).length;
-        add('regions.d1', `${ys}: ${esc(divShort(d))} (${divPad(d)}) leads nationally and in ${num(fmt.int(k))} of ${num(fmt.int(rows.length))} regions`);
-        if (reg) { const ir = regRow(reg, y); if (ir != null && REG.d1[ir] !== 255 && REG.d1[ir] !== d) add('regions.d1', `${loc(reg)}, ${ys}: ${esc(divShort(REG.d1[ir]))} (${divPad(REG.d1[ir])}) leads with ${num(REG.s1[ir] + '%')} of revenue`); } }
-      if (reg) { const ir = regRow(reg, y); if (ir != null) add('regions.listed', `${loc(reg)}, ${ys}: ${num(fmt.int(REG.listed[ir]))} of ${num(fmt.int(REG.n[ir]))} firms registered in the region are on the five lists (treated) and hold ${num(REG.lsh[ir] + '%')} of its revenue`); } }
-    if (ia >= 0 && ib >= 0) add('series.transitions', `${ys}: ${num(fmt.int(TS.X[ib]))} of the firms without a statement in ${y - 1} were removed from the registry (${pctOf(TS.X[ib], TS.origin[ib])}), against ${num(fmt.int(TS.X[ia]))} of those with one (${pctOf(TS.X[ia], TS.origin[ia])})`);
-    if (b) add('firms.by_year', `${ys}: ${num(fmt.int(b.firms))} firms on no list (comparison group) at ${num(fmt.int(b.addresses))} coordinate pairs`);
-    if (b) { const k = FM.median_by_year.year.indexOf(y); if (k >= 0) add('firms.median_by_year', `${ys}: the median real-revenue change of firms on no list (comparison group) is ${num(fmt.signed(FM.median_by_year.med[k]) + '%')} against their own 2019 to 2021 average`); }
-    if (b) add('firms.by_year', `${ys}: ${num(fmt.int(b.listed))} located firms on the lists (treated). ${num(fmt.int(b.city_level))} firms have other geocodes`);
-    if (b) add('firms.by_year', `${ys}: the largest coordinate pair holds ${num(fmt.int(b.max_at_address))} firms on no list. ${num(fmt.int(b.firms_at_100plus))} firms sit at the ${num(fmt.int(b.addresses_100plus))} pairs shared by 100 or more`);
-    if (y === 2021) add('series.facts', `2021: ${num(fmt.int(F.largest_location_firms))} firms share the largest coordinate pair. Across all located firms, ${num(fmt.int(F.firms_at_100plus_locations))} sit at pairs shared by 100 or more`);
-    { const ct = C100.change_totals, sup = C100.change.supported.reduce((a, v) => a + (v ? 1 : 0), 0); add('cells100.change', `2024 against 2021: ${num(fmt.int(sup))} 100 km cells have 50 or more located firms in both years. ${num(fmt.pct(ct.availability_share_percent[0]))} of located firms had a statement in 2021 and ${num(fmt.pct(ct.availability_share_percent[1]))} in 2024`); }
-    add('series.facts.histories', `2019 to 2024: ${num(fmt.int(F.hist_all_available))} of the ${num(fmt.int(F.fixed_2019_cohort))} firms followed from 2019 had a statement in every year (${pctOf(F.hist_all_available, F.fixed_2019_cohort)})`);
-    return out;
-  }
-  function wireFirms(y, band, name) {   // each firm carries its follow-up, the share line of the region it is registered in (round 25), or null where that region is the one shown (the lead gives its line) or has no row
-    if (!TRN) return []; const here = band !== 'national' && regIndex.has(name) ? name : null, ri = here ? TRN.regions.indexOf(name) : -1, ys = y + (y === 2025 ? '*' : '');
-    const pick = useReg => { const idx = []; for (let i = 0; i < TRN.n; i++) if (TRN.red_from[i] === y && !TRN.undated[i] && TRN.name[i] && (!useReg || TRN.reg[i] === ri)) idx.push(i); idx.sort((a, b) => (TRN.name[a] < TRN.name[b] ? -1 : TRN.name[a] > TRN.name[b] ? 1 : a - b)); return idx; };
-    let idx = ri >= 0 ? pick(true) : []; if (idx.length < 2) idx = pick(false); if (!idx.length) return [];
-    const picks = []; for (let i = 0; i < 4; i++) { const j = idx[Math.floor(i * idx.length / 4)]; if (!picks.includes(j)) picks.push(j); }
-    const follow = r => { if (!REG || r === here || r === 'outside the basemap outline' || r === 'region not recorded') return null; const i = regRow(r, y), i21 = regRow(r, 2021); if (i == null || !REG.n[i]) return null;
-      const sh = shareOf(REG.a[i], REG.n[i]), s21 = i21 != null ? shareOf(REG.a[i21], REG.n[i21]) : null;
-      return { kind: 'data', text: `<span class="loc">${esc(r)}</span>, ${ys}: <span class="num">${fmt.int(REG.n[i])}</span> firms registered in the region, <span class="num">${fmt.pct(sh)}</span> with a statement` + (y !== 2021 && s21 != null ? `, <span class="num">${pts(0, sh - s21)}</span> against 2021` : ''), src: 'regions.follow' }; };
-    return picks.map(j => { const ch = TRN.filed[j][y - 2014], st = ch === '1' ? 'available' : ch === '0' ? 'absent' : 'not in the registry', d = dateOf(TRN.red_date[j]);
-      return { kind: 'firm', text: `<span class="nm">${esc(TRN.name[j])}</span> · ${d ? 'on a list from ' + d : 'on a list from ' + y}${TRN.inferred[j] ? ' (date inferred)' : ''} · ${ys} statement ${st}`, src: 'treatednational:' + j, follow: follow(TRN.regions[TRN.reg[j]]) }; });
-  }
-  const wireTipsList = () => { const out = []; TIPS.forEach(t => { if (t.firms && !FIRMS_OK) return; if (t.mouse && coarse()) return; out.push(coarse() && t.touch ? t.touch : t.text); }); return out; };
-  function buildCycle(y, band, name, cycleIndex) {
-    const lf = factFor(band, name, true), an = anniv(), lead = { kind: 'lead', text: lf.text + (an ? '. ' + an.html : ''), src: 'lead:' + lf.kind + (an ? '+anniversary' : '') } /* on an anniversary the lead item carries the sentence (item 6) */, facts = wireFacts(y, band, name), firms = wireFirms(y, band, name), tipsL = wireTipsList();
-    const firmsA = firms.filter((_, i) => i % 2 === 0), firmsB = firms.filter((_, i) => i % 2 === 1), firmSlots = new Set([6, 14]);
-    const half = (fo, fh, tipStart) => { const data = [lead]; let fi = 0, di = 0;   // a firm at its slot, or wherever the facts have run out, with its follow-up right after it
-      while (data.length < 20) { if ((firmSlots.has(data.length) || di >= fo.length) && fi < fh.length) { const f = fh[fi++]; data.push(f); if (f.follow && data.length < 20) data.push(f.follow); continue; } data.push(fo.length ? fo[(di++) % fo.length] : lead); }
-      const items = []; let ti = tipStart, dj = 0; for (let p = 0; p < WIRE_HALF; p++) { if (p % 5 === 4) { const t = tipsL[ti % tipsL.length]; items.push({ kind: 'tip', text: units(esc(t)), src: 'tips:' + (ti % tipsL.length) }); ti++; } else items.push(data[dj++]); } return items; };
-    const cycle = half(facts, firmsA, 0).concat(half(facts.slice().reverse(), firmsB, 5));
-    if (OFFWIRE && OFFWIRE.facts && OFFWIRE.facts.length) { const h = fnv(`${y}|${name}`), pool = OFFWIRE.facts, isFirm = i => i >= 0 && i < cycle.length && cycle[i].kind === 'firm'; let slot = 12 + (h % 26), guard = 0;
-      while (guard++ < 60 && (cycle[slot].kind === 'tip' || isFirm(slot) || isFirm(slot - 1) || isFirm(slot + 1))) { slot++; if (slot >= cycle.length) slot = 12; }
-      const f = pool[(h + 7 * cycleIndex) % pool.length]; cycle[slot] = { kind: 'cat', text: `<span class="cf">${esc(f.text)}</span>`, src: 'offwire:' + f.id }; }
-    return cycle;
-  }
-  const SEP = '<svg class="mk wsep" aria-hidden="true" focusable="false"><use href="#mark-wire"/></svg>';   // the separator: the mark at 14 px with 2 px strokes in the full context green (round 11)
-  const catSep = sep => { if (sep && sep.classList && sep.classList.contains('wsep')) { sep.classList.add('catsep'); sep.innerHTML = '<use href="#mark-cat"/>'; } };   // the mark before a cat fact becomes a cat's head (round 15, the author's item 7C)
-  const wireTrack = () => $('wiretrack'), wireVisW = () => $('ctxwin').clientWidth;
-  const wirePos = el => { const tr = wireTrack().getBoundingClientRect(), r = el.getBoundingClientRect(); return [r.left - tr.left, r.right - tr.left]; };   // an item's edges along the track, whatever its transform (the separators are SVG, without offsetLeft)
-  // Round 16 (the author's item of 27 October 2026: the wire stuttered while the cursor crossed regions; the record showed every region change
-  // cancelling and restarting the scroll, at once for the first slot's width and again 250 ms later for the queued set). A region change no longer
-  // touches the running scroll: one linear animation runs far past the content (WIRE_FAR), so an append only re-arms the top-up timer; items that
-  // leave at the left go into a spacer of the same width at the track's start (ws.pad, its padding), so no item moves; the first slot's width change
-  // is taken up by the track's own margin (ws.h), not by the scroll. The offset x is the track coordinate at the window's left edge, the animation's
-  // own offset plus ws.h. Only a year change, a reset, a pinned tip and the watchdog start a new animation.
-  const WIRE_FAR = 1e6;
-  function wireX() { const ws = wireState; if (ws.anim && !ws.pinned && ws.anim.currentTime != null) return ws.animX0 + WIRE_SPEED * (ws.anim.currentTime / 1000) + ws.h; return ws.x; }   // the scroll offset now, px
-  function wireStop() { const ws = wireState; if (ws.anim) { ws.x = wireX(); ws.anim.cancel(); ws.anim = null; } if (ws.topTimer) { clearTimeout(ws.topTimer); ws.topTimer = 0; } return ws.x; }
-  function wireAnimate(fromX) {   // one linear animation from fromX far past the track's end at the wire's speed; a top-up is scheduled before the content's end enters the view
-    const ws = wireState, tr = wireTrack(); wireStop(); ws.x = fromX; const s = fromX - ws.h;
-    tr.style.transform = `translateX(${-s}px)`;
-    if (!tr.animate) return;
-    ws.animX0 = s; ws.anim = tr.animate([{ transform: `translateX(${-s}px)` }, { transform: `translateX(${-(s + WIRE_FAR)}px)` }], { duration: WIRE_FAR / WIRE_SPEED * 1000, easing: 'linear', fill: 'forwards' });
-    if (ws.paused) ws.anim.pause();
-    wireArm(fromX);
-  }
-  function wireArm(x = wireX()) {   // the top-up timer from the content's end, re-armed after every append without touching the scroll
-    const ws = wireState, tr = wireTrack(); if (ws.topTimer) { clearTimeout(ws.topTimer); ws.topTimer = 0; }
-    const last = tr.lastElementChild, end = last ? wirePos(last)[1] : 0, vis = wireVisW(); if (!(vis > 0)) return;   // a hidden frame has no widths: a timer from them fires at once and advances the cycle, and the rebuild once the frame shows would draw the next cat fact; the watchdog tops up once it is shown (a shown, emptied track still gets its timer at once)
-    ws.topTimer = setTimeout(wireTopUp, Math.max(0, end - vis - 300 - x) / WIRE_SPEED * 1000);
-  }
-  function wireRun(x) { const ws = wireState; if (ws.anim && !ws.pinned) wireArm(x); else wireAnimate(x); }   // the running scroll is kept; one starts only where none runs
-  const wireItems = cycle => { const tr = wireTrack(), els = []; for (const it of cycle) { if (it.kind === 'cat') catSep(tr.lastElementChild); const sp = document.createElement('span'); sp.className = 'wi ' + it.kind; sp.innerHTML = it.text; tr.appendChild(sp); els.push(sp); const hold = document.createElement('span'); hold.innerHTML = SEP; const svg = hold.firstChild; tr.appendChild(svg); els.push(svg); } return els; };
-  function wireMake(cycle, key, ctx, status) {   // a set's items and separators appended after everything on the track
-    const ws = wireState, set = { key, ctx, cycle, cycleIndex: ws.cycleIndex, els: wireItems(cycle), status };
-    ws.sets.push(set); ws.cycle = cycle; ws.key = key; ws.width = setEnd(set) - setStart(set); ws.vis = wireVisW(); ws.builds++; return set;
-  }
-  const setStart = set => (set.els.length ? wirePos(set.els[0])[0] : 0), setEnd = set => (set.els.length ? wirePos(set.els[set.els.length - 1])[1] : 0), setEntered = (set, x) => set.els.length > 0 && setStart(set) < x + wireVisW();
-  function wireDrop(set) { for (const el of set.els) el.remove(); set.els = []; }
-  function wireCutAfterTip(set, x) {   // the priority rule: the playing set keeps its items up to and including the first tip or cat fact past the visible ones; the rest go
-    const vis = x + wireVisW(); let cut = set.els.length;
-    for (let i = 0; i < set.els.length; i += 2) { const sp = set.els[i]; if (wirePos(sp)[0] < vis) continue; if (sp.classList.contains('tip') || sp.classList.contains('cat')) { cut = i + 2; break; } }
-    for (const el of set.els.splice(cut)) el.remove();
-  }
-  function wirePrune(x) {   // the items that have passed the left edge leave the track, orphans and the committed set's alike; the spacer at the track's start takes their width (round 16), so nothing moves and the offset stays
-    const ws = wireState, tr = wireTrack(); let removed = 0;
-    while (tr.firstElementChild) { const el = tr.firstElementChild, [l, r] = wirePos(el); if (r + removed >= x - 20) break;   // an element's place in the track's original frame: what has left so far shifted it left by that much (25 October 2026: compared unshifted, the loop emptied the whole track once the first item had passed, and the new set leapt into view on every region change)
-      const next = el.nextElementSibling, nl = next ? wirePos(next)[0] : null; el.remove(); removed += next ? nl - wirePos(next)[0] : r - l;   // the exact shift of what follows, margins included
-      if (ws.orphans[0] === el) ws.orphans.shift(); else for (const set of ws.sets) if (set.els[0] === el) { set.els.shift(); break; } }
-    while (ws.sets.length > 1 && !ws.sets[0].els.length) { ws.sets.shift(); ws.sets[0].status = 'committed'; ws.commits++; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } }   // the committed set has played out: the pending one plays now
-    if (removed) { ws.pad += removed; tr.style.paddingLeft = ws.pad + 'px'; }   // the spacer in place of what left (round 16): until 27 October the offset moved by the width removed and the scroll restarted from it
-    return removed;
-  }
-  function wireAutoCommit(x) {   // a pending set whose items have entered the view is playing: it is the committed set now, the old one's remaining items orphans
-    const ws = wireState; if (ws.sets.length > 1 && setEntered(ws.sets[1], x)) wireCommit('play');
-  }
-  function wireCommit(why) {   // the pending set becomes the committed set: a committed set that has not entered the view is dropped unseen, one that has plays out to its cut as orphans
-    const ws = wireState; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }
-    if (ws.sets.length < 2) return false;
-    let x = wireX(); wirePrune(x);
-    if (ws.sets.length > 1) { const cur = ws.sets.shift(); if (setEntered(cur, x)) ws.orphans.push(...cur.els); else wireDrop(cur); }
-    ws.sets[0].status = 'committed'; ws.commits++; ws.cycle = ws.sets[0].cycle; ws.key = ws.sets[0].key; wireRun(x); return true;
-  }
-  function wireTopUp() {   // the track is about to run out: the committed set continues with its context's next cycle (the cat fact advancing by seven)
-    const ws = wireState; ws.topTimer = 0; if (!wireScrolls() || ws.pinned || !ws.sets.length) return;
-    let x = wireX(); wirePrune(x); wireAutoCommit(x); x = wireX(); const last = ws.sets[ws.sets.length - 1];
-    if (last.status === 'committed') { ws.cycleIndex++; last.els.push(...wireItems(buildCycle(last.ctx.y, last.ctx.band, last.ctx.name, ws.cycleIndex))); ws.width = setEnd(last) - setStart(last); }
-    wireRun(x);
-  }
-  function wireReset(ctx, key, crossfade) {   // a fresh track from x 0 with one committed set; under crossfade (a year change) a frozen copy of the old track fades out as the new one fades in, 0.3 s
-    const ws = wireState, tr = wireTrack(), box = $('ctxwin');
-    if (crossfade && tr.childElementCount && !reduceMotion()) {
-      const x = wireX(), ghost = tr.cloneNode(true); ghost.removeAttribute('id'); ghost.classList.add('old'); ghost.classList.remove('in', 'pinned'); ghost.style.transform = `translateX(${-(x - ws.h)}px)`; box.appendChild(ghost);   // the copy keeps the track's spacer and margin
-      requestAnimationFrame(() => { ghost.classList.add('fade'); setTimeout(() => ghost.remove(), 400); });
-      tr.classList.add('in'); requestAnimationFrame(() => requestAnimationFrame(() => tr.classList.remove('in')));
-    }
-    wireStop(); if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } ws.sets = []; ws.orphans = []; tr.innerHTML = ''; ws.x = 0; ws.pinned = false; tr.classList.remove('pinned'); ws.resets++;
-    ws.pad = 0; ws.h = 0; tr.style.paddingLeft = ''; tr.style.marginLeft = '';   // a fresh track has nothing to hold in place
-    wireMake(buildCycle(ctx.y, ctx.band, ctx.name, ws.cycleIndex), key, ctx, 'committed'); wireAnimate(0);
-  }
-  function wireContextNow(band, name, how, settled) {   // how: 'append' (a region, layer or view change), 'year' (a rebuild under the crossfade), 'reset' (the first build, or a layout guard)
-    const ws = wireState, ctx = { y: state.year, band, name }, key = [state.year, band, name, state.layer, state.mode, wireScrolls() ? 's' : 'r', narrow() ? 'n' : 'w'].join('|');
-    if (stripState.tip && !wireScrolls()) endTip(false);
-    applyRm2();
-    if (!wireScrolls()) { ws.key = key; ws.cycle = buildCycle(state.year, band, name, ws.cycleIndex); $('ctxtext').classList.add('rm'); wireTrack().innerHTML = ''; ws.sets = []; ws.orphans = []; startRM(); return; }
-    $('ctxtext').classList.remove('rm');
-    const cur = ws.sets[0];
-    if (how !== 'append' || !cur || narrow()) { wireReset(ctx, key, how === 'year' || narrow()); return; }   // a phone-width map has no lead slot: every change rebuilds under the crossfade, as a year change does, so the lead shows at once
-    let x = wireX(); wirePrune(x); wireAutoCommit(x); x = wireX();   // round 16: no stop, so no restart
-    const head = ws.sets[0], pend = ws.sets[1];
-    if (!setEntered(head, x) && head.key !== key) {   // a committed set that has not entered the view is replaced unseen, as a pending one is (round 13): nothing visible is touched and the new lead is not kept waiting behind it
-      if (pend) wireDrop(pend); wireDrop(head); ws.sets = []; if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }
-      ws.cycleIndex++; wireMake(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx, 'committed'); ws.commits++; wireRun(x); return;
-    }
-    if (head.key === key) { if (pend) { wireDrop(pend); ws.sets.length = 1; } if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; } ws.cycle = head.cycle; ws.key = key; wireRun(x); return; }   // back on the committed context: the pending set goes
-    if (pend && pend.key === key) { if (settled) wireCommit('settle'); else { wireRun(x); wireArmCommit(key); } return; }   // already pending; a settled camera commits it now, a hover back onto its region restarts the rest
-    if (pend) { wireDrop(pend); ws.sets.length = 1; }
-    if (setEntered(head, x)) wireCutAfterTip(head, x);   // the priority rule on the playing set; a set not yet in view keeps every item and the new one queues behind it
-    ws.cycleIndex++; wireMake(buildCycle(state.year, band, name, ws.cycleIndex), key, ctx, 'pending'); wireRun(x);
-    if (settled) { wireCommit('settle'); return; }
-    wireArmCommit(key);
-  }
-  function wireArmCommit(key) {   // the pending set commits once the cursor has rested 600 ms on its region, counted from the region change
-    const ws = wireState; if (ws.commitTimer) clearTimeout(ws.commitTimer);
-    ws.commitTimer = setTimeout(() => { ws.commitTimer = 0; if (ws.sets[1] && ws.sets[1].key === key) wireCommit('rest'); }, Math.max(0, 600 - (performance.now() - ws.changedAt)));
-  }
-  function sizeSlot(el) {   // the slot's width follows its text (the width transition carries the wire's window with it), capped at a third of the bar (the author's rule); on a resize the cap is applied again
-    const lead = $('ctxlead'); if (!el) el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); if (!wireScrolls() || narrow()) { lead.style.width = ''; return; }
-    const rg = document.createRange(); rg.selectNodeContents(el); const tw = Math.ceil(rg.getBoundingClientRect().width), cap = Math.floor($('ctxstrip').clientWidth / 3), w0 = lead.getBoundingClientRect().width, w1 = Math.max(0, Math.min(tw + 2, cap));
-    if (Math.abs(w1 - w0) < 0.5) return; lead.style.width = w1 + 'px';
-    const ws = wireState, d = lead.getBoundingClientRect().width - w0; if (!ws.sets.length || Math.abs(d) < 0.01) return;   // the width as drawn: the stylesheet's cap can hold it under w1 (round 16: a long name at the cap was over-compensated by 24 px)   // the window's left edge moved by the change: the track's margin takes it (round 16), so every item keeps its place on screen and the scroll runs on unbroken
-    ws.h += d; ws.x += d; wireTrack().style.marginLeft = (-ws.h) + 'px';
-  }
-  function applyRm2() { const on = narrow() && !wireScrolls(); $('ctxstrip').classList.toggle('rm2', on); wrap.classList.toggle('rm2', on); }   // the two-line reduced-motion form on a phone-width map (round 12, part D): the strip and the lift grow with it
-  let wireSettled = false;   // set by afterCameraMove around its context update: a settled camera commits the pending set at once
-  function rebuildWire(band, name, how = 'append') {   // a region change from a hover waits 250 ms, so the hover cost stays as it was (the lead slot changes at once); the rest at once
-    const ws = wireState, settled = wireSettled; if (ws.timer) { clearTimeout(ws.timer); ws.timer = 0; }
-    if (how !== 'append' || !ws.sets.length || settled) { if (how === 'append') ws.changedAt = performance.now(); wireContextNow(band, name, how, settled); return; }
-    if (ws.commitTimer) { clearTimeout(ws.commitTimer); ws.commitTimer = 0; }   // the cursor has moved to another region: the pending set's rest ends now, not after the debounce
-    ws.changedAt = performance.now(); ws.timer = setTimeout(() => { ws.timer = 0; wireContextNow(band, name, 'append', false); }, 250);
-  }
-  function applyWireCaps() { $('ctxtext').classList.toggle('caps', WIRE_CAPS); }
-  // The wire's scanlines (round 15, the author's final choice of 26 October 2026): a 2 px bar and a 1 px gap with a 1 px offset, each rounded to whole device pixels so
-  // the lines stay even at fractional device ratios (browser zoom, display scaling); recomputed when the ratio changes (zoom, or the window moved to another screen).
-  function wireStripes(phase = 1) {   // phase in CSS px
+  // The REFERENCES icon's scanlines (round 15's wire lines, on the icon since round 16; the wire went in round 30): a 2 px bar and a 1 px gap with a 1 px
+  // offset, each rounded to whole device pixels so the lines stay even at fractional device ratios (browser zoom, display scaling); recomputed when the ratio changes.
+  function refsStripes(phase = 1) {   // phase in CSS px
     const d = window.devicePixelRatio || 1, bar = Math.round(2 * d), gap = Math.max(1, Math.round(d)), s = document.documentElement.style;
     s.setProperty('--wbar', bar / d + 'px'); s.setProperty('--wpitch', (bar + gap) / d + 'px'); s.setProperty('--wphase', Math.round(phase * d) / d + 'px');
-    matchMedia(`(resolution: ${d}dppx)`).addEventListener('change', () => wireStripes(phase), { once: true });
+    matchMedia(`(resolution: ${d}dppx)`).addEventListener('change', () => refsStripes(phase), { once: true });
   }
-  wireStripes(1);
-  // The wire watchdog (the author's request of 25 October 2026): once a second while the document is visible, and at once on visibilitychange and on window focus, the
-  // track's rendered offset is compared with the last check's; a track that should be moving (the scrolling form, an animation started, neither paused under the pointer nor
-  // pinned) but has not advanced restarts its animation from its rendered offset, or tops up when it sits at the track's end. The offset at hiding is kept, so a return finds
-  // a stalled track at once. Nothing is logged.
-  const wireRenderedX = () => { const t = getComputedStyle(wireTrack()).transform; if (!t || t === 'none') return 0; const m = t.match(/matrix\(([^)]+)\)/); return m ? -parseFloat(m[1].split(',')[4]) : 0; };
-  function wireWatch() {
-    const ws = wireState, x = wireRenderedX(), now = performance.now();
-    if (document.visibilityState !== 'visible') { ws.watchX = x; ws.watchT = now; return; }
-    const should = wireScrolls() && !!ws.anim && !ws.paused && !ws.pinned;
-    if (ws.watchT != null && now - ws.watchT < 500) return;   // a focus event right after a tick is no evidence of a stall
-    if (should && ws.watchX != null && Math.abs(x - ws.watchX) < 0.5) { const tr = wireTrack(), last = tr.lastElementChild, end = last ? wirePos(last)[1] : 0, xe = x + ws.h; ws.restarts++; ws.watchX = null; ws.watchT = now; if (end - xe <= 1) wireTopUp(); else wireAnimate(xe); return; }
-    if (should) { const vis = wireVisW(), last = wireTrack().lastElementChild, end = last ? wirePos(last)[1] : 0; if (vis > 0 && end - (x + ws.h) < vis) wireTopUp(); }   // the scroll runs past the content (round 16): a missed top-up shows here as content ending inside the window, an emptied track included; a hidden frame has no widths and is left alone
-    ws.watchX = x; ws.watchT = now;
-  }
-  setInterval(wireWatch, 1000); document.addEventListener('visibilitychange', wireWatch); window.addEventListener('focus', wireWatch);
-  { const bar = $('ctxstrip'), setPause = on => { const ws = wireState; ws.paused = on; if (ws.anim) { if (on) ws.anim.pause(); else ws.anim.play(); } };   // paused under the pointer or focus, as the CSS animation was
-    bar.addEventListener('mouseenter', () => setPause(true)); bar.addEventListener('mouseleave', () => setPause(false)); bar.addEventListener('focusin', () => setPause(true)); bar.addEventListener('focusout', () => setPause(false)); }
-  function startRM() {   // reduced motion: the cycle's items crossfade one at a time, 8 s each, from the lead
-    if (wireState.rmTimer) { clearInterval(wireState.rmTimer); wireState.rmTimer = 0; } if (wireScrolls() || !wireState.cycle.length) return; wireState.rmIndex = 0;
-    wireState.rmTimer = setInterval(() => { if (!stripOpen() || !stripState.fact) return; wireState.rmIndex = (wireState.rmIndex + 1) % wireState.cycle.length; const it = wireState.cycle[wireState.rmIndex]; stripState.tip = it.kind === 'tip' ? { i: -1, text: plainOf(it) } : null; setStripText({ kind: it.kind === 'lead' ? stripState.fact.kind : it.kind, name: '', text: it.kind === 'cat' ? '<svg class="catin" aria-hidden="true" focusable="false"><use href="#mark-cat"/></svg>' + it.text : it.text, nums: [] }, null); }, WIRE_RM_MS);
-  }
-  const plainOf = it => { const d = document.createElement('span'); d.innerHTML = it.text; return d.textContent.replace(/ /g, ' '); };
-  function pinTip() { const ws = wireState, tr = wireTrack(); if (!ws.sets.length) return false; const x = wireX(), tips = [...tr.querySelectorAll('.wi.tip')], el = tips.find(e => wirePos(e)[0] >= x - 1) || tips[0]; if (!el) return false; wireStop(); ws.x = wirePos(el)[0]; ws.pinned = true; tr.classList.add('pinned'); tr.style.transform = `translateX(${-(ws.x - ws.h)}px)`; const i = [...tr.children].filter(e => e.classList.contains('wi')).indexOf(el); stripState.tip = { i, text: plainOf({ text: el.innerHTML }) }; return true; }
-  function unpinTip() { const ws = wireState, tr = wireTrack(); if (!tr) return; tr.classList.remove('pinned'); if (!ws.pinned) return; ws.pinned = false; if (wireScrolls() && ws.sets.length) wireAnimate(ws.x); }
+  refsStripes(1);
 
   // The region glyph: one pre-simplified outline per region from the basemap's parts (the largest ring and any ring with at least a
   // quarter of its area, Douglas-Peucker to about 60 points, fitted into 22 by 22), built once on first use; Russia's outline traced
@@ -1925,10 +1608,6 @@ void main() {
     const w = cam().k >= 1.5 && h.kmx != null ? windowAtKm({ x: h.kmx, y: h.kmy }) : null; if (w) { const p = profileWindow(w); if (p) return p; }
     const rn = h.region && regIndex.has(h.region) ? h.region : null; return rn ? profileRegion(rn) : null;
   }
-  function fillTileBio(p) {
-    const box = $('tipbio'); box.hidden = !p; if (!p) return;
-    $('tipbioh').textContent = p.head; $('tipbiot').textContent = p.tile;
-  }
   function fillPanelProfile(h) {
     const el = $('cellprofile'); if (!el) return; const p = profileFor(h); el.hidden = !p; if (!p) return;
     el.innerHTML = `<div class="ph">Profile · ${esc(p.head)}</div><p>${esc(p.full.join(' '))}</p>`;
@@ -2074,15 +1753,15 @@ void main() {
   // Drag and wheel redraws are coalesced into one frame; drawMap itself stays synchronous.
   let drawQueued = false, drawAfter = null, drawMotion = false;
   function requestDraw(after, motion) { if (after) drawAfter = after; drawMotion = !!motion; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(drawMotion ? { motion: true } : undefined); drawMotion = false; const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
-  function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city, the fit at Russia
+  function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
-  // Motion work and settle work (round 14): a wheel step draws the map, the zoom buttons, the ruler and the tile from the hovered unit's cache; the settle, 150 ms after
+  // Motion work and settle work (round 14): a wheel step draws the map, the zoom buttons and the tile from the hovered unit's cache; the settle, 150 ms after
   // the last step (or at once after a flight, a drag or a pinch), counts the firms in view, rebuilds the tile and the panels once, updates the strip and the wire, the
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
-  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } findPin = -1; /* a found firm leads the tooltip's names only until the camera moves on */ writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); wireSettled = true; try { hoverUnit.key = null; refreshHover(); updateContext(); } finally { wireSettled = false; } /* the hover's own context update counts as settled too (round 12, part D: a pointer left on the map made the rebuild wait for the debounce) */ if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } findPin = -1; /* a found firm leads the tooltip's names only until the camera moves on */ writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); hoverUnit.key = null; refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -2140,7 +1819,7 @@ void main() {
   const overControl = (ev, sel) => !!(ev.target && ev.target.closest && ev.target.closest(sel));
   const MAP_UI = '.zoombox, .toggle, button, input, .maplegend, .mixbox, .mapnote, .ctx, .popout';   // the map's overlays and controls (round 15, the author's item 1): a press on any of them is theirs, never a click on the map under them (a press on the legend's "i" had flown the map to the cell beneath)
   function localXY(ev) { const r = wrap.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region (and its fill) until the settled hover re-reads it, so the strip and the map do not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); requestDraw(); } stillOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
+  function hideHover(opts = {}) { /* keepRegion: a wheel tick keeps the hovered region until the settled hover re-reads it, so the strip does not flip twice a tick */ $('tip').style.display = 'none'; undockTile(); state.hover = null; if (hoverRegionName && !opts.keepRegion) { hoverRegionName = null; updateContext(); } stillOff(); drawOverlay(null); wrap.classList.remove('clickable', 'zoomable'); if (opts.keepRegion) return; hoverUnit.key = null; fillMixBox(null); }   // a wheel step (keepRegion) keeps the hovered unit's cache and leaves the mix box to the settle (round 14: the view's mix cost 13 ms a step in the Firms view)
   function syncCursor(h) {
     const r = h && !press ? ladderTarget(h, kmFromPx(h.px0, h.py0), false) : null;
     wrap.classList.toggle('clickable', !!r && r.rung !== 'zoom'); wrap.classList.toggle('zoomable', !!r && r.rung === 'zoom');
@@ -2185,7 +1864,7 @@ void main() {
   function tileObstacles() {
     if (obsCache) return obsCache;
     const m = wrap.getBoundingClientRect();
-    return obsCache = ['legend', 'mapnote', 'mixbox', 'zoombox', 'scalebar', 'ctxstrip', 'popout'].map(id => { const el = $(id); if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { id, x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top } : null; }).filter(Boolean);
+    return obsCache = ['legend', 'mapnote', 'mixbox', 'zoombox', 'ctxstrip', 'popout'].map(id => { const el = $(id); if (!el || el.hidden) return null; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? { id, x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top } : null; }).filter(Boolean);
   }
   const meets = (a, b, g = 2) => a.x < b.x1 + g && a.x1 > b.x - g && a.y < b.y1 + g && a.y1 > b.y - g;
   // Eight anchors around the cursor, each keeping d px of clearance on at least one axis so the tile never covers the hovered
@@ -2203,7 +1882,7 @@ void main() {
     const tip = $('tip'), d = Math.max(14, r + 9);
     tip.classList.add('docked'); tip.style.width = (stage.width - 24) + 'px';
     const b = { x: 12, y: 12, x1: stage.width - 12, y1: 12 + tip.offsetHeight, anchor: -3, docked: true };
-    if (y >= b.y1 + d && !obs.some(o => (o.id === 'zoombox' || o.id === 'scalebar' || o.id === 'ctxstrip') && meets(b, o))) {
+    if (y >= b.y1 + d && !obs.some(o => (o.id === 'zoombox' || o.id === 'ctxstrip') && meets(b, o))) {
       const soft = obs.filter(o => (o.id === 'mapnote' || o.id === 'mixbox' || o.id === 'legend') && meets(b, o)).map(o => (o.id === 'mapnote' ? 'note' : o.id === 'mixbox' ? 'mix' : o.id));
       if (soft.length) b.relaxed = soft;
       return b;
@@ -2251,10 +1930,10 @@ void main() {
   function showHoverAt(x, y, opts = {}) {
     const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
     if (h.region === undefined) h.region = regionAt(x, y);
-    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); requestDraw(); } }   // the map redraws with the region's fill on a region change only, coalesced with any queued draw   // the strip follows the cursor's region (round 10)
+    { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); } }   // the strip follows the cursor's region (round 10); the overlay outlines it
     const tip = $('tip'), key = unitKey(h), fresh0 = key !== hoverUnit.key, prof = profileFor(h), pkey = prof ? prof.id : '', fresh = fresh0 || pkey !== hoverUnit.prof;
     if (fresh0) $('tipbody').innerHTML = tipText(h);
-    if (pkey !== hoverUnit.prof) { fillTileBio(prof); hoverUnit.prof = pkey; }   // the profile box (round 15, item 9): a fixed height, so the tile changes size only when the box appears or goes
+    if (pkey !== hoverUnit.prof) hoverUnit.prof = pkey;   // the hovered unit's profile, for the UNDER THE CURSOR card (the tile's box went in round 30)
     fillFoot(km, !!opts.tick); tip.style.display = 'block'; if (tip.classList.contains('docked')) undockTile();   // the floating form is measured and placed first
     const foot = ['tlat', 'tlon', 'tscale', 'tunit', 'tfirms'].map(id => $(id).textContent.length).join(',') + ($('tfirmsw').hidden ? 'h' : '');
     if (fresh || foot !== hoverUnit.foot || !hoverUnit.tw) { hoverUnit.tw = tip.offsetWidth; hoverUnit.th = tip.offsetHeight; hoverUnit.foot = foot; }   // one forced layout per unit or footer width change
@@ -2366,26 +2045,12 @@ void main() {
   $('zoom-out').addEventListener('click', () => flyTo(stepCentre(0.5)));
   $('zoom-fit').addEventListener('click', () => flyTo(fitTarget()));
   function syncZoomButtons() { $('zoom-out').disabled = state.cam.k <= kFloor() * 1.001; $('zoom-in').disabled = state.cam.k >= K_MAX * 0.999; }
-  // The ruler (round 12, part D, the author's request of 25 October 2026): a line of fixed length with major ticks at a nice step (1, 2, 5 times a power of ten, in km) that
-  // follows the zoom, a minor tick at each half step, the numbers under the major ticks and the unit at the top right; the ruler's line starts 15 px in, so the end labels
-  // stay inside the box. The step is the smallest that puts the majors at least 28 px apart on a wide map (14 px on a phone-width map, where only every second major
-  // is numbered); every tick sits at i times the step times the zoom, so the ruler is exact at every zoom. Redrawn on every settled draw and wheel step, never on a flight frame.
-  const RULER_STEPS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000], RULER_PAD = 15;
-  let lastRuler = '', rulerState = null;
-  function drawScaleBar() {
+  // The zoom as a factor of the country view, beside the fit button's icon (the author's note of 25 October 2026): ×1.0 at the fit. The ruler that shared this
+  // function since round 12 was removed in round 30 (the author's request of 30 October 2026).
+  let lastZoomF = '';
+  function syncZoomFactor() {
     dropObstacles();
-    const box = $('scalebar'), svg = $('ruler'), k = state.cam.k, Wc = box.clientWidth - 16; if (!(Wc > 0)) return;
-    const L = Wc - 2 * RULER_PAD; let s = RULER_STEPS[RULER_STEPS.length - 1]; for (const v of RULER_STEPS) { if (v * k >= 14) { s = v; break; } }   // majors at least 14 px apart
-    const n = Math.max(1, Math.floor(L / (s * k))), unit = s < 1 ? 'm' : 'km', key = [Wc, k.toFixed(6), s].join('|'); if (key === lastRuler) return; lastRuler = key;
-    { const f = k / kFit(); $('zoomfactor').textContent = '×' + (f < 1 ? f.toFixed(2) : f < 10 ? f.toFixed(1) : fmt.int(Math.round(f))); }   // the zoom as a factor of the country view, beside the fit button's icon (the author's note of 25 October 2026): ×1.0 at the fit, ×0.75 at the floor
-    const labM = i => String(Math.round(s * i * (unit === 'm' ? 1000 : 1))), labW = Motion.measure(mctx, labM(n), 12, 500, 0), every = Math.max(1, Math.ceil((labW + 4) / (s * k)));   // numbers on every major, or every second, third, as the widest number allows
-    const unitShown = unit === 'm' && s * every >= 1 && Math.abs(s * every - Math.round(s * every)) < 1e-9 ? 'km' : unit, lab = i => String(Math.round(s * i * (unitShown === 'm' ? 1000 : 1)));   // whole kilometres read as km even on a half-kilometre step; a step and a half stays in metres
-    const X = i => +(RULER_PAD + i * s * k).toFixed(2), ticks = []; let d = `M${RULER_PAD} 14.5H${X(n)}`;
-    for (let i = 0; i <= n; i++) { d += ` M${X(i)} 14V23`; if (i % every === 0) ticks.push({ i, x: X(i), label: lab(i) }); }
-    for (let i = 0; i < n; i++) d += ` M${+(RULER_PAD + (i + 0.5) * s * k).toFixed(2)} 14V18`;
-    svg.setAttribute('width', Wc); svg.setAttribute('viewBox', `0 0 ${Wc} 34`);
-    svg.innerHTML = `<path d="${d}" class="rl"/>` + ticks.map(t => `<text x="${t.x}" y="33" text-anchor="middle">${t.label}</text>`).join('') + `<text x="${Wc}" y="9" text-anchor="end" class="unit">${unitShown}</text>`;
-    rulerState = { k, step: s, unit: unitShown, n, every, ticks, width: Wc, line: L, labW, pad: RULER_PAD };
+    const f = state.cam.k / kFit(), t = '×' + (f < 1 ? f.toFixed(2) : f < 10 ? f.toFixed(1) : fmt.int(Math.round(f))); if (t === lastZoomF) return; lastZoomF = t; $('zoomfactor').textContent = t;
   }
 
   // ---- side panels -------------------------------------------------------------------------------
@@ -2565,7 +2230,7 @@ void main() {
     const m = wrap.getBoundingClientRect(), W = Math.round(Math.min(640, Math.max(360, 0.6 * m.width)));
     const canvasH = Math.round(Math.min(360, Math.max(200, 0.5 * m.height))); el.style.width = W + 'px'; $('pochart').style.height = canvasH + 'px';
     el.hidden = false; const H = el.getBoundingClientRect().height;
-    const ctrl = ['zoombox', 'scalebar'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
+    const ctrl = ['zoombox'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
     const floor = (ctrl.length ? Math.min(...ctrl) : m.height - 12 - (stripOpen() ? 34 : 0)) - 12;
     el.style.top = Math.round(Math.max(12, floor - H)) + 'px'; dropObstacles();   // round 17: the tile keeps clear of an open pop-out, which the Under the cursor chart invites the reader to hover past
   }
@@ -2591,7 +2256,7 @@ void main() {
   const syncProv = () => { const Lx = LAYERS.find(x => x.id === state.layer), el = $('layerprov');   // round 16: a layer with a reading text shows it in standard terms
     if (state.mode !== 'firms' && Lx.read) el.innerHTML = Lx.read().map(([t, x]) => `<span class="rb"><span class="h">${esc(t)}</span> ${esc(x)}</span>`).join(''); else el.textContent = state.mode === 'firms' ? FIRMS_PROV : Lx.prov;
     for (const e of layersEl.querySelectorAll('.fmark')) e.style.display = state.mode === 'firms' ? '' : 'none'; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { if (blinkState.on) blinkStop(); if (runState.on) runEnd(); state.layer = L.id; endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button[data-id]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { if (runState.on) runEnd(); state.layer = L.id; endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button[data-id]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
   // The LAYER card's groups (round 15, the author's choice of 27 October 2026: C, revised): each name at the left of its buttons, as VIEW is
   { const GROUPS = GROUP_ORDER.map(g => [g, LAYERS.filter(L => L.group === g).map(L => L.id)]), by = id => layersEl.querySelector('.btn[data-id="' + id + '"]'), loose = [...layersEl.querySelectorAll('.btn')];
     for (const [name, ids] of GROUPS) { const bs = ids.map(by).filter(Boolean); if (!bs.length) continue; const lab = document.createElement('span'); lab.className = 'glabel'; lab.textContent = name; lab.style.gridRow = 'span ' + bs.length; layersEl.appendChild(lab); bs.forEach(b => layersEl.appendChild(b)); }
@@ -2606,39 +2271,18 @@ void main() {
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; if (blinkState.on) blinkStop(); if (runState.on) runEnd(); state.mode = m; endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; if (runState.on) runEnd(); state.mode = m; endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
-  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); if (blinkState.on) blinkStop(true); drawNational(); syncMix(); updateContext(true); if (!wireHold) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); } });
-  // ---- the author's three extras (round 15, item 7; each labelled optional in the review) ----------------------------------------
-  // 7A, the blink comparator: hold B, or press BLINK, and the map alternates once a second between 2021, the chapter's base year, and the year shown (2024 when 2021 is
-  // shown), so the places where statements stopped appearing flicker; the year value, the legend, the tile and the slot name the year on screen at every swap, while
-  // the slider, the wire and the charts hold until it stops. Under reduced motion the other year holds while B or the button is down, with no blinking. The button's
-  // tooltip is the quotation the author chose on 26 October 2026, without a citation; its accessible label says what the button does.
-  const blinkOther = y => (y === 2021 ? 2024 : 2021);
-  function showYear(y) {   // the map in year y without moving the slider
-    if (state.year === y) return; state.year = y; $('yearlabel').textContent = y + (y === 2025 ? '*' : '');
-    if (state.mode === 'firms') { endPulse(); fieldAnim.dissolve = { t0: null }; } else endCellPulse();
-    drawMap(); refreshHover(); updateContext(true);
-  }
-  function blinkStart(held) {
-    if (blinkState.on || $('yearrow').hidden) return; if (runState.on) runEnd();   // only where the year row shows: the other layers have a fixed year
-    blinkState.on = true; blinkState.held = !!held; blinkState.base = state.year; blinkState.alt = blinkOther(state.year); wireHold = true; syncYearLine2();
-    const go = () => { if (!blinkState.on) return; if (reduceMotion()) { showYear(blinkState.alt); return; }
-      const tick = () => { if (!blinkState.on) return; showYear(state.year === blinkState.base ? blinkState.alt : blinkState.base); blinkState.timer = setTimeout(tick, 1000); }; tick(); };
-    if (FIRMS_OK) Promise.race([ensureYear(blinkState.alt).catch(() => null), new Promise(r => setTimeout(r, 3000))]).then(go); else go();   // the other year's addresses loaded first, so the first swap never shows an empty field
-  }
-  function blinkStop(keepYear) {
-    if (!blinkState.on) return; blinkState.on = false; clearTimeout(blinkState.timer); blinkState.timer = 0;
-    if (!keepYear) showYear(blinkState.base); wireHold = false; syncYearLine2();
-  }
+  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); });
+  // ---- the author's extras (round 15, item 7; each labelled optional in the review): the year run; the blink comparator (7A) was removed in round 30 --
   // 7B, the year run: a play button by YEAR runs the years from 2014 (or from the year shown, after a pause) to 2025, one a second, through the slider, so every year
-  // change is the ordinary one (the Firms view's pulse for each forward year, the dissolve, the charts' year line); the wire holds and rebuilds once, at the end or the pause.
+  // change is the ordinary one (the Firms view's pulse for each forward year, the dissolve, the charts' year line).
   function setYear(y) { const yEl = $('year'); yEl.value = String(y); yEl.dispatchEvent(new Event('input')); }
   function runStart() {
-    if (runState.on) return; blinkStop();
-    runState.on = true; wireHold = true; syncYearLine2();
+    if (runState.on) return;
+    runState.on = true; syncYearLine2();
     if (+$('year').value >= 2025) setYear(2014);
     runState.timer = setTimeout(runStep, 1000);
   }
@@ -2649,46 +2293,21 @@ void main() {
   }
   function runEnd() {
     if (!runState.on) return; runState.on = false; if (runState.timer) clearTimeout(runState.timer); runState.timer = 0;
-    wireHold = false; syncYearLine2(); { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'year'); }
+    syncYearLine2();
   }
   function syncYearLine2() {
-    const run = $('yearrun'), bl = $('blink'); run.hidden = false; bl.hidden = false;
+    const run = $('yearrun'); run.hidden = false;
     run.setAttribute('aria-pressed', String(runState.on)); { const t = runState.on ? 'Pause the run of the years' : 'Run the years from 2014 to 2025, one a second'; run.setAttribute('aria-label', t); run.title = t.toUpperCase(); }
-    bl.setAttribute('aria-pressed', String(blinkState.on)); bl.querySelector('.by').textContent = String(blinkOther(blinkState.on ? blinkState.base : state.year));
-    bl.setAttribute('aria-label', `Blink the map between ${blinkOther(blinkState.on ? blinkState.base : state.year)} and the year shown (hold B)`); bl.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked';
     $('yline2').hidden = ![...$('yline2').children].some(el => !el.hidden);
   }
   $('yearrun').addEventListener('click', () => { if (runState.on) runEnd(); else runStart(); });
-  $('blink').addEventListener('click', () => { if (blinkState.on) blinkStop(); else blinkStart(false); });
-  document.addEventListener('keydown', e => {
-    const t = e.target; if (e.ctrlKey || e.metaKey || e.altKey || refsIsOpen() || (t && t.closest && t.closest('input, textarea, select, [contenteditable]'))) return;   // the REFERENCES panel holds the page's keys (round 16)
-    const k = (e.key || '').toLowerCase();
-    if (k === 'b' && !e.repeat && !blinkState.on) { blinkStart(true); return; }
-    // 7C, the cat key: c-a-t typed anywhere outside a field puts the next cat fact on the wire just past the items in view (folklore; the wire checker knows these items by their source tag)
-    if (k.length === 1 && !e.repeat) { catKey.buf = (catKey.buf + k).slice(-3); if (catKey.buf === 'cat') { catKey.buf = ''; wireCatNow(); } }
-  });
-  document.addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'b' && blinkState.on && blinkState.held) blinkStop(); });
-  window.addEventListener('blur', () => { if (blinkState.on && blinkState.held) blinkStop(); });
-  function wireCatNow() {
-    if (!OFFWIRE || !OFFWIRE.facts || !OFFWIRE.facts.length || !wireScrolls() || !stripOpen() || !wireState.sets.length) return false;
-    const ws = wireState, tr = wireTrack(), x = wireX(), right = x + wireVisW(); let target = null, owner = null, idx = -1;
-    for (const set of ws.sets) { for (let i = 0; i < set.els.length; i += 2) { if (wirePos(set.els[i])[0] > right) { target = set.els[i]; owner = set; idx = i; break; } } if (target) break; }
-    const f = OFFWIRE.facts[catKey.next++ % OFFWIRE.facts.length];
-    const sp = document.createElement('span'); sp.className = 'wi cat keyed'; sp.dataset.src = 'offwire-key:' + f.id; sp.innerHTML = `<span class="cf">${esc(f.text)}</span>`;
-    const hold = document.createElement('span'); hold.innerHTML = SEP; const sep = hold.firstChild;
-    const cur = wireX();   // the fact goes in past the visible items, so the scroll runs on (round 16)
-    if (target) { catSep(target.previousElementSibling); tr.insertBefore(sp, target); tr.insertBefore(sep, target); owner.els.splice(idx, 0, sp, sep); }
-    else { const last = ws.sets[ws.sets.length - 1]; catSep(tr.lastElementChild); tr.appendChild(sp); tr.appendChild(sep); last.els.push(sp, sep); }
-    wireRun(cur); return true;
-  }
 
   const presets = $('presets');
   // Presets hold a target camera: the button flies there, the audit API jumps, a link's anchor opens there.
   const PRESETS = [];
-  // One short historical fact per place (round 12, part D, item 3): a native tooltip on each minimap group and the RUSSIA frame (an SVG title) and on the phone's
+  // One short historical fact per place (round 12, part D, item 3): a native tooltip on each minimap group (an SVG title) and on the phone's
   // buttons (a title attribute); every fact verified against a reference recorded in motion/README.md, never on screen; at most 200 characters, no semicolons.
   const MM_FACTS = {
-    'Russia': 'Russia and the United States lie 3.8 km apart at the Diomede Islands in the Bering Strait. The date line runs between them, so the Russian island is almost a day ahead.',
     'Moscow': 'From 1680 to the late 19th century the Kremlin\'s walls were kept whitewashed with lime. The red brick showed again only after the coats were left to wear away, by the early 1900s.',
     'St Petersburg': 'In April 1942, with the paintings evacuated to the Urals, a Hermitage guide led visiting cadets through the halls and described the pictures by their empty frames.',
     'Novosibirsk': 'Novosibirsk began in 1893 as a camp for the Trans-Siberian bridge over the Ob and passed one million inhabitants in 1962, 69 years after its founding.',
@@ -2714,8 +2333,8 @@ void main() {
     'Central Moscow (250 m)': 'An eighth Stalin skyscraper was begun in Zaryadye in 1947 and abandoned. The Rossiya hotel rose on its foundations in 1967, and since 2017 the site has been a park.',
   };
   const slugOf = label => label.replace(/\s*\(.*\)$/, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const addPreset = (label, target) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); if (MM_FACTS[label]) b.title = MM_FACTS[label]; presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
-  addPreset('Russia', fitTarget);
+  const addPreset = (label, target, listed = true) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); if (MM_FACTS[label]) b.title = MM_FACTS[label]; if (listed) presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
+  addPreset('Russia', fitTarget, false);   // round 30 (the author's request of 30 October 2026): no RUSSIA button and no minimap frame; the zoom box's fit button and the 0 key fit the country, and #Russia links and the audit's preset still land there
   for (const city of bmp.cities) addPreset(city.label, () => goToTarget(city));
   addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }); PRESETS[PRESETS.length - 1].button.classList.add('keep');   // the one button that stays under the minimap (round 10)
 
@@ -2796,21 +2415,12 @@ void main() {
     // turned every coordinate string into NaN); these lines are generated, not decoded.
     { const clip = el('clipPath', { id: 'mmlandclip' }, defs); el('path', { d, 'clip-rule': 'evenodd' }, clip);
       el('path', { class: 'grat', d: GRAT_KM.map(l => 'M' + l.map(([x, y]) => mmX(x).toFixed(1) + ' ' + mmY(y).toFixed(1)).join('L')).join(''), 'clip-path': 'url(#mmlandclip)' }, land); }
-    // the Russia frame: the mark's four brackets at the outline box's corners (10 px arms), a focusable group with the label box at the top-right corner
-    const fr = el('g', { class: 'frame', id: 'mm-russia', tabindex: 0, role: 'button', 'aria-label': 'Go to Russia', 'aria-pressed': 'false' });
-    el('title', {}, fr).textContent = MM_FACTS.Russia;   // the native tooltip (item 3)
-    const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10;
-    el('path', { d: `M${MM_X0} ${MM_Y0 + A}V${MM_Y0}h${A} M${X1 - A} ${MM_Y0}h${A}v${A} M${X1} ${Y1 - A}v${A}h${-A} M${MM_X0 + A} ${Y1}H${MM_X0}v${-A}` }, fr);
     // The label widths come from the canvas, never from the SVG's own layout (the author's report of 25 October: a browser that lays the page out hidden at load
     // answered 0 from getComputedTextLength() on the published page and every box collapsed to its padding, the text spilling over the outline). The canvas measure
     // reproduces the rendered advance within 0.12 px on all 23 labels (the same font stack, the tracking counted after every glyph as the SVG lays it), and
     // verifyMinimap() rebuilds the boxes should the rendered text ever disagree, as after a late font load.
     const measure = txt => { const w = Motion.measure(mctx, txt, 9, 500, 9 * 0.08); MMAP.widths[txt] = w; return w; };
     const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
-    MMAP.russia = null;   // the frame carries no label since 25 October 2026 (the author's request): RUSSIA is a kept button under the minimap, above CENTRAL MOSCOW, in the context green; the frame keeps its brackets, its tooltip and its pressed state
-    const flyRussia = () => flyTo(fitTarget()); fr.addEventListener('click', flyRussia); fr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flyRussia(); } });
-    PRESETS.find(p => p.label === 'Russia').node = fr;
-    { const rb = PRESETS.find(p => p.label === 'Russia').button; rb.classList.add('keep', 'russia'); }
     for (const city of bmp.cities) {
       const lay = (mmTry && mmTry[city.label]) || MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = (MM_SHORT[city.label] || city.label).toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
       const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
@@ -2983,13 +2593,12 @@ void main() {
   // the site's atlas/ folder, whose home is one level up.
   if (/\/atlas\/(index\.html)?$/.test(location.pathname)) for (const a of [$('lockup'), $('sitelink')]) { a.href = '../'; a.removeAttribute('target'); }
   // ---- the REFERENCES panel (round 16, the author's General 7 of 26 October 2026; the picks of 27 October: refA, rxA, raC, rlA, riA, rtA, rfA, rsA, rdB revised) ----
-  // A fuchsia button beside LIGHT THEME opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 98 percent (94 until round 22, 97 in round 22, the author's picks of 29 October 2026; the sea
+  // A fuchsia button in the header opens a modal dialog placed over the centred 80 percent of the map's area, the stage made translucent at 98 percent (94 until round 22, 97 in round 22, the author's picks of 29 October 2026; the sea
   // at the same alpha on the light theme), with short entries under prompt-line heads in one scrolling body and a row of shortcuts. DEFINITIONS is the atlas's
   // glossary (data/glossary.js, built by tools/glossary_build.py; the sources of every definition are in its provenance, not on screen). The icon, a Pan Am-style
-  // globe whose central meridian is the i's stem, carries the wire's scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
+  // globe whose central meridian is the i's stem, carries round 15's wire scanlines and glow; the Armenian line takes DejaVu Sans Mono. The dialog is modal, so the
   // page behind is inert. Escape, the close toggle or a press outside close it, focus returns to the button, and the page's own keys stand down while it is open.
-  // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance;
-  // the blink's quotation is uncited by the author's choice.
+  // It opens in 180 ms from its centre line and closes in 140 ms, and under reduced motion it appears and goes at once. Every entry is the atlas's own provenance.
   const REFS_ALPHA = 98, GLOSS = D.glossary || null;
   const refsIsOpen = () => { const d = $('refs'); return !!(d && d.open); };
   const lnk = (url, text) => `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(text || url)}</a>`;
@@ -3022,7 +2631,7 @@ void main() {
       if (items.length) S.push(['insights', 'Insights', items]);
     }
     S.push(['type', 'Type and software', [
-      `<b>IBM Plex Mono</b> (IBM) and <b>Tomorrow</b>, SIL Open Font License 1.1, from Google Fonts.`,
+      `<b>IBM Plex Mono</b> (IBM), SIL Open Font License 1.1, from Google Fonts.`,
       `<b>DejaVu Sans Mono</b>, Bitstream Vera licence with DejaVu's changes in the public domain, for the Armenian letters.`,
       `<b>The data passes</b>: R 4.5.2 and DuckDB 1.5.6, with Python 3 for the shared pairs, the insights and the definitions. The page draws with the browser's canvas and WebGL and loads no outside library.`]]);
     S.push(['links', 'Links', [
@@ -3069,7 +2678,7 @@ void main() {
   }
   { const d = $('refs'), b = $('refsbtn');
     if (d && b) {
-      d.style.setProperty('--refs-alpha', REFS_ALPHA + '%');   // both themes: on the light theme 88 percent had let the links fall to 4.2 to 1 over the darkest marks behind
+      d.style.setProperty('--refs-alpha', REFS_ALPHA + '%');   // the stage behind the panel at this alpha
       $('refsicon').innerHTML = globeIcon();
       { const n = $('superusernote'); if (n) n.textContent = n.textContent.replace(/^\s*\n/, '').replace(/\n\s*$/, ''); }   // the author's note as written, blank edge lines aside
       b.addEventListener('click', refsOpen); $('refsclose').addEventListener('click', refsClose);
@@ -3100,7 +2709,7 @@ void main() {
   const pct1 = v => fmt.pct(v), ci = (lo, hi) => `95% confidence interval ${fmt.dec(lo, 3)} to ${fmt.dec(hi, 3)}`;
   function fillReads() {
     $('cr-goto').innerHTML = P(H('Mouse') + 'Scroll, or the + and − buttons, to zoom. Drag to pan. A click on a cell flies to it, and Shift+click steps back out.',
-      H('Keys, map focused') + '+ and − zoom, 0 fits the country, the arrows pan. Hold B to blink the map between 2021 and the year shown.',
+      H('Keys, map focused') + '+ and − zoom, 0 fits the country, the arrows pan.',
       H('Touch') + 'Drag with one finger, pinch to zoom, tap a cell for its values, double-tap to zoom.',
       'FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. LINK TO CURRENT VIEW copies a link that opens the atlas on the same view.',
       'Region geometry: geoBoundaries gbOpen (CC BY 4.0) and OpenStreetMap/Wambacher 2017 (ODbL).');
@@ -3153,21 +2762,20 @@ void main() {
   $('copymail').addEventListener('click', () => { const t = $('mail').textContent, done = ok => { $('copied').textContent = ok ? 'Copied' : ''; if (ok) setTimeout(() => { $('copied').textContent = ''; }, 1500); }; const sel = () => { const r = document.createRange(); r.selectNodeContents($('mail')); const sl = getSelection(); sl.removeAllRanges(); sl.addRange(r); done(false); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(() => done(true), sel); else sel(); });
   // A resize keeps the centre and the span across the width (a phone turned sideways keeps its view).
   // Load-time measurements guarded (round 11, the author's item 7): a frame the host holds hidden at load leaves zero-width layouts behind, so every measurement
-  // taken at load (the canvases' size and the landing camera, the minimap's label boxes, the wire's track, the strip's short-form test, the tile's obstacles) is
+  // taken at load (the canvases' size and the landing camera, the minimap's label boxes, the strip's short-form test, the tile's obstacles) is
   // verified when the map's box changes (a ResizeObserver on the wrap, so a frame shown without a window resize event counts too) and after a late font load,
   // and rebuilt where it disagrees; a stage that measured 1 px at load lands on the fit (or the link's preset) instead of scaling a degenerate zoom.
   const layoutsVerified = [];
   function verifyLayouts(reason) {
     const fixed = []; if (verifyMinimap()) fixed.push('minimap');
-    if (wireScrolls() && stripOpen() && wireState.sets.length) { const first = wireState.sets[0].els[0]; if (wireVisW() !== wireState.vis || !(wireState.width > 0) || !first || first.getBoundingClientRect().width <= 0) { const [b, n] = bandUnderCamera(); rebuildWire(b, n, 'reset'); fixed.push('wire'); } }
     dropObstacles(); layoutsVerified.push({ reason, fixed, t: Math.round(performance.now()) }); if (layoutsVerified.length > 20) layoutsVerified.shift(); return fixed;
   }
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); applyRm2(); sizeSlot(); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
   function overflowing() {
-    const out = [], sels = ['#theme', '#modes .modelabel', '#modes .btn', '#layers .btn', '#presets .btn', '.yearrow .ui', '#yearlabel', '#legendtitle', '#legendbody .row', '#mixtitle', '#cellinfo > span', '#cellinfo b', '#notelabel', '.byline .who', '.byline .what', '.tagline', 'footer .byfoot', 'footer .lic', '#methodbtn', '#methodmore'];
+    const out = [], sels = ['#refsbtn', '#modes .modelabel', '#modes .btn', '#layers .btn', '#presets .btn', '.yearrow .ui', '#yearlabel', '#legendtitle', '#legendbody .row', '#mixtitle', '#cellinfo > span', '#cellinfo b', '#notelabel', '.byline .who', '.byline .what', '.tagline', 'footer .byfoot', 'footer .lic', '#methodbtn', '#methodmore'];
     for (const sel of sels) for (const el of document.querySelectorAll(sel)) {
       if (!el.offsetParent) continue;
       const host = el.closest('.card, .maplegend, .mixbox, .mapnote, header, footer'); if (!host) continue;
@@ -3180,7 +2788,7 @@ void main() {
     const m = wrap.getBoundingClientRect();
     const rel = id => { const el = $(id); const r = el.getBoundingClientRect(); const visible = !el.hidden && getComputedStyle(el).display !== 'none' && r.width > 0 && r.height > 0; return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible }; };
     const pb = $('pulse'), pulse = Object.assign(rel('pulse'), { disabled: pb.disabled, title: pb.title });   // the side panel's year row, for the audit (map-relative boxes like the others)
-    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), scale: rel('scalebar'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), blink: rel('blink'), pulselabel: rel('pulselabel'), tipbio: rel('tipbio'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), wire: rel('ctxtext'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
+    return { overflow: overflowing(), header: { box: rel('hdr'), left: rel('hleft'), lockup: rel('lockup'), right: rel('hright') }, map: { x: 0, y: 0, x1: m.width, y1: m.height, visible: true }, legend: rel('legend'), note: rel('mapnote'), zoom: rel('zoombox'), tip: rel('tip'), pulse, yearrow: rel('yearrow'), year: rel('year'), yearlabel: rel('yearlabel'), yearui: rel('yearui'), cards: Object.fromEntries(CARDS.map(id => [id, { card: rel('card-' + id), head: rel('ch-' + id), title: rel('h2-' + id), toggle: rel('ct-' + id), info: rel(id === 'layer' ? 'methodbtn' : 'ci-' + id), body: rel('cb-' + id), open: cardOpen(id) }])), popout: rel('popout'), popId: pop.id, notetoggle: rel('notetoggle'), notelabel: rel('notelabel'), yline2: rel('yline2'), yearrun: rel('yearrun'), pulselabel: rel('pulselabel'), mixinfo: rel('mixinfo'), minimap: rel('minimap'), presets: (() => { const b = PRESETS.find(p => p.button.isConnected && !p.button.classList.contains('keep')).button, r = b.getBoundingClientRect(); return { x: r.left - m.left, y: r.top - m.top, x1: r.right - m.left, y1: r.bottom - m.top, visible: getComputedStyle(b).display !== 'none' && r.width > 0 }; })(), thumb: rel('yearthumb'), yearPct: +(getComputedStyle($('yearslider')).getPropertyValue('--pct') || 0), thumbHit: (() => { let v = null; for (const sh of document.styleSheets) { let rules; try { rules = sh.cssRules; } catch (e) { continue; } for (const r of rules) if (r.selectorText && /::-webkit-slider-thumb/.test(r.selectorText) && r.style.width) v = Math.min(parseFloat(r.style.width), parseFloat(r.style.height)); } return v; })(), strip: rel('ctxstrip'), striptoggle: rel('ctxtoggle'), glyph: rel('ctxglyph'), stripOpen: stripOpen(), mix: rel('mixbox'), mixtoggle: rel('mixtoggle'), mixOpen: mixOpen(), tipRelaxed: $('tip').style.display !== 'none' && tileState ? tileState.relaxed : null };
   }
   // Driven by tools/atlas-audit.py: switch the layer and the year, redraw, and hand back the text boxes, the overlays'
   // boxes and the camera; the camera moves here are instant.
@@ -3191,18 +2799,18 @@ void main() {
     year(y) { $('year').value = String(y); $('year').dispatchEvent(new Event('input')); },
     redraw() { Motion.audit.boxes = []; Motion.audit.seq = 0; redrawAll(); return { boxes: Motion.audit.boxes, dom: domBoxes() }; },
     tips() {   // every tip measured in the strip's hidden span as it would show (round 10): the audit asserts none is clipped at any width
-      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'), box = $('ctxtext'), hadRm = box.classList.contains('rm'); el.classList.add('tip'); box.classList.add('rm');   // measured in the lead's full width, the reduced-motion form where the tips show there (round 12)
+      const el = stripState.cur === 'A' ? $('ctxB') : $('ctxA'); const keep = el.innerHTML, had = el.classList.contains('tip'); el.classList.add('tip');   // measured in the line's full width, where the tips show (round 12)
       const out = TIPS.flatMap((t, i) => [t.text, t.touch].filter(Boolean).map(str => { el.innerHTML = units(esc(str)); return { i, text: str, w: el.scrollWidth, slot: el.clientWidth, h: el.scrollHeight, hslot: el.clientHeight, clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 }; }));
-      el.innerHTML = keep; el.classList.toggle('tip', had); box.classList.toggle('rm', hadRm); return out;
+      el.innerHTML = keep; el.classList.toggle('tip', had); return out;
     },
     camera() { return { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }; },
     kFit() { return kFit(); },
     preset(label) { const p = PRESETS.find(p => p.label === label); if (!p) return false; flyTo(p.target(), { instant: true }); return true; },
     minimapTry(over, trace) { mmTry = over || null; mmTrace = trace || null; const svg = $('minimap'); while (svg.firstChild) svg.removeChild(svg.firstChild); svg.classList.remove('drawn'); MMAP = null; buildMinimap(); drawCardGraticule(); return { f: MM_F, vx0: MM_VX0, violations: minimapCheck() }; },   // round 16: a trial layout for the hand placement (the audit and the frames)
-    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], russia: MMAP && MMAP.russia, violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
+    minimap() { const m = $('minimap'), cs = getComputedStyle(m), r = m.getBoundingClientRect(); return { visible: cs.display !== 'none' && r.width > 0, rings: MMAP && MMAP.rings, labels: MMAP ? MMAP.cities.map(c => c.label) : [], violations: minimapCheck(), width: r.width, cities: MMAP ? MMAP.cities : [], builds: mmBuilds, widths: MMAP ? MMAP.widths : null, titles: PRESETS.filter(p => p.button.isConnected).map(p => { const t = p.node ? p.node.querySelector('title') : null; return { label: p.label, button: p.button.title || '', svg: p.node ? (t ? t.textContent : '') : null }; }) }; },   // the minimap's geometry and the layout rules (round 10)
     minimapVerify() { return verifyMinimap(); },   // the rendered labels checked against the built widths (25 October): true when it rebuilt
     ghostSizes() { return ghostRank().map(g => ({ label: g.city.label, n: g.n, size: g.size })); },   // the ghost names' rank table (round 12)
-    layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, wire: { width: wireState.width, vis: wireState.vis, x: Math.round(wireX()), sets: wireState.sets.length, items: $('wiretrack').querySelectorAll('.wi').length, builds: wireState.builds, resets: wireState.resets }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
+    layouts() { const mm = $('minimap'); return { stage: [stage.width, stage.height], cam: { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, kfit: kFit(), minimap: { builds: mmBuilds, width: mm ? Math.round(mm.getBoundingClientRect().width) : 0, boxes: MMAP ? Math.round(MMAP.cities.reduce((t, c) => t + (c.box.x1 - c.box.x), 0)) : 0 }, strip: { clipped: this.context().clipped }, obstacles: tileObstacles().length, verified: layoutsVerified.slice(-6) }; },   // every load-time layout, for the hidden-frame check (round 11, item 7)
     verifyLayouts() { return verifyLayouts('api'); },
     minimapClick(label) { const p = PRESETS.find(p => p.label === label); if (!p || !p.node) return null; return flyTo(p.target(), { instant: true }).then(() => cam()); },   // the group's own path, instant
     hoverKm(x, y, opts) { const c = cam(); const px = c.ox + (x - c.cx) * c.k, py = c.oy - (y - c.cy) * c.k; let h; if (opts && opts.show && px >= 0 && px < stage.width && py >= 0 && py < stage.height) { lastPointer = { x: px, y: py, inside: true }; h = showHoverAt(px, py, { touch: !!opts.touch }); } else { const km = { x, y, px, py }; h = hitAt(km); h.kmx = x; h.kmy = y; state.hover = h; } return { kind: h.kind || 'cell', address: !!(h.kind === 'firm' || h.address), grid: h.grid, origin: h.origin || [0, 0], fine: !!h.fine, micro: !!h.micro, n: h.n == null ? null : h.n, listed: h.listed || null }; },
@@ -3247,21 +2855,9 @@ void main() {
     firmsInView() { return countFirmsInView(); },   // the footer's count recomputed now (round 11, item 3)
     floor() { return { kfit: kFit(), kfloor: kFloor(), fraction: FLOOR_FRACTION }; },   // the zoom floor (round 11, item 5)
     strip(open) { ui.ctx = open == null ? null : (open ? 'open' : 'closed'); applyStrip(); if (stripOpen()) updateContext(true); return stripOpen(); },
-    context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: stripState.tip && wireScrolls() ? stripState.tip.text : el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
-    wire() { const ws = wireState, x = wireX(), vis = wireVisW(), cur = ws.sets[0], lead = cur && cur.els.length ? cur.els[0] : $('wiretrack').querySelector('.wi.lead'); return { slotW: $('ctxlead').getBoundingClientRect().width, barW: $('ctxstrip').clientWidth, slot: (stripState.cur === 'A' ? $('ctxA') : $('ctxB')).textContent.trim(), rendered: wireRenderedX(), restarts: ws.restarts, key: ws.key, pending: !!ws.timer, items: ws.cycle.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })), cycle: ws.cycleIndex, width: ws.width, locs: lead ? lead.querySelectorAll('.loc').length : 0, scrolls: wireScrolls(), dur: ws.width ? +(ws.width / WIRE_SPEED).toFixed(1) + 's' : '', x, vis, pinned: ws.pinned, paused: ws.paused, builds: ws.builds, resets: ws.resets, commits: ws.commits, caps: WIRE_CAPS, orphans: ws.orphans.length / 2, dom: $('wiretrack').querySelectorAll('.wi').length, timers: { debounce: !!ws.timer, commit: !!ws.commitTimer, top: !!ws.topTimer }, heap: performance.memory ? performance.memory.usedJSHeapSize : null, lead: { text: $(stripState.cur === 'A' ? 'ctxA' : 'ctxB').textContent, width: $('ctxlead').clientWidth }, sets: ws.sets.map(sset => ({ key: sset.key, status: sset.status, x0: setStart(sset), x1: setEnd(sset), entered: setEntered(sset, x), items: sset.els.length / 2, lead: sset.els.length ? plainOf({ text: sset.els[0].innerHTML }).slice(0, 80) : '' })) }; },   // the wire's current cycle, its two-set queue and the lead slot (rounds 10 to 12)
-    wireGaps() {   // the separators' clearances (the author's report of 25 October 2026): the smallest gap between a separator mark and the items beside it on the track, the lead separator's two margins, the window's edge fade, and any item box a mark covers
-      const tr = wireTrack(), kids = [...tr.children], rs = kids.map(el => { if (el.classList.contains('wsep')) return el.getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(el); return rg.getBoundingClientRect(); }); let min = Infinity, covered = 0;   // an item's text extent, not its padded box
-      for (let i = 0; i < kids.length; i++) { if (!kids[i].classList.contains('wsep')) continue; const s = rs[i]; if (i > 0) { const g = s.left - rs[i - 1].right; if (g < min) min = g; if (g < -0.5) covered++; } if (i + 1 < kids.length) { const g = rs[i + 1].left - s.right; if (g < min) min = g; if (g < -0.5) covered++; } }
-      const lead = $('ctxlead').getBoundingClientRect(), sep = document.querySelector('.ctxt .lsep'), sr = sep ? sep.getBoundingClientRect() : null, win = $('ctxwin').getBoundingClientRect(), cs = getComputedStyle($('ctxwin')), mask = cs.maskImage || cs.webkitMaskImage || 'none';
-      return { min: kids.length ? min : null, covered, lsepLeft: sr && sr.width ? sr.left - lead.right : null, lsepRight: sr && sr.width ? win.left - sr.right : null, fade: mask !== 'none' && mask.includes('gradient'), em: parseFloat(getComputedStyle($('ctxtext')).fontSize), items: kids.length };
-    },
+    context() { const el = stripState.cur === 'A' ? $('ctxA') : $('ctxB'); const [band, name] = bandUnderCamera(); return { band, name, locs: el.querySelectorAll('.loc').length, kind: stripState.tip ? 'tip' : (stripState.fact ? stripState.fact.kind : 'none'), text: el.textContent, glyph: stripState.glyphName, glyphD: $(stripState.glyphCur === 'A' ? 'ctxpathA' : 'ctxpathB').getAttribute('d') || '', open: stripOpen(), clipped: el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1, motion: !reduceMotion() }; },
     refs(on) { if (on === true) refsOpen(); else if (on === false) refsClose(); const d = $('refs'), r = d.getBoundingClientRect(), m = wrap.getBoundingClientRect(), n = $('superusernote');   // the REFERENCES panel (round 16)
       return { open: d.open, rect: [r.left, r.top, r.width, r.height], map: [m.left, m.top, m.width, m.height], sections: [...d.querySelectorAll('section')].map(x => x.dataset.name), links: [...d.querySelectorAll('a')].map(a => a.href), note: n ? n.textContent : null, alpha: REFS_ALPHA, focus: document.activeElement && document.activeElement.id }; },
-    wireStall(on) { const ws = wireState; if (!ws.anim) return false; if (on) ws.anim.pause(); else ws.anim.play(); return true; },   // a stalled animation the page did not ask for (the watchdog's audit state)
-    wireCaps(on) { if (on != null) { WIRE_CAPS = !!on; applyWireCaps(); } return WIRE_CAPS; },   // the capitals experiment's switch (round 12, part D)
-    wireSeek(x) { wireStop(); wireAnimate(Math.max(0, x)); return wireX(); },   // a frames hook: the track scrolled to x at once (round 12)
-    wireItemX(kind, n = 0) { const el = wireTrack().querySelectorAll('.wi.' + kind)[n]; return el ? wirePos(el)[0] : null; },   // a frames hook: the left edge of the n-th item of a kind on the track
-    ruler() { const svg = $('ruler'), b = $('scalebar').getBoundingClientRect(), labels = [...svg.querySelectorAll('text')].map(t => { const r = t.getBoundingClientRect(); return { text: t.textContent, unit: t.classList.contains('unit'), x: r.left - b.left, x1: r.right - b.left, y: r.top - b.top, y1: r.bottom - b.top }; }); return Object.assign({ box: { w: b.width, h: b.height }, labels, narrow: narrow() }, rulerState || {}); },   // the ruler's step, ticks and label boxes (round 12, part D)
     mosaic() { const y = microYear(), b = mosaicCache.get(y + '|1'); return { year: y, ready: microReady(y), level: b ? { count: b.count, sumN: b.sumN } : null, builds: mosaicBuilds, drawn: Object.assign({}, cellsDrawn), state: mosaicState, sets: sqGL ? [...sqGL.sets.keys()] : [], log: drawLog.slice() }; },   // the Cells view's 1 km squares (round 14; round 13's binned Firms view before)
     binAt(x, y) { const yr = microYear(), b = mosaicCache.get(yr + '|1'); if (!b) return null; const j = b.idx.get(binKey(Math.floor(x), Math.floor(y))); return j === undefined ? null : { T: 1, year: yr, n: b.n[j], p: b.p[j], a: b.a[j], f: b.f[j], share: mosaicClass(b, j, 'share'), ind: mosaicClass(b, j, 'industry') }; },
     hoverPixel() { const h = state.hover, p = h && (h.kind === 'pixel' ? h : h.pixel); return p ? { cell: p.cell, n: p.n, a: p.a, p: p.p, size: p.size } : null; },   // the hovered pixel (round 14)
@@ -3278,9 +2874,6 @@ void main() {
     cellPulseState() { return cellPulse ? { count: cellPulse.count, static: cellPulse.static, cells: cellPulse.cells.map(q => [q.x, q.y, q.delay]) } : null; },
     mosaicOff(v) { if (v != null) { mosaicOff = !!v; drawMap(); } return mosaicOff; },   // the squares off, for the contrast probe
     anchors() { return AN ? { a: [AN.a.x_km, AN.a.y_km], b: [AN.b.x_km, AN.b.y_km], distance: AN.distance_m, computed: Math.round(Math.hypot(AN.a.x_km - AN.b.x_km, AN.a.y_km - AN.b.y_km) * 1000) } : null; },   // the pair (round 12, part D, item 5)
-    anniversary(iso) { const a = anniversaryLine(iso); return a ? a.text : null; },   // the builder for a given ISO day (item 6)
-    today() { return TODAY; },
-    wireAt(y, region) { const keep = state.year; state.year = y; const c = buildCycle(y, region === 'Russia' ? 'national' : 'region', region, 0); state.year = keep; return c.map((it, i) => ({ i, kind: it.kind, text: plainOf(it), src: it.src })); },
     tipTexts() { return TIPS.flatMap(t => [t.text, t.touch].filter(Boolean)); },
     tip(force) { if (force === 'reset') { stripState.seen.clear(); try { sessionStorage.removeItem('atlas-tips'); } catch (e) { /* no storage */ } return true; } if (force === false) { endTip(true); return false; } return maybeTip(true); },
     glyph(name) { return regionGlyph(name); },
@@ -3307,32 +2900,20 @@ void main() {
     noteState() { return { open: !$('notebody').hidden, pref: ui.note || null, band: bandUnderCameraOwn()[0], strip: stripOpen() }; },   // the note's state and what decides it (round 10)
     ghost() { const c = cam(), gl = groundLayout(kFit()); return { alpha: GHOST_ALPHA, drawn: ghostDrawn, laid: gl.placed.length, hidden: gl.hidden.map(g => g.city.label), sizes: gl.placed.map(g => [g.city.label, g.size]), colour: theme.tileInk, scale: c.k / kFit() }; },   // the ghost names (round 10; on the ground since round 16)
     hoverRegion() { return hoverRegionName; },
-    pxOf(x, y) { const c = cam(); return [c.ox + (x - c.cx) * c.k, c.oy - (y - c.cy) * c.k]; },   // a km point on the screen (the region-fill states)
-    regionFill() { return { name: hoverRegionName, alpha: theme.dark ? REGION_FILL.dark : REGION_FILL.light }; },
     regionVertex(name, i = 0) { const p = BM.lod0.parts.find(p => p.name === name); if (!p) return null; const r = p.rings[0], n = r.length / 2, j = Math.min(Math.max(0, i | 0), n - 1); let x = r[0] / 10, y = r[1] / 10; for (let k = 1; k <= j; k++) { x += r[2 * k] / 10; y += r[2 * k + 1] / 10; } const [px, py] = Motion.project(cam(), x, y); return { x, y, px, py, i: j }; },   // the i-th vertex of the region's first ring (deltas in 0.1 km), in km and on screen
     pixelsAt(id, px, py) { const cv = $(id), d = window.devicePixelRatio || 1, g = cv.getContext('2d'), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(Array.from(g.getImageData(Math.round((px + dx) * d), Math.round((py + dy) * d), 1, 1).data)); return out; },   // the 3 by 3 pixels of a canvas around a point   // the city-window hand-over (round 10): the window's strength, the outside layer's alpha and whether it is outlined
     method(open) { if (open != null) { ui.method = open ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     methodMore(more) { if (more != null) { ui.methodMore = more ? 'open' : 'closed'; applyMethod(); } return this.methodState(); },
     popout(id) { if (id === null) closePop(); else if (id) openPop(id); return pop.id; },   // the pop-out (round 15, item 5.4)
-    extras() { return { on: true, blink: blinkState.on, run: runState.on, wireHold, catNext: catKey.next, keyed: $('wiretrack').querySelectorAll('.wi.keyed').length }; },   // the three extras (round 15, item 7)
-    blink(on) { if (on) blinkStart(false); else blinkStop(); return blinkState.on; },
-    catNow() { return wireCatNow(); },
+    extras() { return { on: true, run: runState.on }; },   // the year run (round 15, item 7B; the blink and the cat key went in round 30)
     profiles() {   // every region's and city window's profile (round 15, item 9): what profile_check.py re-derives
       const out = { regions: {}, windows: {}, medians: !!PROF, insights: !!INS };
       if (REG) for (const name of regIndex.keys()) { if (name === 'Russia') continue; const p = profileRegion(name); if (p) out.regions[name] = { head: p.head, full: p.full, tile: p.tile }; }
       for (const label of Object.keys(win1)) { const p = profileWindow(label); if (p) out.windows[label] = { head: p.head, full: p.full, tile: p.tile }; }
       return out;
     },
-    profileFit() {   // each profile's short form in the tile's box at the tile's width: the texts that would not fit the box (the box's own clip); a narrow map's tile has no box
-      if (narrow()) return { checked: 0, overflow: [], narrow: true, shown: getComputedStyle($('tipbio')).display !== 'none' };
-      const box = $('tipbio'), t = $('tipbiot'), tip = $('tip'), was = { disp: tip.style.display, hidden: box.hidden, txt: t.textContent }, bad = [];
-      tip.style.display = 'block'; box.hidden = false; tip.style.width = tip.style.maxWidth = '';
-      const all = []; if (REG) for (const name of regIndex.keys()) { const p = name !== 'Russia' && profileRegion(name); if (p) all.push(p); } for (const label of Object.keys(win1)) { const p = profileWindow(label); if (p) all.push(p); }
-      for (const p of all) { t.textContent = p.tile; tip.style.width = getComputedStyle(tip).maxWidth; if (t.scrollHeight > t.clientHeight + 1) bad.push(p.id); tip.style.width = ''; }
-      t.textContent = was.txt; box.hidden = was.hidden; tip.style.display = was.disp; return { checked: all.length, overflow: bad };
-    },
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"'), document.fonts.load('400 13.5px "Tomorrow"'), document.fonts.load('500 13.5px "Tomorrow"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncThemeButton(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); applyWireCaps(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "IBM Plex Mono"'), document.fonts.load('500 13px "IBM Plex Mono"'), document.fonts.load('700 13px "IBM Plex Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
 })();
