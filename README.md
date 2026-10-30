@@ -22,7 +22,7 @@ Served by GitHub Pages from the public repository `ArmenKaprelian.github.io` sin
 | `research/`, `writing/`, `contact/` | Subpages: one column. HOME closes the title's line at the right, on the title's baseline, its right corner on the end of the rule under the title; the film page and `404.html` have it too (the standard since 29 October 2026). |
 | `404.html` | The page GitHub Pages serves for an address the site does not have, in the subpages' style. Its links start at the root (`/css/site.css`), since it is served at any address. |
 | `tools/card.html`, `img/card.jpg` | The link card: the picture email, Slack, LinkedIn and X show when the site's address is pasted (1200 by 630, named in each page's `og:image` tag; the film page shows its poster instead). `tools/card.html` draws it from the site's own stylesheet and stream. |
-| `favicon.svg`, `favicon-32.png`, `favicon.ico`, `apple-touch-icon.png` | The atlas mark in the reading green on the navy. |
+| `favicon.svg`, `favicon-32.png`, `favicon.ico`, `apple-touch-icon.png` | The atlas mark in the fuchsia on the navy. |
 
 ## Common changes
 
