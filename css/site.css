@@ -123,7 +123,7 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
    so the top block keeps one more row, the headshot stays at 132 px, which widens the bio's column, and the dissertation runs on after
    the degree rather than on its own line (the author's pick (ii) of 29 October 2026: the pipeline photo keeps its size). Other screens
    are unchanged. */
-@media (min-width: 761px) and (max-width: 1400px) and (max-height: 860px) {
+@media (min-width: 761px) and (max-width: 1500px) and (max-height: 860px) {   /* to 1,500 px wide since round 32 (1 November 2026): at 1,440 wide the lede wraps to 334 px against the 330 the band reserves, so windows under 860 px tall overflowed by 4 px */
   .home { --band: min(35vw, 100vh - 352px); }
   @supports (height: 100dvh) { .home { --band: min(35vw, 100dvh - 352px); } }
   @supports (width: 1cqw) and (height: 100dvh) { .home { --band: min(35cqw, 100dvh - 352px); } }
