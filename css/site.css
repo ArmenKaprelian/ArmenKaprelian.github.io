@@ -77,9 +77,9 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
    line across the page: the photo's top edge is the index's top rule, and the photo's height (--band, 0.7 of the panel's width,
    capped so the top block keeps its rows) is the index's height. The name, the headshot and the bio sit on the stream's 22 px rows,
    which start 4 px from the top. Widths come from the page (cqw), so a scroll bar never makes the photo wider than its panel. */
-.home { --band: min(35vw, 100vh - 330px); container-type: inline-size; display: grid; grid-template-columns: var(--split) 1fr; min-height: 100vh; min-height: 100dvh; }   /* dvh where the browser has it, so Safari's toolbars never cover the panel */
+.home { --band: min(35vw, 100vh - 330px); --photo: 35vw; container-type: inline-size; display: grid; grid-template-columns: var(--split) 1fr; min-height: 100vh; min-height: 100dvh; }   /* dvh where the browser has it, so Safari's toolbars never cover the panel */
 @supports (height: 100dvh) { .home { --band: min(35vw, 100dvh - 330px); } }
-@supports (width: 1cqw) and (height: 100dvh) { .home { --band: min(35cqw, 100dvh - 330px); } }
+@supports (width: 1cqw) and (height: 100dvh) { .home { --band: min(35cqw, 100dvh - 330px); --photo: 35cqw; } }   /* --photo (round 32, 1 November 2026): the photo's height at the column's full width, apart from the band that sizes the index, so a short window no longer narrows the photo */
 .visual { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: var(--stage); }
 .visual canvas { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; }
 /* The photo's scan lines over the stream too (the author's request of 29 October 2026), so the panel reads as one surface: the same
@@ -87,18 +87,18 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
    caption bar and the slogan card, taking no pointer events. The 3 px tiles are placed from the photo's top edge (the band line, which
    need not be a multiple of 3 px from the panel's top), so the pitch runs on through the photo with no seam. A deliberate exception to
    the rule that stripes belong to large type only: this is the photo's overlay extended over the panel, not stripes on the 11 px text. */
-.visual::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px) 0 calc(100% - var(--band)) / 100% 3px repeat-y; }
+.visual::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px) 0 calc(100% - var(--photo)) / 100% 3px repeat-y; }
 
 /* The photo on the floor at the centre line, its caption bar above it. Inside its frame, bottom to top: the photo, the previews of
    the index's pages, and the scan lines. */
-.photo { position: absolute; right: 0; bottom: 0; z-index: 2; margin: 0; height: var(--band); aspect-ratio: 10 / 7; }
+.photo { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; height: var(--photo); aspect-ratio: 10 / 7; }   /* the column's width; where the window is short the photo's top sits above the index's rule (round 32) */
 .photo > img, .photo .pv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .photo .pv { opacity: 0; transition: opacity .15s linear; }
 .photo .lines { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(3, 6, 14, .38) 0 1px, transparent 1px 3px); }
 .photo .pv.live { opacity: 1; }   /* js/home.js marks the preview of the row under the pointer or the keyboard */
-.photo .card { display: flex; flex-direction: column; justify-content: center; gap: calc(var(--band) * .03); padding: 0 40px; background: var(--panel); }   /* the pages without a picture, set like the film's title cards */
+.photo .card { display: flex; flex-direction: column; justify-content: center; gap: calc(var(--photo) * .03); padding: 0 40px; background: var(--panel); }   /* the pages without a picture, set like the film's title cards */
 .photo .card .k { font-size: 12px; font-weight: 500; letter-spacing: .08em; color: var(--dim); }
-.photo .card .big { font-size: calc(var(--band) * .072); line-height: 1.12; font-weight: 700; letter-spacing: .02em; color: var(--ink); overflow-wrap: anywhere; }
+.photo .card .big { font-size: calc(var(--photo) * .072); line-height: 1.12; font-weight: 700; letter-spacing: .02em; color: var(--ink); overflow-wrap: anywhere; }
 .photo .card .sub { max-width: 52ch; font-size: 14px; color: var(--muted); }
 .photo .above { position: absolute; left: 0; right: 0; bottom: 100%; display: flex; flex-direction: column; align-items: flex-start; }
 /* The slogan, its translation and the pun, while a mouse or a pen is over the photo (or after a tap on a phone): the slogan as the
