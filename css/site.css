@@ -228,9 +228,17 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
      lines run longer beside the picture. Tablets and the split layout are unchanged. */
   .content .top { --shot: 136px; }
   @supports (width: round(down, 10px, 1px)) and (width: 1cqw) { .content .top { --shot: clamp(110px, round(down, (min(100cqw, 820px) - 32px) * .38, 2px), 286px); } }
-  .content .lede .lead { font-size: 13px; }
+  /* Round 33 (the author's request of 1 November 2026, from a phone whose browser scales text about a fifth): the headshot floats at the left and the
+     statement runs beside it and on below it at full width, so a longer rendering never becomes a narrow column; the credentials clear the picture;
+     the name takes 7 percent of the screen's width, one line at 360 px and up unless the text is scaled more than a sixth. */
+  .content h1 { font-size: clamp(22px, 7vw, 30px); line-height: 1.15; }
+  .content .id { display: block; }
+  .content .lede { display: block; }
+  .content .portrait { float: left; margin: 0 16px 4px 0; }
+  .content .lede .lead { font-size: 14px; position: relative; top: -5px; margin: 0; }
   .content .lede .lead .nb { white-space: normal; }   /* "export controls," may break beside the headshot */
   .content .lede .lead br:nth-of-type(2) { display: none; }
+  .content .lede .lead + p { clear: left; margin-top: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
