@@ -27,18 +27,18 @@
   --ink: #ECEEF1;            /* text */
   --muted: #B4C0D0;          /* the second voice */
   --dim: #7D889C;            /* rules, numbers, captions */
-  --cursor: #EE69C0; --cursor-live: #F49ED2;   /* fuchsia: what you act on */
-  --context: #57CE70;        /* green: what you read */
+  --cursor: #DB78B1; --cursor-live: #EB9AC6;   /* fuchsia: what you act on (round 32 (1 November 2026, the author's instruction from a side chat's advice): warmer and a quarter less saturated than round 30's #EE69C0/#F49ED2 and #57CE70/#93E09E, OKLCH 0.70/0.14/346 and 0.77/0.13/128; measured: 6.6:1 and 9.5:1 as text on the panel, 7.1 and 10.1:1 for the stage on their fills, 27 normal, 22 protan and 14 deutan apart, 11.2 and 10.6 from the nearest data colour) */
+  --context: #9CC466;        /* green: what you read */
   --font: "IBM Plex Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace;
   --split: 50%;              /* the image panel's share of the width: half and half (layout C4, the author's pick of 28 October 2026) */
   --mk-tl-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mk-tr-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mk-br-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --mk-bl-dim: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%237D889C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23F49ED2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 7V1h6' fill='none' stroke='%23EB9AC6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M1 1h6v6' fill='none' stroke='%23EB9AC6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 1v6H1' fill='none' stroke='%23EB9AC6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --mk-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath d='M7 7H1V1' fill='none' stroke='%23EB9AC6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --corners: var(--mk-tl) top left / 8px no-repeat, var(--mk-tr) top right / 8px no-repeat, var(--mk-br) bottom right / 8px no-repeat, var(--mk-bl) bottom left / 8px no-repeat;
   --corners-dim: var(--mk-tl-dim) top left / 8px no-repeat, var(--mk-tr-dim) top right / 8px no-repeat, var(--mk-br-dim) bottom right / 8px no-repeat, var(--mk-bl-dim) bottom left / 8px no-repeat;
   color-scheme: dark;
