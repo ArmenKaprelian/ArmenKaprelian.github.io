@@ -223,6 +223,14 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   .page { padding: 14px max(16px, var(--safe-r)) max(40px, calc(var(--safe-b) + 24px)) max(16px, var(--safe-l)); }
   .page h1 { font-size: 30px; }
   .film .chapters button { padding: 5px 0; }   /* taller rows for a finger */
+  /* The home page's bio beside the headshot (the author's friend's note of 1 November 2026: the statement wrapped into nine short lines at 15 px beside
+     a headshot 0.43 of the column wide): the headshot takes 0.38 of the column, the statement is set at 13 px with its non-breaking span released and its second forced break flowing, so the
+     lines run longer beside the picture. Tablets and the split layout are unchanged. */
+  .content .top { --shot: 136px; }
+  @supports (width: round(down, 10px, 1px)) and (width: 1cqw) { .content .top { --shot: clamp(110px, round(down, (min(100cqw, 820px) - 32px) * .38, 2px), 286px); } }
+  .content .lede .lead { font-size: 13px; }
+  .content .lede .lead .nb { white-space: normal; }   /* "export controls," may break beside the headshot */
+  .content .lede .lead br:nth-of-type(2) { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
