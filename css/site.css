@@ -235,9 +235,9 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   .content .id { display: block; }
   .content .lede { display: block; }
   .content .portrait { float: left; margin: 0 16px 4px 0; }
-  .content .lede .lead { font-size: 14px; position: relative; top: -5px; margin: 0; }
+  .content .lede .lead { font-size: 13px; position: relative; top: -5px; margin: 0; }   /* 13 px and one paragraph: seven lines, all beside the photo, at 360 to 430 px (the wrap computed for the common phones, 1 November 2026) */
   .content .lede .lead .nb { white-space: normal; }   /* "export controls," may break beside the headshot */
-  .content .lede .lead br:nth-of-type(2) { display: none; }
+  .content .lede .lead br { display: none; }   /* both forced breaks flow on phones */
   .content .lede .lead + p { clear: left; margin-top: 18px; }
 }
 
