@@ -26,6 +26,7 @@ SKELETON = ('<!doctype html>\n<html lang="en">\n<meta charset="utf-8">\n'
 
 
 def main():
+    if any(a in ("-h", "--help") for a in sys.argv[1:]): print(__doc__.strip()); return 0   # the lab's rule: every tool prints its help for -h (round 32, 1 November 2026)
     src = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else LAB_PUBLISH
     page = (src / "explorer.html").read_text(encoding="utf-8")
     assert not page.lstrip().lower().startswith("<!doctype"), "the publish set's page already has a skeleton"
