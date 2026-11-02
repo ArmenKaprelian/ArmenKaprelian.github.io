@@ -223,22 +223,26 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   .page { padding: 14px max(16px, var(--safe-r)) max(40px, calc(var(--safe-b) + 24px)) max(16px, var(--safe-l)); }
   .page h1 { font-size: 30px; }
   .film .chapters button { padding: 5px 0; }   /* taller rows for a finger */
-  /* The home page's bio beside the headshot (the author's friend's note of 1 November 2026: the statement wrapped into nine short lines at 15 px beside
-     a headshot 0.43 of the column wide): the headshot takes 0.38 of the column, the statement is set at 13 px with its non-breaking span released and its second forced break flowing, so the
-     lines run longer beside the picture. Tablets and the split layout are unchanged. */
-  .content .top { --shot: 136px; }
-  @supports (width: round(down, 10px, 1px)) and (width: 1cqw) { .content .top { --shot: clamp(110px, round(down, (min(100cqw, 820px) - 32px) * .38, 2px), 286px); } }
-  /* Round 33 (the author's request of 1 November 2026, from a phone whose browser scales text about a fifth): the headshot floats at the left and the
-     statement runs beside it and on below it at full width, so a longer rendering never becomes a narrow column; the credentials clear the picture;
-     the name takes 7 percent of the screen's width, one line at 360 px and up unless the text is scaled more than a sixth. */
+  /* The home page's top block as a card (round 33, the author's request of 2 November 2026, after a phone that scales text by about 1.13 ran the
+     statement's last line under the headshot, and his rule against dead space). Beside the headshot sit the lines that identify him, "Economist.",
+     the degree and the dissertation, and the headshot is as tall as they are: its box takes the rows they fill and crops the square picture to
+     a taller frame (object-fit: cover, at most 1.6 times its width; beyond that, at a text scale over about 1.4, the lines run on below it),
+     so no line falls under the picture and no space stands beside it, at any text scale. The statement runs below at the column's full width,
+     where no line is short. The four pieces are spans in the two paragraphs (display: contents), placed by the grid; the laptop and tablet
+     layouts read the same markup in its own order. The headshot takes 0.40 of the column. The name takes 7 percent of the screen's width, one
+     line at 360 px and up unless the text is scaled more than a sixth. (The runaround of 1 November 2026 is retired.) */
+  .content .top { --shot: 150px; }
+  @supports (width: round(down, 10px, 1px)) and (width: 1cqw) { .content .top { --shot: clamp(110px, round(down, (min(100cqw, 820px) - 32px) * .40, 2px), 286px); } }
   .content h1 { font-size: clamp(22px, 7vw, 30px); line-height: 1.15; }
-  .content .id { display: block; }
-  .content .lede { display: block; }
-  .content .portrait { float: left; margin: 0 16px 4px 0; }
-  .content .lede .lead { font-size: 13px; position: relative; top: -5px; margin: 0; }   /* 13 px and one paragraph: seven lines, all beside the photo, at 360 to 430 px (the wrap computed for the common phones, 1 November 2026) */
-  .content .lede .lead .nb { white-space: normal; }   /* "export controls," may break beside the headshot */
-  .content .lede .lead br { display: none; }   /* both forced breaks flow on phones */
-  .content .lede .lead + p { clear: left; margin-top: 18px; }
+  .content .id { grid-template-rows: auto auto 1fr auto; }   /* the headshot's rows: "Economist.", the degree, the dissertation; the fr row takes any height left */
+  .content .lede p { display: contents; }
+  .content .lede br { display: none; }
+  .content .portrait { grid-column: 1; grid-row: 1 / 4; align-self: start; height: 100%; min-height: var(--shot); max-height: calc(var(--shot) * 1.6); object-fit: cover; }
+  .content .lede .role, .content .lede .deg, .content .lede .dis { grid-column: 2; position: relative; top: -5px; }   /* the capitals on the headshot's top edge */
+  .content .lede .role { grid-row: 1; font-size: 15px; color: var(--ink); }
+  .content .lede .deg { grid-row: 2; font-size: 13px; color: var(--muted); }
+  .content .lede .dis { grid-row: 3; font-size: 13px; color: var(--muted); }
+  .content .lede .what { grid-column: 1 / -1; grid-row: 4; margin-top: 22px; font-size: 15px; color: var(--ink); }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
