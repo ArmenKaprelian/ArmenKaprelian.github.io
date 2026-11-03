@@ -2,7 +2,7 @@
 
 Rebuilt from the atlas’s data when the atlas was published on 3 November 2026.
 
-You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.github.io/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
+You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.com/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
 ## 1. How to help
 
@@ -26,7 +26,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.3. Eligible firms. Every firm-year record the RFSD marks eligible, with or without a statement. Eligibility is the data provider's operational classification, not a verified legal duty to file. Eligible firms per year: 4,837,958 in 2014, 3,357,109 in 2021, 3,147,504 in 2024 and 3,125,555 in 2025.
 
-2.4. Statement availability. A statement is available when the release holds the firm's own filing for that year, filed and not imputed. The atlas's word for this is an "original statement." A share with a statement is the fraction of a group's eligible firms in a year that have one. Every share in the atlas is of one year's population. It compares years, not the same firms followed over time, unless a text says it follows firms (2.16).
+2.4. Statement availability. A statement is available when the release holds the firm's filing for that year. Files not explicitly identified as imputed by the RFSD authors are treated as non-imputed. A share with a statement is the fraction of a group's eligible firms in a year that have one. Every share in the atlas is of one year's population. It compares years, not the same firms followed over time, unless a text says it follows firms (2.16).
 
 2.5. Registered at year-end. Eligible firms that are also registered at the end of the financial year. It is the second population in the national chart (9.3) and the second line of the Statement share tile (5.2).
 
@@ -46,11 +46,11 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.11. Coordinate pairs. The distinct coordinates of geocoded registered addresses. In 2021 the located firms sit at 727,190 pairs. The most shared pair holds 7,928 firms, and 514,368 located firms sit at pairs shared by 100 or more.
 
-2.12. Geocode levels. A house- or street-level geocode matches an address to a building or a street. Other geocodes are coordinates without a verified house or street match. The Firms view and the 1 km squares draw only firms on no list with house- or street-level geocodes. Firms with other geocodes are counted and not drawn: 195,010 in 2021 and 195,153 in 2024.
+2.12. Geocode levels. A house- or street-level geocode matches an address to a building or a street. Other geocodes are coordinates without a verified house or street match. The Firms view and the 1 km squares draw only firms on no list with house- or street-level geocodes. In the Firms view, firms with other geocodes are counted and not drawn: 195,010 in 2021 and 195,153 in 2024.
 
 2.13. Ownership and legal form come from the registry's codes (OKFS and OKOPF), grouped as the chapter groups them.
 - State-related firms: ownership code for state or municipal ownership, mixed ownership with state participation, or state-corporation ownership.
-- State-run firms: state-related firms with the unitary-enterprise legal form. A federal, regional or municipal body owns them outright and they issue no shares. They are about half of the state-related firms, and 86% of them were municipal in 2024.
+- State and municipal enterprises: These enterprises operate assets owned by the federal government, a region, or a municipality and issue no shares. The registry calls this legal form a “unitary enterprise.” The group shown here includes those also recorded as state-related. They are about half of the state-related firms, and 86% of those shown were municipal in 2024.
 - The codes do not establish operational control or disclosure protection.
 
 2.14. Industry. Firms are classed by division, the two-digit OKVED 2 code, which is identical to NACE Rev. 2 at two digits. The atlas uses NACE Rev. 2 division names and shows the code in brackets, as in "Wholesale trade (46)." The industry layer groups divisions into nine classes (5.7).
@@ -99,7 +99,7 @@ The LAYER card groups the layers under three tabs in a row under VIEW, COUNTS, S
 
 5.1. Firm density, 2021 (COUNTS, fixed to 2021). Located eligible firms at registered addresses per cell in 2021. Grids: 5 km cells across the country, 1 km squares closer in (firms on no list with a house- or street-level geocode), and 250 m cells in the city windows. Classes: 1–2, 3–5, 6–10, 11–25, 26–60, 61–150, 151–400 and more than 400 firms. The tile also gives the cell's firms with a 2021 statement. The busiest 5 km cell, over central Moscow, holds 65,761 located firms.
 
-5.2. Statement share by year (STATEMENTS, follows the slider, 2014 to 2025). The share of located eligible firms with an original statement, per cell and year. Grids: 100 km cells, 25 km cells closer in, 1 km squares from the address files for every year, and 250 m cells in the city windows for 2021. Classes at 100 km: under 20%, 20–35, 35–50, 50–60, 60–70 and 70% or more. The 1 km squares use their own classes (under 55%, 55–62, 62–68, 68–74 and 74% or more) and count only firms on no list with house- or street-level geocodes. The tile adds the cell's firms registered at year-end and their share, and the cell's sanctions-list members. The note gives the national figure: 63.4% of eligible firms in 2021 and 66.3% in 2024.
+5.2. Statement share by year (STATEMENTS, follows the slider, 2014 to 2025). The share of located eligible firms with a statement, per cell and year. Grids: 100 km cells, 25 km cells closer in, 1 km squares from the address files for every year, and 250 m cells in the city windows for 2021. Classes at 100 km: under 20%, 20–35, 35–50, 50–60, 60–70 and 70% or more. The 1 km squares use their own classes (under 55%, 55–62, 62–68, 68–74 and 74% or more) and count only firms on no list with house- or street-level geocodes. The tile adds the cell's firms registered at year-end and their share, and the cell's sanctions-list members. The note gives the national figure: 63.4% of eligible firms in 2021 and 66.3% in 2024.
 
 5.3. Change, 2024 against 2021 (STATEMENTS, fixed). The change in the located share with a statement, in percentage points, in 100 km cells with 50 or more located firms in both years. Six classes at ±2 and ±5 points: more than +5, +2 to +5, 0 to +2, −2 to 0, −5 to −2 and −5 or less. The legend gives each class's count of cells. 658 cells qualify at 100 km. Across all located firms, the share with a statement moves from 64.0% in 2021 to 66.5% in 2024. Closer in, 25 km cells follow the same rule (1,975 cells). The atlas notes that the chapter's figure shows only the 100 km cells. Each year counts the firms registered then, not the same firms. The tile gives both years' counts and shares and the change.
 
@@ -135,7 +135,7 @@ The atlas computes this comparison from its address files. The chapter does not 
 
 6.1. The tile. Hovering the map opens a tile at the cursor. Its first line names the region and, in the Cells view on every layer but Change: state-related, ends with a red number: the firms on the five lists present in the layer's year at coordinates inside the hovered cell, counted at the cell's own size. A cell without them shows 0. The next lines give the layer's values for the cell, square, pixel, pair or region, with counts of firms. Then come the coordinates and the pixel size ("1 px = 7.4 km"). The tile gives the values of the cell, square or pixel. The region's own figures appear on the context line (7.4).
 
-6.2. UNDER THE CURSOR repeats the tile's values as labelled rows and adds a chart and the profile. In the Firms view it also lists the firms on the five lists nearby. Every share comes with its count of firms. The chart plots the share of located eligible firms with an original statement in that cell by financial year, leaving out years with fewer than 50 firms. On a 1 km square it plots the surrounding 25 km cell. The 1 km city cells plot 2019 to 2024. The 250 m cells and the 5 km density cells carry 2021 only and have no chart. On the shared-pairs layer it plots the firms at shared pairs against those elsewhere. The state-related layer shows a note in place of a chart.
+6.2. UNDER THE CURSOR repeats the tile's values as labelled rows and adds a chart and the profile. In the Firms view it also lists the firms on the five lists nearby. Every share comes with its count of firms. The chart plots the share of located eligible firms with a statement in that cell by financial year, leaving out years with fewer than 50 firms. On a 1 km square it plots the surrounding 25 km cell. The 1 km city cells plot 2019 to 2024. The 250 m cells and the 5 km density cells carry 2021 only and have no chart. On the shared-pairs layer it plots the firms at shared pairs against those elsewhere. The state-related layer shows a note in place of a chart.
 
 6.3. In the Firms view the tile describes the pixel or pair at the cursor: its firms on no list and their coordinate pairs, how many have a statement that year, on the industry layer the leading division's share of revenue there, and the firms on the five lists nearby, split into red (with a statement), hollow (without) and "added later" (added to a list after the year shown). A line gives the firms in view. Under the cursor gives their count and the radius it searched.
 
@@ -193,8 +193,8 @@ The card's findings, in its words: larger asset quintiles have greater condition
 - joint-stock companies: 73.0% to 78.2%, +5.2
 - private firms: 64.2% to 67.2%, +3.0
 - state-related firms: 69.8% to 61.3%, −8.5
-- state-run firms: 70.1% to 48.8%, −21.3
-The state-run firms are about half of the state-related firms and carry the whole decline. The other state-related firms rise, from 69.5% to 73.7%. The card's i text adds that the declines are concentrated in 2024 (Figures 2.2 and 2.3).
+- state and municipal enterprises: 70.1% to 48.8%, −21.3
+The state and municipal enterprises shown here are about half of the state-related firms and carry the whole decline. The other state-related firms rise, from 69.5% to 73.7%. The visible note explains their public ownership and absence of shares, and gives the municipal share. The card's i text adds that the declines are concentrated in 2024 (Figures 2.2 and 2.3).
 
 ## 10. Driving the atlas
 
@@ -217,7 +217,7 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 11.1. National availability rises from 63.4% of eligible firms in 2021 to 66.3% in 2024 (Table B.1). This series is the national level against which the group, size and list comparisons are read.
 
-11.2. Groups. From 2021 to 2024 availability falls among state-related firms, all of it among the state-run firms, and rises among private firms and joint-stock companies (9.4). The atlas calls these population comparisons the chapter's clearest findings on the sanctions period. It says the chapter's opacity model organizes them without predicting them.
+11.2. Groups. From 2021 to 2024 availability falls among state-related firms, all of it among the state and municipal enterprises shown here, and rises among private firms and joint-stock companies (9.4). The atlas calls these population comparisons the chapter's clearest findings on the sanctions period. It says the chapter's opacity model organizes them without predicting them.
 
 11.3. Size. Larger asset quintiles have greater conditional availability. The largest firms' advantage rises modestly after 2021 (9.2). The atlas calls this financial selection: the largest firms stay visible.
 
@@ -253,6 +253,6 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 The atlas gives no citation form. This guide suggests:
 
-Kaprelian, Armen G. 2026. Visibility Atlas: which Russian firms stay visible under sanctions, and which do not. https://armenkaprelian.github.io/atlas/
+Kaprelian, Armen G. 2026. Visibility Atlas: which Russian firms stay visible under sanctions, and which do not. https://armenkaprelian.com/atlas/
 
 To contact the author, use the email address shown in the atlas's footer.
