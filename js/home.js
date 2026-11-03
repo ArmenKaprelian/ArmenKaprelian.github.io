@@ -29,7 +29,14 @@
   index.addEventListener('focusout', e => { if (!index.contains(e.relatedTarget)) show(''); });
   addEventListener('pageshow', () => show(''));   // coming back to the page from one of its links
 
-  addEventListener('load', () => {
-    if (wide.matches) fig.querySelectorAll('img[data-src]').forEach(i => { i.src = i.dataset.src; });
-  }, { once: true });
+  const loadPreviews = () => {
+    if (wide.matches) fig.querySelectorAll('img[data-src]').forEach(i => {
+      if (!i.getAttribute('src')) i.src = i.dataset.src;
+    });
+  };
+  addEventListener('load', loadPreviews, { once: true });
+  wide.addEventListener('change', () => {
+    if (wide.matches) loadPreviews();
+    else show('');
+  });
 })();
