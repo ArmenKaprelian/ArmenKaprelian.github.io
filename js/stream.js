@@ -15,8 +15,8 @@
   const ctx = canvas.getContext('2d');
   const root = getComputedStyle(document.documentElement);
   const INK = root.getPropertyValue('--ink').trim() || '#ECEEF1';
-  const SIZE = 11, PITCH = 22, TRACK = 0.88;            // 11 px Plex Mono, rows 22 px apart, 8 percent tracking
-  const FONT = `500 ${SIZE}px "IBM Plex Mono", monospace`;
+  const SIZE = 11, PITCH = 22, TRACK = 0.88;            // 11 px Geist Mono, rows 22 px apart, 8 percent tracking
+  const FONT = `500 ${SIZE}px "Geist Mono", monospace`;
   const GAP = 34, MARK = 8;                              // the space between items and the mark in it
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -114,6 +114,6 @@
   ro.observe(panel); if (photo) ro.observe(photo);
   reduce.addEventListener('change', () => { frame(); start(); });
 
-  // The rows are measured in Plex Mono, so nothing is laid out before the font is in.
+  // The rows are measured in Geist Mono, so nothing is laid out before the font is in.
   document.fonts.load(FONT).finally(() => { ready = true; build(); frame(); start(); });
 })();
