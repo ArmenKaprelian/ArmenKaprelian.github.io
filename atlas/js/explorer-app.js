@@ -2,6 +2,7 @@
 // in the page; the map redraws on every state change; every panel names its source.
 (function () {
   'use strict';
+  const COPY = window.MOTION_COPY;
   const D = window.MOTION_DATA, S = D.series, C100 = D.cells100, DEN = D.density, BM = D.basemap, CY = D.cellsyears;
   const F = S.facts, fmt = Motion.fmt, MM = MotionMap, CH = MotionCharts;
   MM.listedQuiet = 1; MM.listedCased = 1; MM.pulseModern = 1;   // the atlas's quieter resting listed marks at the national zoom (round 11, item 2) and the cased marks of round 14 (B''); the video keeps round 8's rule
@@ -2214,7 +2215,7 @@ void main() {
     const SU = D.statesplit.state_unitary, col = it => Object.assign(it, { color: it.b >= it.a ? theme.accent : theme.fall });
     const top = [{ label: 'joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1] }, { label: 'state-related', a: F.own.state[0], b: F.own.state[1] }, { label: 'private', a: F.own.private[0], b: F.own.private[1] }]
       .map(col).sort((p, q) => (q.b - q.a) - (p.b - p.a));
-    const items = top.flatMap(it => it.label === 'state-related' ? [it, col({ label: 'state and municipal enterprises', a: SU.share[0], b: SU.share[1] })] : [it]);
+    const items = top.flatMap(it => it.label === 'state-related' ? [it, col({ label: COPY.state_municipal_label.toLowerCase(), a: SU.share[0], b: SU.share[1] })] : [it]);
     CH.changes(ctx, { x: 8, y: big ? 34 : 26, w: w - 16, h: hh - (big ? 44 : 32) }, items, { theme, size: sz, bar: big ? 8 : 6 });
     if (!big && pop.id === 'groups') drawGroups('pochart');
   }
@@ -2223,11 +2224,28 @@ void main() {
     const { ctx, w } = chartCtx(id); const hh = $(id).getBoundingClientRect().height, sz = big ? 14 : 12;
     const sz5 = {}; for (let i = 0; i < S.size.year.length; i++) if (S.size.era[i] === 'recent') (sz5[S.size.quintile[i]] = sz5[S.size.quintile[i]] || []).push({ x: S.size.year[i], y: S.size.or[i], low: S.size.low[i], high: S.size.high[i] });
     const ls = []; for (let i = 0; i < S.lists.year.length; i++) if (S.lists.model[i] === 'annual-eligible-membership' && S.lists.contrast[i] === 'sanctioned_only' && S.lists.comparison[i] === 'level' && S.lists.year[i] != null) ls.push({ x: S.lists.year[i], y: S.lists.or[i], low: S.lists.low[i], high: S.lists.high[i] });
-    // The right margin fits the longest end label (measured, as drawNational does): the plot's inner margin is 14 px here and the label starts 10 px past the last
-    // point and ends 8 px inside the canvas (round 10: with the monospace label the chart's default 40 px margins left 59 px for five years on a phone).
-    const listLabel = 'sanctioned-only firms', pad = big ? 22 : 14, endGap = big ? 14 : 10, right = Motion.measure(ctx, listLabel, sz, 500) + 40 - pad + endGap + 8, d = big ? 1.5 : 1;
-    CH.yearDots(ctx, { x: big ? 52 : 40, y: 10, w: w - right - (big ? 12 : 0), h: hh - (big ? 50 : 44) }, [{ label: 'Q5 vs Q1', color: theme.accentStrong, points: sz5.Q5 || [], whiskers: true, dot: 4 * d, width: 2 * d }, { label: 'Q2 vs Q1', color: theme.accent, points: sz5.Q2 || [], dot: 3 * d, width: 1.5 * d }, { label: listLabel, color: theme.fall, points: ls, whiskers: true, dot: 4 * d, width: 2 * d }],
-      { xDomain: [2019, 2024], yDomain: [0.3, 5], yTicks: [0.5, 1, 2, 4], theme, size: sz, thinTicks: true, spreadLabels: true, pad, endGap });
+    // Both samples retain the same log scale, with their own population and reference.
+    const listLabel = 'sanctioned-only firms', pad = big ? 22 : 14, endGap = big ? 14 : 10, d = big ? 1.5 : 1;
+    const left = big ? 52 : 40, line = sz * 1.4, panelH = (hh - 36) / 2;
+    Motion.text(ctx, 'Adjusted odds ratio · logarithmic scale', 4, sz + 2, { size: sz, color: theme.muted });
+    const panels = [
+      { heading: 'Size: continued statement availability', population: 'Previously available, still registered and eligible', reference: 'Reference: smallest asset fifth (Q1)', series: [
+        { label: 'Q5 vs Q1', color: theme.accentStrong, points: sz5.Q5 || [], whiskers: true, dot: 4 * d, width: 2 * d },
+        { label: 'Q2 vs Q1', color: theme.accent, points: sz5.Q2 || [], dot: 3 * d, width: 1.5 * d }] },
+      { heading: 'Membership: annual statement availability', population: 'Eligible firms retained in the model', reference: 'Reference: firms on no list', series: [
+        { label: listLabel, color: theme.fall, points: ls, whiskers: true, dot: 4 * d, width: 2 * d }] }
+    ];
+    panels.forEach((panel, i) => {
+      const top = 36 + i * panelH;
+      let y = Motion.paragraph(ctx, panel.heading, 4, top + sz, w - 8, { size: sz, weight: 700, color: theme.ink, lineHeight: 1.4 });
+      y = Motion.paragraph(ctx, panel.population, 4, y, w - 8, { size: sz, color: theme.muted, lineHeight: 1.4 });
+      Motion.text(ctx, panel.reference, 4, y, { size: sz, color: theme.muted });
+      const right = Motion.measure(ctx, listLabel, sz, 500) + 40 - pad + endGap + 8;
+      const plotY = y + line, box = { x: left, y: plotY, w: w - right - (big ? 12 : 0), h: top + panelH - 32 - plotY };
+      const axes = CH.yearDots(ctx, box, panel.series,
+        { xDomain: [2019, 2024], yDomain: [0.3, 5], yTicks: [0.5, 1, 2, 4], theme, size: sz, thinTicks: true, spreadLabels: true, pad, endGap });
+      Motion.text(ctx, '1 = equal odds', box.x + box.w + endGap - pad, axes.sy(1) - 8, { size: sz, color: theme.muted });
+    });
     if (!big && pop.id === 'odds') drawOdds('pochart');
   }
   // ---- the pop-out (round 15, the author's item 5.4 and its revision of 26 October 2026) -------------------------------------------------------------------
@@ -2242,11 +2260,14 @@ void main() {
     const el = $('popout'); if (!pop.id) { el.hidden = true; dropObstacles(); return; }
     $('pogroupnote').hidden = pop.id !== 'groups';
     const m = wrap.getBoundingClientRect(), W = Math.round(Math.min(640, Math.max(360, 0.6 * m.width)));
-    const canvasH = Math.round(Math.min(360, Math.max(200, 0.5 * m.height))); el.style.width = W + 'px'; $('pochart').style.height = canvasH + 'px';
+    const canvasH = pop.id === 'odds' ? 540 : Math.round(Math.min(360, Math.max(200, 0.5 * m.height))); el.style.width = W + 'px'; $('pochart').style.height = canvasH + 'px';
+    el.style.maxHeight = ''; el.style.overflowY = '';
     el.hidden = false; const H = el.getBoundingClientRect().height;
     const ctrl = ['zoombox'].map(id => $(id)).filter(e => e && getComputedStyle(e).display !== 'none').map(e => e.getBoundingClientRect().top - m.top);
     const floor = (ctrl.length ? Math.min(...ctrl) : m.height - 12 - (stripOpen() ? 42 : 0)) - 12;
-    el.style.top = Math.round(Math.max(12, floor - H)) + 'px'; dropObstacles();   // round 17: the tile keeps clear of an open pop-out, which the Under the cursor chart invites the reader to hover past
+    if (pop.id === 'odds') { el.style.maxHeight = Math.max(200, floor - 12) + 'px'; el.style.overflowY = 'auto'; }
+    const visibleH = el.getBoundingClientRect().height;
+    el.style.top = Math.round(Math.max(12, floor - visibleH)) + 'px'; dropObstacles();   // round 17: the tile keeps clear of an open pop-out, which the Under the cursor chart invites the reader to hover past
   }
   function openPop(id) {
     if (pop.id === id || !id || !popAllowed()) { closePop(); return; }
@@ -2603,7 +2624,7 @@ void main() {
     else foundRaf = requestAnimationFrame(foundTick);
   }
   $('methodintro').textContent = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021, 100 km and 25 km cells by year, 1 km squares from the address files by year, and 250 m cells in 22 city windows for 2021. Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records for the financial years ${F.years}. Boundaries: geoBoundaries gbOpen (CC BY 4.0) and OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every figure from the data is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). The insights cite their sources under References.`;   // the method block's first lines (round 10): the counts from the former description and the records line from the former footer
-  $('methodread').textContent = 'Files not explicitly identified as imputed by the RFSD authors are treated as non-imputed. Descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, 2020 filing-exemption, government strategic, presidential strategic). The word names the study’s group, not an effect. Comparison group: firms on none of the five lists. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the Firms view).';   // the former footer's reading notes
+  $('methodread').textContent = COPY.non_imputation + ' Descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, 2020 filing-exemption, government strategic, presidential strategic). The word names the study’s group, not an effect. Comparison group: firms on none of the five lists. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the Firms view).';   // the former footer's reading notes
   $('footer').innerHTML = `<div class="lic">Data: ${F.release}, CC BY 4.0 · geoBoundaries gbOpen, CC BY 4.0 · OpenStreetMap, ODbL 1.0 · © 2026 Armen G. Kaprelian</div>`;   // one line (round 10): the author line is inserted before it below, the data licences at the right
   // The footer line (round 10, the author's item 16): the name with the mark, the email as selectable text with a copy button (no mail link), the link to the author's site (28 October 2026),
   // two square buttons to the author's X profile and an X share intent with a prepared text; then the licence line (item 17).
@@ -2746,18 +2767,18 @@ void main() {
       H('The question') + 'The chapter asks whether sanctions increase the value of withholding financial information, and it measures withholding through statement availability. This series is the national level against which the group, size and list comparisons are read. A missing statement is absent from the RFSD release, which does not recover the public archive as it stood in each year.',
       'Source: ' + esc(S.sources.avail) + '.');
     const SS = D.statesplit;   // the state-run row's figures (round 24, M14)
-    const groupNote = `State and municipal enterprises have publicly owned assets and issue no shares. Among those shown here, ${Math.round(SS.municipal_share[1])}% were municipal in 2024.`;
+    const groupNote = COPY.state_municipal_note.replace('{municipal}', Math.round(SS.municipal_share[1]));
     $('groupnote').textContent = groupNote; $('pogroupnote').textContent = groupNote;
     $('cr-groups').innerHTML = P(H('What it shows') + 'The share of eligible firms with a statement in 2021 and in 2024, by ownership and by legal form. Each year’s population is compared, not the same firms.',
-      H('State and municipal enterprises') + `These enterprises operate assets owned by the federal government, a region, or a municipality and issue no shares. The registry calls this legal form a “unitary enterprise.” The group shown here includes those also recorded as state-related. In 2024, ${Math.round(SS.municipal_share[1])} percent of them were municipal.`,
+      H(COPY.state_municipal_label) + COPY.state_municipal_definition + ` In 2024, ${Math.round(SS.municipal_share[1])} percent of them were municipal.`,
       H('Findings') + `Availability falls among state-related firms (${pct1(F.own.state[0])} to ${pct1(F.own.state[1])}) and rises among private firms and joint-stock companies. The state and municipal enterprises shown here are about half of the state-related firms and carry the whole decline (${pct1(SS.state_unitary.share[0])} to ${pct1(SS.state_unitary.share[1])}). The other state-related firms rise (${pct1(SS.state_other.share[0])} to ${pct1(SS.state_other.share[1])}). The declines are concentrated in 2024.`,
       H('The question') + 'These population comparisons carry the chapter’s clearest findings on the sanctions period. Its opacity model organizes them without predicting them, and the ownership codes do not establish operational control or disclosure protection.',
       'Source: the data behind Figures 2.2 and 2.3.');
     const later = (() => { const sc = S.size_changes; for (let i = 0; i < sc.id.length; i++) if (sc.quintile[i] === 'Q5' && /^2023/.test(sc.window[i])) return { r: sc.ratio[i], lo: sc.low[i], hi: sc.high[i] }; return null; })();
     const r22 = `the ratio of odds ratios is ${fmt.dec(F.size_q5_2022_ratio, 3)} (${ci(F.size_q5_2022_low, F.size_q5_2022_high)})`;
     const sizeLine = `The Q5 vs Q1 odds ratio rises in 2022 against 2021: ${r22}.` + (later ? ` The 2023–2024 increase, a ratio of odds ratios of ${fmt.dec(later.r, 3)} (${ci(later.lo, later.hi)}), is smaller when wholesale trade is excluded.` : '');   // P-C, the author's pick (26 October 2026)
-    $('cr-odds').innerHTML = P(H('What it shows') + 'Odds ratios from the chapter’s binary logit models with industry, region, legal-form and ownership fixed effects and year effects. A ratio above 1 means higher odds of an available statement than the reference group.',
-      H('The lines') + 'Q5 vs Q1 and Q2 vs Q1: the largest and the second asset quintile against the smallest, for a statement in the following year among continuing firms with a statement for the year before (the dissertation’s Table B.4). Sanctioned-only firms: firms on the sanctions list and on no other list, against firms on no list (comparison group), for a statement in the year among eligible firms (its Table B.7).',
+    $('cr-odds').innerHTML = P(H('What it shows') + 'Adjusted odds ratios from the chapter’s binary logit models, on a logarithmic scale. A ratio of 1 means equal conditional odds. Values below 1 mean lower odds and values above 1 mean higher odds. These are odds comparisons, not availability probabilities.',
+      H('The panels') + 'The upper panel compares the largest and second asset quintiles with the smallest, among firms with an available preceding-year statement that remain registered and eligible (Table B.4). The lower panel compares sanctioned-only firms with firms on no list, among eligible firms retained in the annual model (Table B.7).',
       H('Inference') + 'Whiskers show 95% confidence intervals. Standard errors are two-way clustered by industry and region.',
       H('Findings') + 'Larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). ' + sizeLine + ' Sanctioned-only firms have lower availability than firms on no list by 2024.',
       H('The question') + 'The list comparison tests the chapter’s opacity prediction most directly: under its assumptions, firms exposed to sanctions value withholding more. Sanctioned-only firms are less visible than firms on no list by 2024. The size comparison describes financial selection: the largest firms stay visible, and their advantage rises modestly after 2021. These are descriptive and conditional associations.');

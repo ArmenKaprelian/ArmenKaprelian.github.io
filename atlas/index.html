@@ -6,7 +6,7 @@
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="local preview 2daf936c4312">
+<meta name="build" content="local preview 6a5de41bec3b">
 <style>
 /* The atlas's and the explainer's Geist Mono, served from their own fonts/ folder (round 36, the author's decision of 2 November 2026, in
    place of IBM Plex Mono's fifteen subset files of round 20): Vercel's variable file, one face for every weight the pages use (400, 500 and
@@ -397,6 +397,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .groupnote { color: var(--muted); font-size: 12px; line-height: 1.4; margin: 8px 0 0; }
 canvas.chart { width: 100%; height: 170px; display: block; }
 @media (min-width: 901px) { canvas.chart.pop { height: 124px; cursor: zoom-in; } canvas.chart.pop.out { outline: 2px solid var(--context); outline-offset: 2px; } #groupchart { height: 170px; } }   /* round 15 (the author's item 5.4): compact in the column, a click enlarges the chart over the map */
+#oddschart.chart { height: 540px; } /* Two separately labelled samples, at the existing readable type size. */
 @media (min-width: 901px) { #cellchart { cursor: zoom-in; } #cellchart.out { outline: 2px solid var(--context); outline-offset: 2px; } }   /* round 17 (the author's request): the Under the cursor chart pops out like the three above, at its own 170 px in the card */
 /* The pop-out (round 15): the chart enlarged over the map beside its card, joined to the card by a short line across the gap; a click on it, on its card's chart or
    Escape puts it back. No dragging. */
@@ -548,7 +549,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
       <div class="chead" id="ch-odds"><h2 id="h2-odds">Adjusted odds ratios for statement availability</h2><button class="btn info cinfo" id="ci-odds" type="button" aria-expanded="false" aria-controls="cr-odds" aria-label="How to read this chart" title="HOW TO READ THIS CHART">i</button><button class="toggle ctoggle" id="ct-odds" type="button" aria-expanded="true" aria-controls="cb-odds" aria-label="Collapse the card"></button></div>
       <div class="cbody" id="cb-odds">
       <div class="cread" id="cr-odds" hidden></div>
-      <canvas class="chart pop" id="oddschart" aria-label="Adjusted odds ratios by year: asset quintiles Q5 and Q2 against Q1, and sanctioned-only firms against firms on no list"></canvas>
+      <canvas class="chart pop" id="oddschart" aria-label="Two panels of adjusted odds ratios on a logarithmic scale. Upper: continued statement availability among prior-available continuing firms, comparing Q5 and Q2 with Q1. Lower: annual statement availability among retained eligible firms, comparing sanctioned-only firms with firms on no list. One means equal conditional odds."></canvas>
       </div>
     </section>
     <section class="card" id="card-national">
@@ -595,6 +596,7 @@ dialog.refs.shut { transform: scaleY(0.02); opacity: 0; }
 <script src="data/glossary.js" onerror="this.remove()"></script>   <!-- the REFERENCES panel's DEFINITIONS (round 16, the author's pick of 27 October 2026) -->
 <script src="data/anchors.js" onerror="this.remove()"></script>   <!-- the two firms of the film (round 12, part D, item 5) -->
 <script src="data/firms.js" onerror="this.remove()"></script>
+<script src="js/shared-copy.js"></script>
 <script src="js/motion-core.js"></script>
 <script src="js/map-layers.js"></script>
 <script src="js/charts.js"></script>

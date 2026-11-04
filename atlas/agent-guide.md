@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 3 November 2026.
+Rebuilt from the atlas’s data when the atlas was published on 4 November 2026.
 
 You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.com/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
@@ -180,10 +180,10 @@ Display names come from the list files, in Latin letters, with the legal form ab
 
 9.1. On screens wider than 900 px, a click on any chart in the column, the Under the cursor chart included, enlarges it over the map. A click or Escape puts it back.
 
-9.2. ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY. Odds ratios from the chapter's binary logit models with industry, region, legal-form and ownership fixed effects and year effects, on a logarithmic axis with ticks at 0.5, 1, 2 and 4. A ratio above 1 means higher odds of an available statement than the reference group. Whiskers show 95% confidence intervals, and standard errors are two-way clustered by industry and region. Three lines:
+9.2. ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY. Two stacked panels show adjusted odds ratios from the chapter's binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Both logarithmic axes span 0.3 to 5, with ticks at 0.5, 1, 2 and 4. A ratio of 1 means equal conditional odds. Below 1 means lower odds and above 1 means higher odds. These are odds comparisons, not availability probabilities. The upper panel concerns continued statement availability among previously available firms that remain registered and eligible, with the smallest asset fifth as reference. The lower panel concerns annual statement availability among eligible firms retained in the model, with firms on no list as reference. Each reference line is labelled '1 = equal odds'. Whiskers show 95% confidence intervals, and standard errors are two-way clustered by industry and region. The same three series remain:
 - Q5 vs Q1: the largest asset quintile against the smallest, for a statement in the following year among continuing firms with a statement for the year before (Table B.4). Dots for 2020 to 2024, between 3 and 4, highest in 2022 and 2023.
 - Q2 vs Q1: the second quintile against the smallest, same sample, without whiskers. Dots for 2020 to 2024, flat near 2.
-- Sanctioned-only firms against firms on no list, for a statement in the year among eligible firms (Table B.7). Dots for 2019 to 2024, above 1 in 2019 and falling below 1 from 2021, lowest in 2024.
+- Sanctioned-only firms against firms on no list, for a statement in the year among eligible firms retained in the model (Table B.7). Dots for 2019 to 2024, above 1 in 2019 and falling below 1 from 2021, lowest in 2024.
 The chart prints no values. Read levels from its axis and do not quote exact ratios beyond those in the card's text.
 The card's findings, in its words: larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). The Q5 vs Q1 odds ratio rises in 2022 against 2021, a ratio of odds ratios of 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (1.020 to 1.169), is smaller when wholesale trade is excluded. Sanctioned-only firms have lower availability than firms on no list by 2024.
 
