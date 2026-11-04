@@ -147,7 +147,7 @@
   };
   // The striped display style (round 10, the author's item 18): large type cut by horizontal hairline gaps in the IBM manner, eight bars per
   // capital height (Geist Mono's cap height is 0.710 em, its OS/2 sCapHeight, the same in all three weights; Plex Mono's was 0.698), the gaps
-  // cut out of the drawn shape on an offscreen canvas so the true background
+  // cut to half opacity on an offscreen canvas so the true background
   // shows through them; the audit's ink boxes are recorded before the cut and do not change. Nothing under about 28 px takes it.
   Motion.CAP = 0.710;
   let stripeCv = null;
@@ -157,7 +157,7 @@
     if (stripeCv.width < W || stripeCv.height < H) { stripeCv.width = Math.max(W, stripeCv.width); stripeCv.height = Math.max(H, stripeCv.height); }
     const oc = stripeCv.getContext('2d'); oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'source-over'; oc.clearRect(0, 0, stripeCv.width, stripeCv.height);
     oc.setTransform(s, 0, 0, s, 1 - x0 * s, 1 - y0 * s); oc.globalAlpha = 1; draw(oc);
-    oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = '#000';
+    oc.setTransform(1, 0, 0, 1, 0, 0); oc.globalCompositeOperation = 'destination-out'; oc.fillStyle = 'rgba(0, 0, 0, .5)';
     const g = Math.max(1, Math.round(gap * s));
     for (let yy = pitch - gap; yy < h; yy += pitch) oc.fillRect(0, Math.round(yy * s) + 1, W, g);
     oc.globalCompositeOperation = 'source-over';

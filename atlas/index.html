@@ -53,11 +53,11 @@ header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr
 footer { flex: 0 0 auto; }
 .hleft { display: grid; gap: 0; min-width: 0; justify-self: start; }
 header h1 { font-size: 28px; line-height: 28px; margin: 0; font-weight: 700; text-transform: uppercase; }   /* VISIBILITY ATLAS (round 10); 28 px, the striped display size */
-/* The striped display style (round 10, item 18): large type cut by hairline gaps; on canvas eight bars per capital height, on the page a 3 px pitch (2 px bars, 1 px gaps,
+/* The striped display style (round 10, item 18): large type with half-opacity hairline gaps; on canvas eight bars per capital height, on the page a 3 px pitch (2 px bars, 1 px gaps,
    six and a half bars over the 19.5 px cap of a 28 px line) because a fractional pitch blurs under the mask's antialiasing; the mask's phase starts at the cap top (the
    baseline sits 24.5 px down a 28 px line box); on a span around the text, so the 18 px mark beside it stays whole; plain where masks are unsupported. */
 @supports (mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000)) {
-  .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, transparent 2px, transparent 3px); -webkit-mask-position: 0 5px; mask-position: 0 5px; }
+  .striped { -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, rgba(0, 0, 0, .5) 2px, rgba(0, 0, 0, .5) 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, rgba(0, 0, 0, .5) 2px, rgba(0, 0, 0, .5) 3px); -webkit-mask-position: 0 5px; mask-position: 0 5px; }
 }
 .tagline { color: var(--muted); font-size: 11px; line-height: 16px; }   /* 11 px since round 11: the tagline must fit the outer column beside the centred lock-up at 1,600 px */
 .hright { justify-self: end; display: flex; align-items: center; min-width: 0; }   /* the REFERENCES button at the right edge */
@@ -115,7 +115,7 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .toggle:hover { border-color: var(--context-live); color: var(--ink); }
 .maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 0; }
 .maplegend .sw.dot { border-radius: 50%; box-sizing: border-box; }
-.maplegend .sw.bars { background: repeating-linear-gradient(to bottom, var(--c) 0 2px, transparent 2px 3px); }   /* a ramp swatch as five 2 px bars with 1 px gaps (round 10; a hard-stop stripe, not a tonal gradient) */
+.maplegend .sw.bars { background: var(--c); -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, rgba(0, 0, 0, .5) 2px, rgba(0, 0, 0, .5) 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, rgba(0, 0, 0, .5) 2px, rgba(0, 0, 0, .5) 3px); }   /* a ramp swatch as five 2 px bars with half-opacity 1 px gaps (round 10; a hard-stop stripe, not a tonal gradient) */
 .loc { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* place names in tracked capitals (round 10) */
 .tooltip b.loc { font-size: 11.5px; }
 .kv b.loc { font-size: 12px; }
@@ -477,7 +477,7 @@ dialog.refs::backdrop { background: transparent; }
 .refs .rcursor { display: inline-block; width: 0.6em; height: 1.15em; margin-top: 10px; background: var(--context); }
 .refs .ricon { width: 40px; height: 40px; flex: 0 0 auto; color: var(--context); }
 .refs .rglow { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 1px color-mix(in srgb, var(--context) 70%, transparent)) drop-shadow(0 0 4px color-mix(in srgb, var(--context) 35%, transparent)); }
-.refs .rlines { display: block; width: 100%; height: 100%; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), transparent var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
+.refs .rlines { display: block; width: 100%; height: 100%; -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), rgba(0, 0, 0, .5) var(--wbar, 2px) var(--wpitch, 3px)); mask-image: repeating-linear-gradient(to bottom, #000 0 var(--wbar, 2px), rgba(0, 0, 0, .5) var(--wbar, 2px) var(--wpitch, 3px)); -webkit-mask-position: 0 var(--wphase, 1px); mask-position: 0 var(--wphase, 1px); }
 .refs .rlines svg { display: block; width: 100%; height: 100%; overflow: visible; }
 @media (prefers-contrast: more), (forced-colors: active) { .refs .rglow { filter: none; } .refs .rlines { -webkit-mask-image: none; mask-image: none; } }
 .refs .copied { color: var(--context); font-size: 11px; margin-left: 8px; }
