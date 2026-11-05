@@ -6,7 +6,7 @@
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="local preview 06e5d5dee60b">
+<meta name="build" content="local preview 951cfd393662">
 <style>
 /* The atlas's and the explainer's Geist Mono, served from their own fonts/ folder (round 36, the author's decision of 2 November 2026, in
    place of IBM Plex Mono's fifteen subset files of round 20): Vercel's variable file, one face for every weight the pages use (400, 500 and
@@ -106,20 +106,20 @@ main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minm
 .mapwrap { --lift: 0px; }
 .mapwrap.strip-open { --lift: 34px; }   /* the open line lifts the legend clear of itself (round 9's strip at 26 px, 34 px since round 10); since round 37 the zoom buttons sit inside the bar on a wide map and only a phone-width map's zoom column lifts with it */
 .mapwrap.strip-open.narrow { --lift: 58px; }   /* the two-line form on a phone-width map (round 12, part D) */
-.maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 8px 10px; border-radius: 0; border: 2px solid var(--context); font-size: 13px; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
+.maplegend { position: absolute; left: 12px; bottom: calc(12px + var(--lift)); background: color-mix(in srgb, var(--panel) 92%, transparent); padding: 6px 8px; border-radius: 0; border: 2px solid var(--context); font-size: 12px; line-height: 1.3; max-width: calc(100% - 136px); max-height: calc(100% - 24px - var(--lift)); overflow-y: auto; box-sizing: border-box; }   /* a legend taller than the map (the industry legend on a phone) scrolls inside it (round 9) */   /* clears the right-hand column (the zoom box and the scale bar, 100 px) with margins */
 .lhead { display: flex; align-items: center; gap: 6px; }
 .lhead .ltitle { flex: 1 1 auto; min-width: 0; }
 .toggle { background: transparent; color: var(--muted); border: 3px solid var(--context); border-radius: 0; width: 26px; height: 24px; padding: 0; cursor: pointer; font-size: 12px; line-height: 1; flex: 0 0 auto; position: relative; display: grid; place-items: center; }
 .toggle::before { content: ""; display: block; width: 12px; height: 8px; background: currentColor; clip-path: polygon(0 0, 100% 0, 50% 100%); }   /* the triangle drawn, not set in type (the author's request of 25 October 2026): 12 by 8 px inside the 20 by 18 px box, the same on every device; collapsed, it points right */
 .toggle[aria-expanded="false"]::before { width: 8px; height: 12px; clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .toggle:hover { border-color: var(--context-live); color: var(--ink); }
-.maplegend .sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 0; }
+.maplegend .sw { display: inline-block; width: 12px; height: 12px; vertical-align: -2px; margin-right: 6px; border-radius: 0; }
 .maplegend .sw.dot { border-radius: 50%; box-sizing: border-box; }
 .maplegend .sw.bars { background: var(--c); -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, rgba(0, 0, 0, .5) 2px, rgba(0, 0, 0, .5) 3px); mask-image: repeating-linear-gradient(to bottom, #000 0, #000 2px, rgba(0, 0, 0, .5) 2px, rgba(0, 0, 0, .5) 3px); }   /* a ramp swatch as five 2 px bars with half-opacity 1 px gaps (round 10; a hard-stop stripe, not a tonal gradient) */
 .loc { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }   /* place names in tracked capitals (round 10) */
 .tooltip b.loc { font-size: 11.5px; }
 .kv b.loc { font-size: 12px; }
-.maplegend .row { margin: 2px 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; padding-left: 20px; text-indent: -20px; }   /* legend row labels in tracked capitals (round 10); a wrapped row hangs under its text, not under the swatch */
+.maplegend .row { margin: 1px 0; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; padding-left: 18px; text-indent: -18px; }   /* legend row labels in tracked capitals (round 10); a wrapped row hangs under its text, not under the swatch */
 .maplegend .row.p { text-transform: none; letter-spacing: 0; font-weight: 400; padding-left: 0; text-indent: 0; }   /* the legend's sentence lines stay mixed case */
 .lhead .ltitle { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--context); }   /* the overlays' titles in the neon green (25 October) */
 .lhead .ltitle b { font-weight: 500; }
@@ -281,9 +281,9 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .card > .chead, .maplegend > .lhead, .mapnote > .nhead, .mixbox > .mhead, .popout > .pohead { background-color: var(--bar); background-image: var(--grain-bar); background-size: 128px 128px; background-repeat: repeat; }
 .card > .chead { margin: -8px -10px 0; padding: 8px 10px; }
 .card.collapsed > .chead { margin-bottom: -8px; }
-.maplegend > .lhead { margin: -8px -10px 0; padding: 6px 10px; }
-.maplegend > .lbody { margin-top: 6px; }
-.maplegend:has(> .lbody[hidden]) > .lhead { margin-bottom: -8px; }
+.maplegend > .lhead { margin: -6px -8px 0; padding: 5px 8px; }
+.maplegend > .lbody { margin-top: 5px; }
+.maplegend:has(> .lbody[hidden]) > .lhead { margin-bottom: -6px; }
 .mapnote > .nhead { margin: -6px -10px 0; padding: 6px 10px; }
 .mapnote > .lbody { margin-top: 6px; }
 .mapnote:has(> .lbody[hidden]) > .nhead { margin-bottom: -6px; }
