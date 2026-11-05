@@ -6,7 +6,7 @@
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <title>Visibility Atlas</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="build" content="local preview 6a5de41bec3b">
+<meta name="build" content="local preview 06e5d5dee60b">
 <style>
 /* The atlas's and the explainer's Geist Mono, served from their own fonts/ folder (round 36, the author's decision of 2 November 2026, in
    place of IBM Plex Mono's fifteen subset files of round 20): Vercel's variable file, one face for every weight the pages use (400, 500 and
@@ -370,7 +370,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .presets .btn { font-size: 12px; padding: 2px 6px; }
 /* The minimap (round 10, the author's item 12, in the GO TO card's ice-blue neutral of item 21): the outline and the graticule from the basemap, the 22 preset cities as dots
-   with leaders to label boxes in tracked capitals, the mark's four brackets as the Russia frame; shown above 900 px, where the button list keeps only Central Moscow; the
+   with leaders to label boxes in tracked capitals; shown above 900 px, where the city button list is hidden; the
    phone keeps the buttons. Hover and focus take the full white; the city the camera sits at reads as pressed (its box filled). The leaders draw on once at load (0.6 s). */
 .minimap { display: block; width: 100%; height: auto; overflow: visible; margin: 10px 0; color: var(--go); }   /* 10 px above and below since round 15 (item 5.3B): the trimmed drawing sits centred between the search field and the buttons */
 .minimap .land { fill: var(--land); stroke: var(--border); stroke-width: 1; vector-effect: non-scaling-stroke; }
@@ -392,7 +392,7 @@ header, footer { background-color: var(--band); background-image: var(--grain-ba
 .minimap [aria-pressed="true"] text { fill: var(--context); }
 .minimap .city:hover text { fill: var(--ink); }
 @media (max-width: 900px) { .minimap { display: none; } }
-@media (min-width: 901px) { .presets .btn:not(.keep) { display: none; } .presets { flex-direction: column; align-items: flex-start; } .presets .btn.keep { font-size: 11px; padding: 2px 6px; } }   /* under the minimap the kept button, CENTRAL MOSCOW (RUSSIA above it until round 30), at one size between the frame label's 9 px and the list's 12 px (the author's request of 25 October 2026) */
+@media (min-width: 901px) { .presets { display: none; } }
 @media (prefers-reduced-motion: reduce) { .minimap.drawn .city .ld { animation: none; } }
 .groupnote { color: var(--muted); font-size: 12px; line-height: 1.4; margin: 8px 0 0; }
 canvas.chart { width: 100%; height: 170px; display: block; }

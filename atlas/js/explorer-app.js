@@ -2377,25 +2377,24 @@ void main() {
   const addPreset = (label, target, listed = true) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; { const mm = /^(.*?)( \(.*\))?$/.exec(label); b.innerHTML = `${esc(mm[1])}${mm[2] ? `<span class="u">${esc(mm[2])}</span>` : ''}`; } /* the place name in capitals, a unit suffix as it is (round 10) */ b.addEventListener('click', () => flyTo(target())); if (MM_FACTS[label]) b.title = MM_FACTS[label]; if (listed) presets.appendChild(b); PRESETS.push({ label, slug: slugOf(label), target, button: b }); };
   addPreset('Russia', fitTarget, false);   // round 30 (the author's request of 30 October 2026): no RUSSIA button and no minimap frame; the zoom box's fit button and the 0 key fit the country, and #Russia links and the audit's preset still land there
   for (const city of bmp.cities) addPreset(city.label, () => goToTarget(city));
-  addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }); PRESETS[PRESETS.length - 1].button.classList.add('keep');   // the one button that stays under the minimap (round 10)
+  addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }, false);   // retained for existing links and fine-cell checks; no menu button
 
   // ---- the minimap (round 10, the author's item 12; the GO TO card's ice-blue neutral, item 21) ---------------------------------------------------
-  // A 376 by 232 viewBox: the national extent in a 272 by 154 box at the right (0.033397 px per km), a 100 px label column at the left and a 56 px band
+  // A 376 by 196 drawing before the horizontal crop: the national extent in a 272 by 154 box at the right (0.033397 px per km), a 100 px label column at the left and a 32 px band
   // below. The outline is the basemap's land traced at 0.03 px per km (every component of four pixels or more; the mainland first) and simplified; the
   // graticule is the basemap's own polylines clipped to the box. Each city is a focusable group (dot, leader, label box); the layout table below places
   // the boxes by hand against the rules the audit checks (no box meets another box or a dot within 2 px, no leader crosses another, none passes within
-  // 4 px of another city's dot or through another box, every box inside the viewBox). Clicking a city flies to its preset; the frame fits the country.
+  // 4 px of another city's dot or through another box, every box inside the viewBox). Clicking a city flies to its preset.
   const MM_W = 376, MM_H = 196, MM_X0 = 104, MM_Y0 = 10, MM_S = 272 / SPAN_X, MM_BOX_H = 12, MM_PAD = 4, MM_R = 3;
   const mmX = x => MM_X0 + (x - BM.extents.national.x[0]) * MM_S, mmY = y => MM_Y0 + (BM.extents.national.y[1] - y) * MM_S;
-  // Round 16 (the author's item of 27 October 2026, picked as 1.1 times the same day): the viewBox is cropped to its right 376/1.1 units (the author's
-  // method), so the drawing keeps its units and scales about its top-right corner: the labels and their boxes, the dots, the leaders and the corner marks grow
-  // with the map by the same factor, and the card grows taller by it. The labels the cropped column no longer holds are placed by hand (MM_LAYOUT_F), and
-  // minimapCheck() tests the layout against the left edge that still shows (MM_VX0); the card's graticule follows the crop. 1.12 leaves Rostov-on-Don no room
-  // (its box would meet Voronezh's leader), and 1.25 would need the Siberian labels moved or a label row added.
-  const MM_F = 1.1, MM_VX0 = MM_W * (1 - 1 / MM_F);
-  const MM_LAYOUT_F = { 'Kaliningrad': ['X', 116, 0], 'St Petersburg': ['X', 202, 0], 'Moscow': ['L', 22], 'Kazan': ['L', 50], 'Voronezh': ['L', 64], 'Rostov-on-Don': ['L', 87.5], 'Krasnodar': ['L', 102], 'Volgograd': ['L', 116], 'Samara': ['L', 130], 'Ufa': ['L', 144], 'Khabarovsk': ['X', 302.5, 94] };   // the hand placements (27 October 2026): the two northern labels over the Baltic and the Barents, three raised; every other label keeps MM_LAYOUT's entry. Round 29 (30 October 2026): Rostov-on-Don back in the column under a short label, since its full name's box had covered Crimea and no placement of it clears both the land and the layout rules, and Khabarovsk above its dot, off Sakhalin; then (the author's pick A) ROSTOV lowered and the four labels below it 4 units down, so Rostov-on-Don's leader passes south of Crimea instead of across it
+  // The 4 November follow-up uses the removed Central Moscow button's height for a larger minimap.
+  // Cropping to 376/1.19 units enlarges the map, labels, dots and leaders by 1.19/1.1 relative to the preceding layout.
+  // Western labels are repositioned below; minimapCheck() checks the visible crop and every label/leader clearance.
+  // The card graticule uses this same crop and scale, preserving its alignment with Russia.
+  const MM_F = 1.19, MM_VX0 = MM_W * (1 - 1 / MM_F);
+  const MM_LAYOUT_F = { 'Kaliningrad': ['X', 116, 0], 'St Petersburg': ['X', 202, 0], 'Moscow': ['X', 63, 22], 'Kazan': ['X', 63, 50], 'Voronezh': ['X', 63, 68], 'Rostov-on-Don': ['X', 60.1, 87.5], 'Krasnodar': ['X', 63, 108], 'Volgograd': ['X', 63, 122], 'Samara': ['X', 69, 144], 'Ufa': ['X', 79, 158], 'Khabarovsk': ['X', 302.5, 94] , 'Chelyabinsk': ['X', 99, 182] };   // city labels fitted to the enlarged crop; geographic city positions are unchanged
   const MM_SHORT = { 'Rostov-on-Don': 'Rostov' };   // round 29: the minimap's label where the full name has no room (the group's title and the button keep the full name)
-  let mmTry = null;   // a trial layout from the audit hook (minimapTry), over MM_LAYOUT_F's
+  let mmTry = null;   // retained optional trial positions, over MM_LAYOUT_F's
   const MM_TRACE = [0.06, 16]; let mmTrace = null;   // the land's trace: px per km and the smallest component kept, in px (a trial from minimapTry's second argument). Round 29 (the author's pick A, 30 October 2026): 0.06, twice round 10's 0.03, so a small shape such as Crimea keeps about four-fifths of its area and the coasts step half as far; 16 px keeps round 10's smallest component, 4,444 km2
   const MM_LAYOUT = {   // ['L', top]: the left column, the box's right edge at x 98; ['X', left, top]: the box's left edge and top; ['R', right, top]: the box's right edge and top
     'St Petersburg': ['L', 0], 'Kaliningrad': ['L', 14], 'Moscow': ['L', 42], 'Kazan': ['L', 56], 'Voronezh': ['L', 70], 'Rostov-on-Don': ['L', 84], 'Krasnodar': ['L', 98], 'Volgograd': ['L', 112], 'Samara': ['L', 126], 'Ufa': ['L', 140],
@@ -2491,8 +2490,6 @@ void main() {
     const inter = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x, b.x)) > -clear && Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y, b.y)) > -clear && Math.min(a.x1, b.x1) - Math.max(a.x, b.x) > -clear && Math.min(a.y1, b.y1) - Math.max(a.y, b.y) > -clear;
     const boxes = C.map(c => Object.assign({ label: c.label }, c.box));   // the 22 city boxes (the Russia label left the frame on 25 October 2026)
     for (const b of boxes) if (b.x < MM_VX0 || b.y < 0 || b.x1 > MM_W || b.y1 > MM_H) out.push(['outside', b.label]);   // round 16: the left edge that shows at the size
-    { const X1 = MM_X0 + 272, Y1 = MM_Y0 + 154, A = 10, arms = [[MM_X0, MM_Y0, MM_X0 + A, MM_Y0 + A], [X1 - A, MM_Y0, X1, MM_Y0 + A], [X1 - A, Y1 - A, X1, Y1], [MM_X0, Y1 - A, MM_X0 + A, Y1]];   // round 16: no box on a corner mark
-      for (const b of boxes) for (const [x0, y0, x1, y1] of arms) if (inter(b, { x: x0, y: y0, x1, y1 })) out.push(['box-frame', b.label]); }
     for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) if (inter(boxes[i], boxes[j])) out.push(['box-box', boxes[i].label, boxes[j].label]);
     const segDist = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-9, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)); return Math.hypot(a[0] + t * dx - p[0], a[1] + t * dy - p[1]); };
     const cross = (p1, p2, p3, p4) => { const d = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); const d1 = d(p3, p4, p1), d2 = d(p3, p4, p2), d3 = d(p1, p2, p3), d4 = d(p1, p2, p4); return ((d1 > 0) !== (d2 > 0)) && ((d3 > 0) !== (d4 > 0)); };

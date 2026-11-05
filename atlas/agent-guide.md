@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 4 November 2026.
+Rebuilt from the atlas’s data when the atlas was published on 5 November 2026.
 
 You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.com/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
@@ -172,7 +172,7 @@ Display names come from the list files, in Latin letters, with the legal form ab
 
 8.3. The LISTS row, under the year slider: the red button and a count of the firms added to one of the five lists in the year shown, 55 in 2014, 31 in 2021, 1,480 in 2024 and none in 2025. The button pulses them. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding one. In the Firms view every one of those firms swells at once. The row is hidden on the other Cells-view layers and the button is disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
 
-8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the 22 cities (on a phone, a row of city buttons takes its place), CENTRAL MOSCOW (250 m), which opens the 250 m cells of central Moscow, and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
+8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the 22 cities (on a phone, a row of city buttons takes its place), and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
 
 8.5. FIND searches the firms on the five lists by name, in Latin or Cyrillic letters. Arrow keys move through the matches, and Enter or a click chooses one. The atlas then switches to the Firms view, moves to a year in which the firm is present if needed, and flies to it. Escape closes the list, then clears the text.
 
