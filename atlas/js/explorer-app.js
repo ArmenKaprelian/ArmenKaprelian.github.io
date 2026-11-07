@@ -13,7 +13,7 @@
   // author's revision dropped the unitary-enterprise layer; round 24 found those firms about half of the state-related ones). Their data load on first use.
   let SHD = null, GRP = null, markShared = false; const dataPending = new Set();
   const grpLayer = () => state.layer === 'gs';
-  const runState = { on: false, timer: 0 };   // the year run's state (round 15, item 7B)
+  const runState = { on: false, timer: 0, generation: 0 };   // the year run's state (round 15, item 7B)
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
   // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
   if (new URLSearchParams(location.search).get('__audit') === '1') Motion.audit.on = true;
@@ -375,7 +375,7 @@
     const dx = new Int32Array(buf, 32, U), dy = new Int32Array(buf, 32 + 4 * U, U), X = new Int32Array(U), Y = new Int32Array(U);
     let x = 0, y = 0; for (let i = 0; i < U; i++) { if (dx[i]) { x += dx[i]; y = dy[i]; } else y += dy[i]; X[i] = x; Y[i] = y; }
     return { U, X, Y };
-  }, e => { coordsP = null; throw e; }));
+  }).catch(e => { coordsP = null; throw e; }));
   async function loadYear(y) {
     const [C, buf] = await Promise.all([loadCoords(), fetchInflated(FM.files[y], y)]);
     const dv = new DataView(buf), magic = magicOf(dv), n = dv.getUint32(4, true), U = dv.getUint32(8, true), year = dv.getUint16(16, true), ver = dv.getUint16(18, true), exp = FM.by_year[y];
@@ -399,19 +399,42 @@
     const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); prebuildBins(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); for (const T of MOSAIC_LEVELS) mosaicCache.delete(yy + '|' + T); mosaicBitmaps.clear(); mosaicPathCache.clear(); } firmPending.delete(y); syncMix(); return d; }, e => { firmPending.delete(y); throw e; });
     firmPending.set(y, p); return p;
   }
-  // The bins of a loaded year are built in idle time (round 14), not in the first frame that needs them (a 312 ms stall on the first zoom past k 1.5).
-  function decodeGrid25() {   // the 25 km cells, once their two files are in (round 31)
-    C25 = D.cells25 || null;
-    if (C25) {
-      for (const [y, r] of Object.entries(C25.by_year)) c25[+y] = decode25(r, [['n', 'n', true], ['a', 'a', true], ['ns', 'ns', true], ['ng', 'ng', true]]);
-      chg25 = C25.change ? decode25(C25.change, [['n21', 'n21', true], ['a21', 'a21', true], ['n24', 'n24', true], ['a24', 'a24', true], ['cls', 'class', false], ['pp', 'change_pp_x1000', true]]) : null;
-      if (c25[2021]) { const d = c25[2021]; for (let i = 0; i < d.count; i++) if (d.ns[i] >= 5) list25Counts[listClass(d.ns[i])]++; }
+  function decodeGrid25(key) {
+    const byYear = {};
+    if (key === 'cells25') {
+      const cells = D.cells25;
+      for (const [y, r] of Object.entries(cells.by_year)) byYear[y] = decode25(r, [['n', 'n', true], ['a', 'a', true], ['ns', 'ns', true], ['ng', 'ng', true]]);
+      const change = cells.change ? decode25(cells.change, [['n21', 'n21', true], ['a21', 'a21', true], ['n24', 'n24', true], ['a24', 'a24', true], ['cls', 'class', false], ['pp', 'change_pp_x1000', true]]) : null;
+      const d = byYear[2021];
+      if (d) for (let i = 0; i < d.count; i++) if (d.ns[i] >= 5) list25Counts[listClass(d.ns[i])]++;
+      Object.assign(c25, byYear);
+      chg25 = change;
+      C25 = cells;
+    } else if (INDD) {
+      const industry = D.industry25.grid25;
+      for (const [y, r] of Object.entries(industry.by_year)) byYear[y] = decodeInd(r, industry.topk);
+      Object.assign(ind25, byYear);
     }
-    const I25 = D.industry25 && D.industry25.grid25; if (I25 && INDD) for (const [y, r] of Object.entries(I25.by_year)) ind25[+y] = decodeInd(r, I25.topk);
   }
+  // The importer discovers these optional assets by their literal paths.
+  const grid25Files = { cells25: 'data/cells25.js', industry25: 'data/industry25.js' };
+  const loadedGrids25 = new Set();
   let grid25P = null;
-  const ensureGrid25 = () => grid25P || (grid25P = Promise.all(['data/cells25.js', 'data/industry25.js'].map(f => loadScript(f).catch(() => null))).then(() => { decodeGrid25(); layersDirty(); drawMap(); refreshHover(); }));
+  function ensureGrid25() {
+    if (grid25P) return grid25P;
+    const missing = Object.keys(grid25Files).filter(key => !loadedGrids25.has(key));
+    grid25P = Promise.allSettled(missing.map(async key => {
+      await loadScript(grid25Files[key]);
+      decodeGrid25(key);
+      loadedGrids25.add(key);
+    })).then(results => {
+      if (results.some(r => r.status === 'rejected')) grid25P = null;
+      if (results.some(r => r.status === 'fulfilled')) { layersDirty(); drawMap(); refreshHover(); }
+    });
+    return grid25P;
+  }
   const onIdle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 250));
+  // The bins of a loaded year are built in idle time (round 14), not in the first frame that needs them (a 312 ms stall on the first zoom past k 1.5).
   function prebuildBins(y) {   // outside flights, drags, pinches and wheel runs (the build is one long task); the Cells view draws the squares once they exist
     const build = () => { if (!firmYears.has(y)) return; if (flight || settleTimer || press || pinch) { onIdle(build); return; }
       for (const T of MOSAIC_LEVELS) { const had = mosaicCache.has(y + '|' + T); mosaicBins(y, T); if (!had && state.mode !== 'firms' && microYear() === y && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.5) { drawMap(); refreshHover(); } } };
@@ -1779,7 +1802,18 @@ void main() {
   // view's revenue mix and the presets' pressed state. Before, every wheel step ran the whole settle.
   let settleTimer = 0;
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
-  function afterCameraMove() { if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; } findPin = -1; /* a found firm leads the tooltip's names only until the camera moves on */ writeHash(); if (state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear()); syncZoomButtons(); countFirmsInView(); hoverUnit.key = null; refreshHover(); updateContext(); if (!state.hover) fillMixBox(null); syncPresetPressed(); }
+  function afterCameraMove() {
+    if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; }
+    findPin = -1;   // a found firm leads the tooltip's names only until the camera moves on
+    writeHash();
+    if (state.mode !== 'firms') {
+      if (!grid25P && state.cam.k > 1.5 * kFit()) ensureGrid25();
+      if (MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear());
+    }
+    syncZoomButtons(); countFirmsInView(); hoverUnit.key = null; refreshHover(); updateContext();
+    if (!state.hover) fillMixBox(null);
+    syncPresetPressed();
+  }
 
   // The click ladder (24 October 2026, revised the same evening): a click goes to what was clicked. The subject is the
   // city whose window holds the point (from the country, the city in the clicked 100 km cell), else the clicked cell's
@@ -2323,13 +2357,19 @@ void main() {
   function setYear(y) { const yEl = $('year'); yEl.value = String(y); yEl.dispatchEvent(new Event('input')); }
   function runStart() {
     if (runState.on) return;
+    runState.generation++;
     runState.on = true; syncYearLine2();
     if (+$('year').value >= 2025) setYear(2014);
     runState.timer = setTimeout(runStep, 1000);
   }
   function runStep() {
     runState.timer = 0; if (!runState.on) return; const y = +$('year').value; if (y >= 2025) { runEnd(); return; }
-    const next = y + 1, go = () => { if (!runState.on) return; setYear(next); runState.timer = setTimeout(runStep, 1000); };
+    const next = y + 1, generation = runState.generation;
+    const go = () => {
+      if (!runState.on || generation !== runState.generation) return;
+      setYear(next);
+      runState.timer = setTimeout(runStep, 1000);
+    };
     if (FIRMS_OK && state.mode === 'firms') ensureYear(next).then(go, go); else go();
   }
   function runEnd() {

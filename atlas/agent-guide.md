@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 5 November 2026.
+Rebuilt from the atlas’s data when the atlas was published on 7 November 2026.
 
 You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.com/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
