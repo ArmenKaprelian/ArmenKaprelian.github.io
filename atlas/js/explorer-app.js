@@ -174,7 +174,7 @@
 
   if (INDD && IND_T) state.layer = 'industry';
   if (INDD && IND_T) LAYERS.push({ id: 'industry', label: 'Leading industry by year',
-    prov: 'The division (two-digit OKVED 2 code, identical to NACE Rev. 2) with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value, per 100 km and 25 km cell for 2014 to 2025 (M11 pass over the foundation registry and payload partitions), and per 1 km square of the address files for every year. Nine classes: ' + IND_T.classes.label.map((l, i) => `${l} (divisions ${IND_T.classes.divisions[i]})`).join(' · ') + '. Division names: NACE Rev. 2, Eurostat codelist NACE_R2 version 20.1, which OKVED 2 (OK 029-2014) mirrors at the two-digit level. Shares are within the year. Firms on these lists (treated) are included in the cells and their share of a cell’s revenue is given in the hover. In the Firms view the colour is the division with the largest share of revenue at the coordinate pair, over every firm registered there with a statement and a positive revenue value, firms on the five lists (treated) included. A coordinate pair without a firm with a revenue value is neutral.' });
+    prov: 'The division (two-digit OKVED 2 code, identical to NACE Rev. 2) with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value, per 100 km and 25 km cell for 2014 to 2025 (M11 pass over the foundation registry and payload partitions), and per 1 km square of the address files for every year. Nine classes: ' + IND_T.classes.label.map((l, i) => `${l} (divisions ${IND_T.classes.divisions[i]})`).join(' · ') + '. Division names: NACE Rev. 2, Eurostat codelist NACE_R2 version 20.1, which OKVED 2 (OK 029-2014) mirrors at the two-digit level. Shares are within the year. Firms matched to any of the five lists are included in the cells and their share of a cell’s revenue is given in the hover. In the Firms view the colour is the division with the largest share of revenue at the coordinate pair, over every firm registered there with a statement and a positive revenue value, including firms matched to any of the five lists. A coordinate pair without a firm with a revenue value is neutral.' });
 
   // The two layers' reading texts in standard terms (round 16); the method block shows them in place of a provenance line.
   const SHARED_REG = 'Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
@@ -862,9 +862,9 @@ void main() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
     b.hidden = !show; b.disabled = !count;
-    const label = !count ? `No firm was added to these lists in ${y}` : state.mode === 'firms' ? `Replay the pulse of firms added to a list in ${y}` : `Pulse the cells holding a firm added to a list in ${y}`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
+    const label = `Replay the ${y} pulse`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
-    const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = count ? `<b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'} added in ${y}` : `No firm added in ${y}`; pl.classList.toggle('zero', on && !count); }   // the LISTS row (round 37): the count and the year on one line under the slider; at zero the sentence dims with the disabled button (the author liked it, 27 October 2026)
+    const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `${y} pulse · <b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'}`; pl.classList.toggle('zero', on && !count); }   // the LISTS row (round 37): the count and the year on one line under the slider; at zero the sentence dims with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
   }
   // ---- the Cells view's squares and pulse (round 14, the author's decisions of 25 October 2026) ---------------------------------------------------------------------
@@ -1197,10 +1197,10 @@ void main() {
     const i = REG ? regRow(name, y) : null, i21 = REG ? regRow(name, 2021) : null, nat = band === 'national';
     const n = i != null ? REG.n[i] : null, a = i != null ? REG.a[i] : null, n21 = i21 != null ? REG.n[i21] : 0, a21 = i21 != null ? REG.a[i21] : 0;
     const what = nat ? 'located firms' : 'firms registered in the region';
-    if (state.mode === 'firms' && nat && FM && FM.by_year[y]) { const by = FM.by_year[y]; return { band, name, kind: 'firms', text: nw ? `${loc('Russia')}, ${ys}: ${num(by.firms, fmt.int(by.firms))} firms on no list (comparison group)` : `${loc('Russia')}, ${ys}: ${num(by.firms, fmt.int(by.firms))} firms on no list (comparison group) at ${num(by.addresses, fmt.int(by.addresses))} coordinate pairs, and ${num(by.listed, fmt.int(by.listed))} on the lists (treated)`, nums: N, short: `${loc('Russia')}, ${ys}: ${sp(fmt.int(by.firms))} on no list (comparison group)`, shortNums: [by.firms] }; }
+    if (state.mode === 'firms' && nat && FM && FM.by_year[y]) { const by = FM.by_year[y]; return { band, name, kind: 'firms', text: nw ? `${loc('Russia')}, ${ys}: ${num(by.firms, fmt.int(by.firms))} firms on no list (comparison group)` : `${loc('Russia')}, ${ys}: ${num(by.firms, fmt.int(by.firms))} firms on no list (comparison group) at ${num(by.addresses, fmt.int(by.addresses))} coordinate pairs, and ${num(by.listed, fmt.int(by.listed))} on any of the five lists`, nums: N, short: `${loc('Russia')}, ${ys}: ${sp(fmt.int(by.firms))} on no list (comparison group)`, shortNums: [by.firms] }; }
     if (i == null) { const t = totals[y]; if (t) return { band, name, kind: 'share-t', text: `${loc('Russia')}, ${ys}: ${num(t.located, fmt.int(t.located))} located firms, ${num(t.located_stmt_share, fmt.pct(t.located_stmt_share))} with a statement`, nums: N }; return { band, name, kind: 'none', text: '', nums: N }; }
     if (L === 'industry' && REG.d1[i] !== 255) { const d = REG.d1[i]; return { band, name, kind: 'industry', text: nw ? `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}), ${num(REG.s1[i], REG.s1[i] + '%')} of revenue` : `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}) leads with ${num(REG.s1[i], REG.s1[i] + '%')} of revenue`, nums: N, short: `${loc(name)}, ${ys}: ${esc(divShort(d))} (${divPad(d)}), ${sp(REG.s1[i] + '%')} of revenue`, shortNums: [REG.s1[i]] }; }   // the short label with its code, never the code alone (the author's rule of 25 October 2026)
-    if (L === 'lists') return { band, name, kind: 'lists', text: nw ? `${loc(name)}, ${ys}: ${num(REG.listed[i], fmt.int(REG.listed[i]))} of ${num(n, fmt.int(n))} on the lists (treated)` : `${loc(name)}, ${ys}: ${num(REG.listed[i], fmt.int(REG.listed[i]))} of ${num(n, fmt.int(n))} ${nat ? 'located firms' : 'firms registered in the region'} are on the five lists (treated)`, nums: N, short: `${loc(name)}, ${ys}: ${sp(fmt.int(REG.listed[i]))} on the lists (treated)`, shortNums: [REG.listed[i]] };
+    if (L === 'lists') return { band, name, kind: 'lists', text: nw ? `${loc(name)}, ${ys}: ${num(REG.listed[i], fmt.int(REG.listed[i]))} of ${num(n, fmt.int(n))} on any of the five lists` : `${loc(name)}, ${ys}: ${num(REG.listed[i], fmt.int(REG.listed[i]))} of ${num(n, fmt.int(n))} ${nat ? 'located firms' : 'firms registered in the region'} match any of the five lists`, nums: N, short: `${loc(name)}, ${ys}: ${sp(fmt.int(REG.listed[i]))} on any of the five lists`, shortNums: [REG.listed[i]] };
     if (L === 'change') { const i24 = regRow(name, 2024); if (i24 != null && i21 != null) { const s21 = shareOf(REG.a[i21], REG.n[i21]), s24 = shareOf(REG.a[i24], REG.n[i24]); return { band, name, kind: 'change', text: `${loc(name)}: ${num(s21, fmt.pct(s21))} with a statement in 2021, ${num(s24, fmt.pct(s24))} in 2024, ${num(s24 - s21, pts(0, s24 - s21))}`, nums: N, short: `${loc(name)}: ${sp(fmt.pct(s21))} in 2021, ${sp(fmt.pct(s24))} in 2024`, shortNums: [s21, s24] }; } }
     return Object.assign({ band, name, kind: 'share' }, shareLine(loc(name), n, a, n21, a21, what));
   }
@@ -1312,9 +1312,9 @@ void main() {
     { text: 'From a city, a click goes to the 20 km scale, then 2.5 times closer.', mouse: true },
     { text: 'In the Firms view, clicks past the 20 km scale zoom 4 times closer.', mouse: true, firms: true },
     { text: 'Shift+click zooms back out from the point.', mouse: true },
-    { text: 'The red button shows the firms added to a list in the year shown.', firms: true },
+    { text: 'The red button replays the pulse for the year shown.', firms: true },
     { text: 'The Firms view draws registered addresses, year by year.', firms: true },
-    { text: 'Firms on the five lists (treated) turn red from the year added.', firms: true },
+    { text: 'Red marks show firms matched to any of the five lists.', firms: true },
     { text: 'Add a city to the link, as in #Moscow, to open the atlas there.' },
     { text: 'Type a name under GO TO to find a firm on the five lists.' },
     { text: 'Five lists: sanctions, decree, 2020 exemption, two strategic lists.' },   // round 32 (1 November 2026): the five lists named where the term shows (67 characters)
@@ -1457,11 +1457,11 @@ void main() {
       else { read = '<div class="row p">This layer is a cell layer: the Firms view draws every coordinate pair in one colour.</div>'; html = `<div class="row">${sw(theme.neutral)}every coordinate pair</div>`; }
       // The listed marks as one group under its header (round 14: the rows had repeated "(treated)" and set the box's width).
       if (markShared) html += `<div class="row"><span class="sw" style="background:transparent;border:1.5px solid ${theme.ink};border-radius:50%"></span>a coordinate pair shared by 100 or more firms</div>`;   // round 16
-      html += `<div class="row h">On one of the five lists (treated)</div><div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}before the year it was added</div><div class="row">${dot(theme.treated)}from that year, statement available</div><div class="row">${dot(theme.land, theme.treated)}from that year, no statement</div>`;
+      html += `<div class="row h">Any of the five lists</div><div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}before list year shown</div><div class="row">${dot(theme.treated)}from that year, statement available</div><div class="row">${dot(theme.land, theme.treated)}from that year, no statement</div>`;
       read += pix ? `<div class="row p">Blocks of 2 and 3 px: 10 and 100 or more ${L === 'fin' ? 'filers' : 'firms'} in the pixel.</div><div class="row p">Each pixel (about ${pixelSize(1 / c.k)} at this zoom) sums the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.</div>`
         : '<div class="row p">Each dot is one coordinate pair. Larger dots hold more firms.</div>';
       read += FIVE_LISTS_ROW;
-      note = firmStatus || `${ys}: ${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} coordinate pairs and ${fmt.int(by.listed)} firms on the five lists (treated). ${fmt.int(by.city_level)} firms with other geocodes, without a verified house or street match, are counted but not drawn.` + (TRN.name ? ' Hover a red mark for the firm’s name.' : '');
+      note = firmStatus || `${ys}: ${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} coordinate pairs and ${fmt.int(by.listed)} firms matched to any of the five lists. ${fmt.int(by.city_level)} firms with other geocodes, without a verified house or street match, are counted but not drawn.` + (TRN.name ? ' Hover a red mark for the firm’s name.' : '');
     } else if (L === 'density') {
       const micro = microA(c.k, 2021) >= 0.5, f250 = fineA(c.k) >= 0.5;
       title = '<b>Firms per cell</b> <span class="u">(' + (f250 ? '250 m' : micro ? '1 km' : '5 km') + ')</span>';
@@ -1516,8 +1516,8 @@ void main() {
     }
     if (state.mode !== 'firms' && TRN && !grpLayer()) {   // the tile's red count (round 14), in the layer's own year: its key row, and its definition on the reading side; none on the state-related layer, whose tile has no red count (round 18)
       const ly = layerYear();
-      html += `<div class="row"><span class="sw dot" style="background:${theme.treated}"></span><b class="lcn">N</b> on the five lists (treated), ${ly}</div>`;
-      read += `<div class="row p">The red number in the tile counts the firms on these lists (treated) present in ${ly} at coordinates inside the hovered cell, at the cell’s own size. A cell without them shows 0.</div>`;
+      html += `<div class="row"><span class="sw dot" style="background:${theme.treated}"></span><b class="lcn">N</b> on any of the five lists, ${ly}</div>`;
+      read += `<div class="row p">The red number in the tile counts firms matched to any of the five lists and present in ${ly} at coordinates inside the hovered cell, at the cell’s own size. A cell without them shows 0.</div>`;
       read += FIVE_LISTS_ROW;
     }
     const body = `<div class="lg-key">${html}</div>` + (read ? `<div class="lg-read">${read}</div>` : '');
@@ -1596,7 +1596,7 @@ void main() {
                   hollow: () => `<span class="gl" style="background:${theme.land};border:2px solid ${theme.treated}"></span>`,
                   rim: () => `<span class="gl" style="background:${theme.neutral};border:2px solid rgba(227,26,28,0.8)"></span>` };
   function listedGlyph(i, year) { const yi = year - 2014; return TRN.red_from[i] > year ? GLYPH.rim() : TRN.filed[i][yi] === '1' ? GLYPH.red() : GLYPH.hollow(); }
-  const listedYear = i => (TRN.undated[i] ? 'undated' : String(TRN.red_from[i]));
+  const listedYear = i => (TRN.undated[i] ? 'undated' : 'List: ' + TRN.red_from[i]);
   const listedState = (i, year) => `${TRN.filed[i][year - 2014] === '1' ? '' : 'no '}${year} statement`;
   const LIST_WORDS = { s: 'sanctions', d: 'decree', r: '2020 filing-exemption', g: 'government strategic', p: 'presidential strategic' };
   const listedLists = i => (TRN.lists ? Array.from(TRN.lists[i] || '', c => LIST_WORDS[c]).filter(Boolean).join(', ') : '');
@@ -1682,8 +1682,8 @@ void main() {
       }
       if (h.listed) {
         const Ls = h.listed, parts = [];
-        if (Ls.n === 1) parts.push(Ls.ring ? 'hollow' : Ls.red ? 'red' : 'added later');
-        else { if (Ls.red - Ls.ring) parts.push(`${fmt.int(Ls.red - Ls.ring)} red`); if (Ls.ring) parts.push(`${fmt.int(Ls.ring)} hollow`); if (Ls.rim) parts.push(`${fmt.int(Ls.rim)} added later`); }
+        if (Ls.n === 1) parts.push(Ls.ring ? 'hollow' : Ls.red ? 'red' : 'List: later');
+        else { if (Ls.red - Ls.ring) parts.push(`${fmt.int(Ls.red - Ls.ring)} red`); if (Ls.ring) parts.push(`${fmt.int(Ls.ring)} hollow`); if (Ls.rim) parts.push(`List: later (${fmt.int(Ls.rim)})`); }
         lines.push(`${num(fmt.int(Ls.n))} on the lists: ${parts.join(', ')}`);
         if (TRN.name && Ls.top && Ls.top.length) {   // red first, then before their listing year; up to three
           const shown = narrow() ? Ls.top.slice(0, 1) : Ls.top;   // a phone-width map shows one name, then the rest as a count (the panel below lists three)
@@ -1727,7 +1727,7 @@ void main() {
       else {
         lines.push(`${cell}, ${state.year}: ${fmt.int(h.nrev)} firms with a revenue value`);
         lines.push(`Largest share of revenue: ${esc(divShort(h.dom))} (${divPad(h.dom)}), ${h.share}%`);
-        if (h.lsh) lines.push(`Firms on these lists (treated) hold ${h.lsh}% of this cell’s revenue`);
+        if (h.lsh != null) lines.push(`Firms matched to any of the five lists account for ${h.lsh}% of this cell’s revenue.`);
       }
       return lines.join('<br>');
     }
@@ -2150,7 +2150,7 @@ void main() {
       row('Cell', h.fine ? (h.grid < 1 ? '250 m' : `${h.grid} km`) : `${h.grid} km (${h.ix}, ${h.iy})`);
       if (L === 'industry') {
         if (h.dom == null || h.dom === 255) row('Leading', h.dom === 255 || h.nrev === 0 ? 'no firm with a revenue value' : 'no located firms');
-        else { row('With revenue', `${fmt.int(h.nrev)} firms`); row('Leading', lead(h.dom, h.share)); if (h.mix && h.mix.length > 1) { const shown = h.mix.slice(1, 5), rest = (h.rest || 0) + h.mix.slice(5).reduce((t, m) => t + m.share, 0); row('', mixRows(shown, rest), 'full'); }   /* four ranked rows after the leader; the divisions past them fold into the remainder */ if (h.lsh != null) row('Listed (treated)', `${h.lsh}% of revenue`); }
+        else { row('With revenue', `${fmt.int(h.nrev)} firms`); row('Leading', lead(h.dom, h.share)); if (h.mix && h.mix.length > 1) { const shown = h.mix.slice(1, 5), rest = (h.rest || 0) + h.mix.slice(5).reduce((t, m) => t + m.share, 0); row('', mixRows(shown, rest), 'full'); }   /* four ranked rows after the leader; the divisions past them fold into the remainder */ if (h.lsh != null) row('Any of the five lists', `${h.lsh}% of revenue`); }
       }
       else if (h.fine) { const ys = h.yearShown || 2021; if (h.n == null) row('Firms', 'none located'); else { row('Firms', `${band(h.n)} located`); row(`${ys} statement`, h.a != null ? `${fmt.int(h.a)}${cellShareSuffix(h.a, h.n)}` : h.n >= 50 ? 'not available' : 'share not shown under 50 firms'); } }
       else if (L === 'share') { if (h.n == null) row('Firms', 'none located'); else { row('Firms', `${fmt.int(h.n)} located`); row(`${y} statement`, `${fmt.int(h.a)}` + (h.n >= 50 ? ` (${pct(h.a, h.n)})` : ', share not shown under 50 firms')); if (h.ns) row('Sanctions', `${fmt.int(h.ns)} members`); } }
@@ -2168,11 +2168,11 @@ void main() {
     }
     if (h && h.listed && h.listed.top && TRN.name) {   // the detail view (author's rule, 25 October 2026): the display name, the filed name beneath, the listing year, one line of state, memberships and revenue
       const Ls = h.listed, where = Ls.within_km ? `within ${Ls.within_km < 1 ? Math.round(Ls.within_km * 1000) + ' m' : fmt.dec(Ls.within_km, 1) + ' km'}` : 'at this pair';
-      row('On the five lists (treated)', `${fmt.int(Ls.n)} ${where}`);
+      row('Any of the five lists', `${fmt.int(Ls.n)} ${where}`);
       const blocks = Ls.top.map(i => {
         const filed = TRN.name_filed ? TRN.name_filed[i] : '', nm = TRN.name[i], cs = TRN.name_case ? TRN.name_case[i] : 0, shared = TRN.name_shared ? TRN.name_shared[i] : 0;
         const tail = [listedState(i, y), listedLists(i), listedRevenue(i, y)].filter(Boolean).join(' · ');
-        return `<div class="lf"><div class="lf-h"><b>${listedGlyph(i, y)}${listedName(i)}${cs === 2 ? ' <span class="muted">(transliterated)</span>' : ''}</b><span class="muted yr">${TRN.undated[i] ? 'undated' : 'on a list from ' + TRN.red_from[i]}</span></div>`
+        return `<div class="lf"><div class="lf-h"><b>${listedGlyph(i, y)}${listedName(i)}${cs === 2 ? ' <span class="muted">(transliterated)</span>' : ''}</b><span class="muted yr">${listedYear(i)}</span></div>`
           + (filed && filed !== nm ? `<div class="muted filed">${esc(filed)}</div>` : '') + (shared > 1 ? `<div class="muted filed">one of ${fmt.int(shared)} entries under this name</div>` : '') + `<div class="muted filed">${tail}</div></div>`;
       });
       if (Ls.n > Ls.top.length) blocks.push(`<div class="lf more">and ${fmt.int(Ls.n - Ls.top.length)} more</div>`);
@@ -2259,14 +2259,14 @@ void main() {
     const sz5 = {}; for (let i = 0; i < S.size.year.length; i++) if (S.size.era[i] === 'recent') (sz5[S.size.quintile[i]] = sz5[S.size.quintile[i]] || []).push({ x: S.size.year[i], y: S.size.or[i], low: S.size.low[i], high: S.size.high[i] });
     const ls = []; for (let i = 0; i < S.lists.year.length; i++) if (S.lists.model[i] === 'annual-eligible-membership' && S.lists.contrast[i] === 'sanctioned_only' && S.lists.comparison[i] === 'level' && S.lists.year[i] != null) ls.push({ x: S.lists.year[i], y: S.lists.or[i], low: S.lists.low[i], high: S.lists.high[i] });
     // Both samples retain the same log scale, with their own population and reference.
-    const listLabel = 'sanctioned-only firms', pad = big ? 22 : 14, endGap = big ? 14 : 10, d = big ? 1.5 : 1;
+    const listLabel = 'Sanctions list only', pad = big ? 22 : 14, endGap = big ? 14 : 10, d = big ? 1.5 : 1;
     const left = big ? 52 : 40, line = sz * 1.4, panelH = (hh - 36) / 2;
     Motion.text(ctx, 'Adjusted odds ratio · logarithmic scale', 4, sz + 2, { size: sz, color: theme.muted });
     const panels = [
       { heading: 'Size: continued statement availability', population: 'Previously available, still registered and eligible', reference: 'Reference: smallest asset fifth (Q1)', series: [
         { label: 'Q5 vs Q1', color: theme.accentStrong, points: sz5.Q5 || [], whiskers: true, dot: 4 * d, width: 2 * d },
         { label: 'Q2 vs Q1', color: theme.accent, points: sz5.Q2 || [], dot: 3 * d, width: 1.5 * d }] },
-      { heading: 'Membership: annual statement availability', population: 'Eligible firms retained in the model', reference: 'Reference: firms on no list', series: [
+      { heading: 'Membership: annual statement availability', population: 'Eligible firms retained in the model', reference: 'Reference: comparison group', series: [
         { label: listLabel, color: theme.fall, points: ls, whiskers: true, dot: 4 * d, width: 2 * d }] }
     ];
     panels.forEach((panel, i) => {
@@ -2321,7 +2321,7 @@ void main() {
   // ---- controls -------------------------------------------------------------------------------------
   const layersEl = $('layers');
   // Firms view provenance (author's wording standard, 24 October 2026): the geocode categories defined once, the shared-registration text verbatim.
-  const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year). Firms on at least one of the five lists (treated) come from the national pass (M8), red from the year they were added to a list. Firms on the five lists are named from the list files (the decree and government strategic workbooks’ name columns, then the sanctions file’s name field): one display name per firm, the core name with its legal form abbreviated after a comma, in Latin script (the sanctions file’s Latin alias that transliterates the filed name, else a BGN/PCGN transliteration marked as such, else the Latin name as filed), cut at 60 characters. The full filed name is shown in the Under the cursor panel. Firms on no list are never named. In the Firms view, other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
+  const FIRMS_PROV = 'Firms view: every located eligible firm on no list (comparison group) with a house- or street-level geocode, drawn at its registered address and grouped by coordinate pair (M9 pass over the foundation registry and payload, one record per coordinate pair and year). Firms on at least one of the five lists (treated) come from the national pass (M8), red from the list year shown. Firms on the five lists are named from the list files (the decree and government strategic workbooks’ name columns, then the sanctions file’s name field): one display name per firm, the core name with its legal form abbreviated after a comma, in Latin script (the sanctions file’s Latin alias that transliterates the filed name, else a BGN/PCGN transliteration marked as such, else the Latin name as filed), cut at 60 characters. The full filed name is shown in the Under the cursor panel. Firms on no list are never named. In the Firms view, other geocodes, coordinates without a verified house or street match, are counted and not drawn. Most located firms have a house- or street-level address match. The remaining geocodes have unverified precision. Registered legal addresses can be shared business centres or addresses rented for registration and correspondence, rather than production premises. Several firms can therefore share one registered address. The Federal Tax Service tracks mass-registration addresses.';
   const syncProv = () => { const Lx = LAYERS.find(x => x.id === state.layer), el = $('layerprov');   // round 16: a layer with a reading text shows it in standard terms
     if (state.mode !== 'firms' && Lx.read) el.innerHTML = Lx.read().map(([t, x]) => `<span class="rb"><span class="h">${esc(t)}</span> ${esc(x)}</span>`).join(''); else el.textContent = state.mode === 'firms' ? FIRMS_PROV : Lx.prov;
     for (const e of layersEl.querySelectorAll('.fmark')) e.style.display = state.mode === 'firms' ? '' : 'none'; };
@@ -2614,7 +2614,7 @@ void main() {
   let findOpen = false;   // the list shows only while the field is being typed in: a choice, Escape or leaving the field closes it
   function renderFind() {
     const q = findOpen ? normName(findInput.value) : '';
-    findList.innerHTML = findOpen && findItems.length ? findItems.map((i, j) => { const rg = TRN.regions && TRN.reg ? TRN.regions[TRN.reg[i]] : ''; return `<button type="button" tabindex="-1" role="option" class="fo${j === findActive ? ' on' : ''}" id="fo-${j}" data-i="${i}" aria-selected="${j === findActive}">${listedGlyph(i, state.year)}${listedName(i)}<span class="fm">${TRN.undated[i] ? 'undated' : 'on a list from ' + TRN.red_from[i]}${rg ? ' · ' + esc(rg) : ''}</span></button>`; }).join('')
+    findList.innerHTML = findOpen && findItems.length ? findItems.map((i, j) => { const rg = TRN.regions && TRN.reg ? TRN.regions[TRN.reg[i]] : ''; return `<button type="button" tabindex="-1" role="option" class="fo${j === findActive ? ' on' : ''}" id="fo-${j}" data-i="${i}" aria-selected="${j === findActive}">${listedGlyph(i, state.year)}${listedName(i)}<span class="fm">${listedYear(i)}${rg ? ' · ' + esc(rg) : ''}</span></button>`; }).join('')
       : q.length >= 2 ? '<div class="none">No list member by that name</div>' : '';
     const open = !!findList.innerHTML; findList.hidden = !open; findInput.setAttribute('aria-expanded', String(open));
     if (open && findActive >= 0) { findInput.setAttribute('aria-activedescendant', 'fo-' + findActive); const el = $('fo-' + findActive); if (el) el.scrollIntoView({ block: 'nearest' }); } else findInput.removeAttribute('aria-activedescendant');
@@ -2661,7 +2661,7 @@ void main() {
     else foundRaf = requestAnimationFrame(foundTick);
   }
   $('methodintro').textContent = `${fmt.int(F.located_2021)} located eligible firms at ${fmt.int(F.distinct_locations)} distinct coordinate pairs in 2021, 100 km and 25 km cells by year, 1 km squares from the address files by year, and 250 m cells in 22 city windows for 2021. Data: ${F.release} (Bondarkov et al. 2025, CC BY 4.0), ${fmt.int(F.records_total)} annual records for the financial years ${F.years}. Boundaries: geoBoundaries gbOpen (CC BY 4.0) and OpenStreetMap/Wambacher 2017 (ODbL 1.0), © OpenStreetMap contributors. Every figure from the data is a checked aggregate with a provenance record in the lab (motion/data/*.provenance.json). The insights cite their sources under References.`;   // the method block's first lines (round 10): the counts from the former description and the records line from the former footer
-  $('methodread').textContent = COPY.non_imputation + ' Descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, 2020 filing-exemption, government strategic, presidential strategic). The word names the study’s group, not an effect. Comparison group: firms on none of the five lists. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the Firms view).';   // the former footer's reading notes
+  $('methodread').textContent = COPY.non_imputation + ' Descriptive associations, not causal effects. Absence from the archive is not withdrawal or concealment. The lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, 2020 filing-exemption, government strategic, presidential strategic). The word names the study’s group, not an effect. The comparison group consists of firms with no match on any of the five lists. Firms with unknown membership are counted separately. The map uses the earliest sanctions-list year, including inferred dates. Earlier years are shown from 2014. The map assigns 2020 to filing-exemption-only matches and shows other undated matches in red from 2014. The replay button excludes undated matches and counts only firms present in the selected year. Open the atlas at a city by adding its name to the link, as in #Moscow or #St-Petersburg (#Moscow-firms for the Firms view).';   // the former footer's reading notes
   $('footer').innerHTML = `<div class="lic">Data: ${F.release}, CC BY 4.0 · geoBoundaries gbOpen, CC BY 4.0 · OpenStreetMap, ODbL 1.0 · © 2026 Armen G. Kaprelian</div>`;   // one line (round 10): the author line is inserted before it below, the data licences at the right
   // The footer line (round 10, the author's item 16): the name with the mark, the email as selectable text with a copy button (no mail link), the link to the author's site (28 October 2026),
   // two square buttons to the author's X profile and an X share intent with a prepared text; then the licence line (item 17).
@@ -2693,7 +2693,7 @@ void main() {
     const S = [];
     S.push(['data', 'Data', [
       `<b>Russian Financial Statements Database (RFSD)</b>, ${esc(F.release)}, 2 September 2026. Bondarkov, Ledenev and Skougarevskiy (2025), Scientific Data 12, 995, ${lnk('https://doi.org/10.1038/s41597-025-05150-1', 'doi:10.1038/s41597-025-05150-1')}. Dataset: ${lnk('https://doi.org/10.5281/zenodo.22257046', 'doi:10.5281/zenodo.22257046')}. CC BY 4.0.`,
-      `<b>The five lists</b>: the sanctions list, the decree list, the 2020 filing-exemption list (Government Decree No. 35 of 22 January 2020), the government strategic list and the presidential strategic list, provided on request by the RFSD's authors, as in the chapter.`,
+      `<b>The five lists</b>: the sanctions list, the Russian government’s list of strategic firms, the Russian president’s list of strategic firms, the 2020 filing-exemption list, and the decree list. The RFSD authors supplied them on request. The 2020 filing-exemption list is associated with Government Decree No. 35, repealed effective January 1, 2023.`,
       `<b>Region boundaries</b>: geoBoundaries gbOpen, Russia ADM1 and Ukraine ADM1 (two regions), cut to the coast with Natural Earth 1:10m land (public domain). Runfola et al. (2020), PLOS ONE 15(4), e0231866, ${lnk('https://doi.org/10.1371/journal.pone.0231866', 'doi:10.1371/journal.pone.0231866')}. CC BY 4.0. From OpenStreetMap through Wambacher (2017), © OpenStreetMap contributors (${lnk('https://www.openstreetmap.org/copyright', 'openstreetmap.org/copyright')}), ${lnk('https://opendatacommons.org/licenses/odbl/1-0/', 'ODbL 1.0')}.`,
       `<b>GDP deflator</b>: World Bank, NY.GDP.DEFL.ZS.AD (GDP deflator: linked series), Russian Federation, rebased to 2021, ${lnk('https://data.worldbank.org/indicator/NY.GDP.DEFL.ZS.AD', 'data.worldbank.org')}. CC BY 4.0.`,
       `<b>Industry classes</b>: OKVED 2, identical to NACE Rev. 2 at two digits (Eurostat's codelist, reuse under Commission Decision 2011/833/EU). <b>Ownership and legal form</b>: OKFS and OKOPF, grouped as the chapter groups them.`]]);
@@ -2794,7 +2794,7 @@ void main() {
     $('cr-cursor').innerHTML = P('The rows describe what lies under the cursor in the view and year shown: a cell, a square, a pixel, a coordinate pair or, on the state-related layer, a region. Every share comes with its count of firms.',
       'The chart: the share of located eligible firms with a statement in that cell, by financial year (the M5 pass over the registry and the statements). Years with fewer than 50 firms are left out. On the shared-pairs layer it compares the firms at shared pairs with those elsewhere, and the state-related layer has no chart.',
       'Disclosure: in the Cells view a share needs 50 firms, list counts under 5 in a cell are not shown, and counts under 10 in the 250 m city cells and the 5 km density cells are banded. The Firms view and the 1 km squares show exact counts, and the Firms view shows each coordinate pair’s own share.',
-      'A firm on the five lists shows its name, the name as filed, the year it was added to a list and its lists. Firms on no list are never named.',
+      'A firm on the five lists shows its name, the name as filed, the map’s list year and its lists. Firms on no list are never named.',
       INS ? 'The profile: one sourced sentence on the region’s or the city’s economy, then the medians of the firms registered in the region, or located in the city’s window, with a statement and a positive value in 2024, in constant 2021 rubles (the GDP deflator), where 50 or more firms.' : '');
     const e21 = S.avail.eligible_share[S.avail.year.indexOf(2021)], e24 = S.avail.eligible_share[S.avail.year.indexOf(2024)];
     // The model outputs' reading blocks (round 15, the author's item 5): what the chart shows, how to read it, what the chapter finds there and how it bears on the
@@ -2815,10 +2815,10 @@ void main() {
     const r22 = `the ratio of odds ratios is ${fmt.dec(F.size_q5_2022_ratio, 3)} (${ci(F.size_q5_2022_low, F.size_q5_2022_high)})`;
     const sizeLine = `The Q5 vs Q1 odds ratio rises in 2022 against 2021: ${r22}.` + (later ? ` The 2023–2024 increase, a ratio of odds ratios of ${fmt.dec(later.r, 3)} (${ci(later.lo, later.hi)}), is smaller when wholesale trade is excluded.` : '');   // P-C, the author's pick (26 October 2026)
     $('cr-odds').innerHTML = P(H('What it shows') + 'Adjusted odds ratios from the chapter’s binary logit models, on a logarithmic scale. A ratio of 1 means equal conditional odds. Values below 1 mean lower odds and values above 1 mean higher odds. These are odds comparisons, not availability probabilities.',
-      H('The panels') + 'The upper panel compares the largest and second asset quintiles with the smallest, among firms with an available preceding-year statement that remain registered and eligible (Table B.4). The lower panel compares sanctioned-only firms with firms on no list, among eligible firms retained in the annual model (Table B.7).',
+      H('The panels') + 'The upper panel compares the largest and second asset quintiles with the smallest, among firms with an available preceding-year statement that remain registered and eligible (Table B.4). The lower panel compares firms matched only to the sanctions list with the comparison group, among eligible firms retained in the annual model. “Only” excludes matches to the other four lists (Table B.7).',
       H('Inference') + 'Whiskers show 95% confidence intervals. Standard errors are two-way clustered by industry and region.',
-      H('Findings') + 'Larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). ' + sizeLine + ' Sanctioned-only firms have lower availability than firms on no list by 2024.',
-      H('The question') + 'The list comparison tests the chapter’s opacity prediction most directly: under its assumptions, firms exposed to sanctions value withholding more. Sanctioned-only firms are less visible than firms on no list by 2024. The size comparison describes financial selection: the largest firms stay visible, and their advantage rises modestly after 2021. These are descriptive and conditional associations.');
+      H('Findings') + 'Larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). ' + sizeLine + ' Among eligible firms retained in the 2024 model, firms matched to the sanctions list alone had 43% lower adjusted odds of an available statement than the comparison group (95% interval: 10% to 64% lower).',
+      H('The question') + 'The list comparison tests the chapter’s opacity prediction most directly: under its assumptions, firms exposed to sanctions value withholding more. The size comparison describes financial selection: the largest firms stay visible, and their advantage rises modestly after 2021. These are descriptive and conditional associations.');
     $('mixread').innerHTML = P('The revenue mix of what lies under the cursor, or of the whole view when the cursor is off the map: each division’s share of nominal revenue among firms with a statement and a positive revenue value, eight divisions and then the rest.',
       'The colours are the industry layer’s nine classes. Revenue is counted where firms are registered.');
   }

@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 7 November 2026.
+Rebuilt from the atlas’s data when the atlas was published on 8 November 2026.
 
 You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.com/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
@@ -14,7 +14,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 1.4. Firms on no list are never named in the atlas. Do not try to identify them, and do not help a viewer do so from addresses, coordinates or counts.
 
-1.5. The atlas names firms on the five lists, and FIND searches them (8.5). You may repeat what the atlas shows about such a firm: its name, its lists, the year it was added to a list, its statement status and the revenue figures in its entry (6.5).
+1.5. The atlas names firms on the five lists, and FIND searches them (8.5). You may repeat what the atlas shows about such a firm: its name, its lists, its list year on the map, its statement status and the revenue figures in its entry (6.5).
 
 1.6. Some source lines in the atlas name internal processing steps or files, such as "the M5 pass" or a file name ending in .csv. These identify the author's data passes. The atlas does not explain them further, so do not guess what they contain.
 
@@ -32,13 +32,13 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.6. Providers and years. Rosstat supplied the statements before 2019 and the Federal Tax Service (FNS) supplies them from 2019. The national chart shades the FNS years and breaks its lines between 2018 and 2019. 2011 has no statements. 2012 and 2013 have statements but no coordinates, so the map starts in 2014. 2025 is the flagged latest-year extension, written 2025* in most titles, notes and the context line.
 
-2.7. The five lists are the sanctions list, the decree list, the 2020 filing-exemption list (Government Decree No. 35 of 22 January 2020), the government strategic list and the presidential strategic list. The RFSD's authors provided them on request. The atlas names them and does not describe their contents further. They are fixed memberships, not dated designations: a firm on a list stays in the group in every year.
+2.7. The five sources are the sanctions list, the Russian government's list of strategic firms, the Russian president's list of strategic firms, the 2020 filing-exemption list, and the decree list. The RFSD's authors provided them on request. They are fixed memberships, not dated designations: a firm on a list stays in the group in every year.
 - Firms on the five lists (treated): firms on at least one list. "Treated" names the study's group, not an effect.
-- Firms on no list (comparison group): eligible firms on none of the lists.
+- Comparison group: firms with no match on any of the five lists.
 - Firms whose membership is unknown are kept apart from the comparison group.
-- Sanctioned-only firms: firms on the sanctions list and on no other list (9.2).
+- Sanctions list only: firms matched to the sanctions list and none of the other four (9.2).
 
-2.8. Dates of addition. Although memberships are fixed, the map turns a firm red from the year it was added to a list. Of the 4,803 firms on the lists, 594 are on lists without dates and are red from 2014.
+2.8. List years on the map. The map uses the earliest sanctions-list year, including inferred dates. Earlier years are shown from 2014. The map assigns 2020 to filing-exemption-only matches and shows other undated matches in red from 2014. The replay button excludes undated matches and counts only firms present in the selected year. Of the 4,803 firms on the lists, 594 are on lists without dates and are red from 2014.
 
 2.9. Located firms. Eligible firms whose registered address has map coordinates. Unlocated firms stay in the counts but are not drawn. 97.6% of eligible firms are located in 2021 (3,277,638 of 3,357,109) and 98.0% in 2024.
 
@@ -87,7 +87,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 4.4. Pixels and dots. Below 20 px per km of map, each screen pixel sums the firms on no list at the addresses inside it. The legend states the pixel's size at the current zoom. Blocks of 2 and 3 px mark pixels with 10 and 100 or more firms. Past 20 px per km the map draws dots: each dot is one coordinate pair, and larger dots hold more firms.
 
-4.5. The red marks show firms on the five lists. Before the year a firm was added to a list it is a grey mark with a red rim. From that year it is solid red if it has a statement for the year shown, and hollow red if it has none. Hover a red mark for the firm's name (6.5).
+4.5. The red marks show firms on the five lists. Before the list year shown it is a grey mark with a red rim. From that year it is solid red if it has a statement for the year shown, and hollow red if it has none. Hover a red mark for the firm's name (6.5).
 
 4.6. What colours the Firms view. On Statement share by year it is the share of the firms in each pixel or at each pair with a statement that year. On Median revenue change it is the firm-level revenue class (5.6). On Leading industry by year it is the leading class (5.7). On the other layers the Firms view shows firm counts by brightness, and its legend says the layer is a cell layer. At dot zoom those layers draw every coordinate pair in one colour.
 
@@ -110,7 +110,7 @@ The LAYER card groups the layers under three tabs in a row under VIEW, COUNTS, S
 5.6. Median revenue change (descriptive) (REVENUE, fixed). In the Cells view: the percent change of each cell's median real revenue among cohort firms observed in 2024, against the cell's 2021 median, in cells with 50 or more observed firms. Classes: more than +20%, +10 to +20, 0 to +10, −10 to 0, −20 to −10 and −20% or less. 100 km cells only. It is descriptive because the firms observed change from year to year: a cell's median can move because the set of firms observed changes, not only because their revenue changed. Its source line says it is "Not a Chapter 3 estimate." Example: in the 100 km cell over Moscow, the one with the most cohort firms, 193,993 of 271,277 cohort firms are observed in 2024, and their median real revenue is 27.4% above the cell's 2021 median.
 In the Firms view the layer follows the slider and colours firms on no list by a firm-level measure: each firm's real revenue against its own 2019–2021 average, minus the year's median. Classes: −50% or less, −50 to −20, −20 to 0, 0 to +50, +50 to +150 and more than +150%. Faint marks have no usable baseline. Pixels count filers, not firms.
 
-5.7. Leading industry by year (REVENUE, follows the slider). Per cell and year, the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. Firms on the five lists are included, and the tile gives their share of the cell's revenue. Grids: 100 km and 25 km cells for 2014 to 2025, and 1 km squares for every year, coloured by the class with the largest revenue at their coordinate pairs. In the Firms view the colour is the leading class at each coordinate pair, over every firm there with a statement and a positive revenue value. Pairs without one are faint. The nine classes and their divisions:
+5.7. Leading industry by year (REVENUE, follows the slider). Per cell and year, the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. The tile gives the share of the cell's revenue accounted for by firms matched to any of the five lists. Grids: 100 km and 25 km cells for 2014 to 2025, and 1 km squares for every year, coloured by the class with the largest revenue at their coordinate pairs. In the Firms view the colour is the leading class at each coordinate pair, over every firm there with a statement and a positive revenue value. Pairs without one are faint. The nine classes and their divisions:
 - Agriculture, extraction and energy: 01 to 03, 05 to 09, 35
 - Manufacturing: 10 to 33
 - Construction: 41 to 43
@@ -137,11 +137,11 @@ The atlas computes this comparison from its address files. The chapter does not 
 
 6.2. UNDER THE CURSOR repeats the tile's values as labelled rows and adds a chart and the profile. In the Firms view it also lists the firms on the five lists nearby. Every share comes with its count of firms. The chart plots the share of located eligible firms with a statement in that cell by financial year, leaving out years with fewer than 50 firms. On a 1 km square it plots the surrounding 25 km cell. The 1 km city cells plot 2019 to 2024. The 250 m cells and the 5 km density cells carry 2021 only and have no chart. On the shared-pairs layer it plots the firms at shared pairs against those elsewhere. The state-related layer shows a note in place of a chart.
 
-6.3. In the Firms view the tile describes the pixel or pair at the cursor: its firms on no list and their coordinate pairs, how many have a statement that year, on the industry layer the leading division's share of revenue there, and the firms on the five lists nearby, split into red (with a statement), hollow (without) and "added later" (added to a list after the year shown). A line gives the firms in view. Under the cursor gives their count and the radius it searched.
+6.3. In the Firms view the tile describes the pixel or pair at the cursor: its firms on no list and their coordinate pairs, how many have a statement that year, on the industry layer the leading division's share of revenue there, and the firms on the five lists nearby, split into red (with a statement), hollow (without) and "List: later" (the map’s list year is later than the slider year). A line gives the firms in view. Under the cursor gives their count and the radius it searched.
 
 6.4. The profile. For a region, or a city window when zoomed into one, the panel gives one sourced sentence on its economy, then the medians of revenue and total assets in 2024, in constant 2021 rubles, of firms registered in the region (or located in the window) with a statement and a positive value, where 50 or more firms. For Russia as a whole the medians are 10.1 million rubles of revenue and 3.8 million of total assets. Many sentences concern sanctions designations and other events involving firms in the region. Their sources appear by region and window under REFERENCES, INSIGHTS (13.4).
 
-6.5. A firm on the five lists. The tile gives the firm's display name, the year it was added to a list ("undated" for lists without dates) and, in brackets, its share of the revenue of every firm at its coordinate pair, from its most recent statement up to the year shown. The year is named when it is not the slider's year. Under the cursor adds:
+6.5. A firm on the five lists. The tile gives the firm's display name, its list year on the map ("undated" for lists without dates) and, in brackets, its share of the revenue of every firm at its coordinate pair, from its most recent statement up to the year shown. The year is named when it is not the slider's year. Under the cursor adds:
 - the name as filed, in Cyrillic
 - "(transliterated)" where the atlas transliterated the filed name into Latin letters
 - whether it has a statement for the year shown
@@ -170,7 +170,7 @@ Display names come from the list files, in Latin letters, with the legal form ab
 
 8.2. The year row appears for the layers that follow the slider (5.2, 5.7, 5.9) and in the Firms view. The slider runs from 2014 to 2025*. The play button steps the years forward one a second from the year shown to 2025, starting from 2014 if the year shown is 2025, and pauses on a second press. Its tooltip reads "Run the years from 2014 to 2025, one a second."
 
-8.3. The LISTS row, under the year slider: the red button and a count of the firms added to one of the five lists in the year shown, 55 in 2014, 31 in 2021, 1,480 in 2024 and none in 2025. The button pulses them. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding one. In the Firms view every one of those firms swells at once. The row is hidden on the other Cells-view layers and the button is disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
+8.3. The LISTS row, under the year slider: the red button and the number of firms in that year’s pulse, 55 in 2014, 31 in 2021, 1,480 in 2024 and none in 2025. The button pulses them. In the Cells view, on Statement share by year and Leading industry by year, it pulses the cells holding one. In the Firms view every one of those firms swells at once. The row is hidden on the other Cells-view layers and the button is disabled in years with no such firm. In the Firms view, stepping the year forward also pulses the firms that turn red in the new year.
 
 8.4. GO TO holds FIND, a minimap of Russia whose city labels fly to the 22 cities (on a phone, a row of city buttons takes its place), and LINK TO CURRENT VIEW, which copies a link to the view on screen. Each city's tooltip gives a fact about the place.
 
@@ -183,9 +183,9 @@ Display names come from the list files, in Latin letters, with the legal form ab
 9.2. ADJUSTED ODDS RATIOS FOR STATEMENT AVAILABILITY. Two stacked panels show adjusted odds ratios from the chapter's binary logit models with industry, region, legal-form and ownership fixed effects and year effects. Both logarithmic axes span 0.3 to 5, with ticks at 0.5, 1, 2 and 4. A ratio of 1 means equal conditional odds. Below 1 means lower odds and above 1 means higher odds. These are odds comparisons, not availability probabilities. The upper panel concerns continued statement availability among previously available firms that remain registered and eligible, with the smallest asset fifth as reference. The lower panel concerns annual statement availability among eligible firms retained in the model, with firms on no list as reference. Each reference line is labelled '1 = equal odds'. Whiskers show 95% confidence intervals, and standard errors are two-way clustered by industry and region. The same three series remain:
 - Q5 vs Q1: the largest asset quintile against the smallest, for a statement in the following year among continuing firms with a statement for the year before (Table B.4). Dots for 2020 to 2024, between 3 and 4, highest in 2022 and 2023.
 - Q2 vs Q1: the second quintile against the smallest, same sample, without whiskers. Dots for 2020 to 2024, flat near 2.
-- Sanctioned-only firms against firms on no list, for a statement in the year among eligible firms retained in the model (Table B.7). Dots for 2019 to 2024, above 1 in 2019 and falling below 1 from 2021, lowest in 2024.
+- Sanctions list only against the comparison group, for a statement in the year among eligible firms retained in the model (Table B.7). Dots for 2019 to 2024, above 1 in 2019 and falling below 1 from 2021, lowest in 2024.
 The chart prints no values. Read levels from its axis and do not quote exact ratios beyond those in the card's text.
-The card's findings, in its words: larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). The Q5 vs Q1 odds ratio rises in 2022 against 2021, a ratio of odds ratios of 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (1.020 to 1.169), is smaller when wholesale trade is excluded. Sanctioned-only firms have lower availability than firms on no list by 2024.
+The card's findings, in its words: larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). The Q5 vs Q1 odds ratio rises in 2022 against 2021, a ratio of odds ratios of 1.131 (95% confidence interval 1.062 to 1.204). The 2023–2024 increase, a ratio of odds ratios of 1.092 (1.020 to 1.169), is smaller when wholesale trade is excluded. Among eligible firms retained in the 2024 model, firms matched to the sanctions list alone had 43% lower adjusted odds of an available statement than the comparison group (95% interval: 10% to 64% lower).
 
 9.3. NATIONAL AVAILABILITY BY YEAR. The share of firms with a statement by financial year, 2012 to 2025*, for two populations: the year's eligible firms and those of them registered at year-end (Table B.1). The FNS years from 2019 are shaded, and the lines break between 2018 and 2019. On Statement share by year and Leading industry by year, a dashed line marks the year shown. The chart prints its end values: eligible 64.3% and registered 72.1% in 2025*. The NOTE on Statement share by year gives the eligible share for each year on the slider, for example 36.9% in 2014, 63.4% in 2021 and 66.3% in 2024.
 
@@ -221,7 +221,7 @@ The ending _fit in place of the coordinates fits the country, as in #cells_share
 
 11.3. Size. Larger asset quintiles have greater conditional availability. The largest firms' advantage rises modestly after 2021 (9.2). The atlas calls this financial selection: the largest firms stay visible.
 
-11.4. The lists. Sanctioned-only firms have lower availability than firms on no list by 2024 (9.2, Table B.7). The atlas calls this comparison the most direct test of the chapter's opacity prediction: under the chapter's assumptions, firms exposed to sanctions value withholding more.
+11.4. The lists. See the 2024 adjusted odds comparison in 9.2 (Table B.7). The atlas calls this comparison the most direct test of the chapter's opacity prediction: under the chapter's assumptions, firms exposed to sanctions value withholding more.
 
 11.5. The question behind all of them, in the atlas's words: whether sanctions increase the value of withholding financial information. The chapter measures withholding through statement availability.
 
