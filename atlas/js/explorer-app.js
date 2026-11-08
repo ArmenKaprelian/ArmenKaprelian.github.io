@@ -862,9 +862,9 @@ void main() {
     const b = $('pulse'); if (!b) return;
     const show = state.mode === 'firms' ? FIRMS_OK : !!TRN && CELL_PULSE_LAYERS.has(state.layer), y = state.year, count = show ? manualMask(y).count : 0;   // the Cells view's share and industry layers too (round 14)
     b.hidden = !show; b.disabled = !count;
-    const label = `Replay the ${y} pulse`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
+    const label = `Replay the ${y} blink`; b.title = 'We’re eyeball to eyeball, and I think the other fellow just blinked'; b.setAttribute('aria-label', label);   // the tooltip is the old BLINK button's quotation (the author's request of 30 October 2026)
     // 4B (round 15, the author's item 4): the label says what the pulse shows, the year and the number of firms listed in it (the pulse's own mask: dated listings, firms present that year)
-    const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `${y} pulse · <b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'}`; pl.classList.toggle('zero', on && !count); }   // the LISTS row (round 37): the count and the year on one line under the slider; at zero the sentence dims with the disabled button (the author liked it, 27 October 2026)
+    const pl = $('pulselabel'); if (pl) { const on = show; pl.hidden = !on; if (on) pl.innerHTML = `${y} blink · <b class="num">${fmt.int(count)}</b> ${count === 1 ? 'firm' : 'firms'}`; pl.classList.toggle('zero', on && !count); }   // the LISTS row (round 37): the count and the year on one line under the slider; at zero the sentence dims with the disabled button (the author liked it, 27 October 2026)
     syncYearLine2();
   }
   // ---- the Cells view's squares and pulse (round 14, the author's decisions of 25 October 2026) ---------------------------------------------------------------------
@@ -1312,7 +1312,7 @@ void main() {
     { text: 'From a city, a click goes to the 20 km scale, then 2.5 times closer.', mouse: true },
     { text: 'In the Firms view, clicks past the 20 km scale zoom 4 times closer.', mouse: true, firms: true },
     { text: 'Shift+click zooms back out from the point.', mouse: true },
-    { text: 'The red button replays the pulse for the year shown.', firms: true },
+    { text: 'The red button replays the blink for the year shown.', firms: true },
     { text: 'The Firms view draws registered addresses, year by year.', firms: true },
     { text: 'Red marks show firms matched to any of the five lists.', firms: true },
     { text: 'Add a city to the link, as in #Moscow, to open the atlas there.' },
