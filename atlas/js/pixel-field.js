@@ -151,19 +151,17 @@ void main() {
   if (bs > 0.5) { int ci = int(bc); float al = u_alpha[ci] * u_la; col = vec4(u_pal[ci] * al, al) + col * (1.0 - al); }
   o = col;
 }`;
-  // The copy to the canvas: nearest sampling of the composed cells, at weight u (the dots' crossfade), faded by the sweep's edge and mixed with the previous year's
-  // image during the dissolve.
+  // Copy the composed cells at the dots' crossfade weight, blending the previous year during the dissolve.
   const FS_BLIT = `#version 300 es
 precision highp float;
-uniform sampler2D tcur; uniform sampler2D tprev; uniform vec2 u_canvas; uniform vec2 u_vcells; uniform float u_u; uniform float u_t; uniform float u_sweep; uniform float u_feather; uniform float u_dpr;
+uniform sampler2D tcur; uniform sampler2D tprev; uniform vec2 u_canvas; uniform vec2 u_vcells; uniform float u_u; uniform float u_t; uniform float u_dpr;
 out vec4 o;
 void main() {
   vec2 dev = vec2(gl_FragCoord.x, u_canvas.y - gl_FragCoord.y);   // device px from the top left
   vec2 cell = floor(dev / u_dpr); if (cell.x >= u_vcells.x || cell.y >= u_vcells.y) { o = vec4(0.0); return; }
   ivec2 t = ivec2(int(cell.x), int(u_vcells.y - 1.0 - cell.y));
   vec4 c = texelFetch(tcur, t, 0); if (u_t < 1.0) c = mix(texelFetch(tprev, t, 0), c, u_t);
-  float m = u_sweep < 1e8 ? clamp((u_sweep - cell.x) / u_feather, 0.0, 1.0) : 1.0;
-  o = c * u_u * m;
+  o = c * u_u;
 }`;
 
   PF.createGL = function (gl) {
@@ -226,13 +224,13 @@ void main() {
       gl.activeTexture(gl.TEXTURE0);
     }
     // Draw the composed image onto the canvas (already cleared by the caller), premultiplied "over".
-    function blit(canvasW, canvasH, p, u, t, sweep, feather) {
+    function blit(canvasW, canvasH, p, u, t) {
       gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, canvasW, canvasH);
       gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
       const B = loc.blit; gl.useProgram(B.p);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, T.comp.tex[0]); gl.uniform1i(B.tcur, 0);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, T.prev.tex[0]); gl.uniform1i(B.tprev, 1);
-      gl.uniform2f(B.u_canvas, canvasW, canvasH); gl.uniform2f(B.u_vcells, p.W, p.H); gl.uniform1f(B.u_u, u); gl.uniform1f(B.u_t, t); gl.uniform1f(B.u_sweep, sweep == null ? 1e9 : sweep); gl.uniform1f(B.u_feather, feather || 1); gl.uniform1f(B.u_dpr, p.dpr);
+      gl.uniform2f(B.u_canvas, canvasW, canvasH); gl.uniform2f(B.u_vcells, p.W, p.H); gl.uniform1f(B.u_u, u); gl.uniform1f(B.u_t, t); gl.uniform1f(B.u_dpr, p.dpr);
       quadDraw(B);
       gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, null);
     }

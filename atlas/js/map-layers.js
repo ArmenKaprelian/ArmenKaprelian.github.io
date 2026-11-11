@@ -28,6 +28,19 @@
   M.b64Int32 = function (b64) { const bin = atob(b64); const buf = new ArrayBuffer(bin.length); const u8 = new Uint8Array(buf); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Int32Array(buf); };
 
   // --- basemap --------------------------------------------------------------------------------
+  M.simplifyRing = function (p, tol) {   // Douglas-Peucker on an open or closed ring
+    if (p.length <= 3) return p;
+    const keep = new Uint8Array(p.length); keep[0] = keep[p.length - 1] = 1; const stack = [[0, p.length - 1]];
+    while (stack.length) { const [a, b] = stack.pop(); let best = -1, bd = 0; const [ax, ay] = p[a], [bx, by] = p[b], dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1e-12;
+      for (let i = a + 1; i < b; i++) { const t = Math.max(0, Math.min(1, ((p[i][0] - ax) * dx + (p[i][1] - ay) * dy) / L2)), ex = ax + t * dx - p[i][0], ey = ay + t * dy - p[i][1], d = ex * ex + ey * ey; if (d > bd) { bd = d; best = i; } }
+      if (best >= 0 && bd > tol * tol) { keep[best] = 1; stack.push([a, best], [best, b]); } }
+    return p.filter((_, i) => keep[i]);
+  };
+  M.fitGlyphPath = function (rings) {   // rings in km -> an SVG path in the 22 by 22 box with 1 px padding, y up in km, down on screen
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of rings) for (const [x, y] of r) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const sc = 20 / Math.max(x1 - x0, y1 - y0, 1e-9), xc = (x0 + x1) / 2, yc = (y0 + y1) / 2;
+    return rings.map(r => 'M' + r.map(([x, y]) => `${(11 + sc * (x - xc)).toFixed(1)} ${(11 - sc * (y - yc)).toFixed(1)}`).join('L') + 'Z').join('');
+  };
   M.buildBasemap = function (bm) {
     const lod0 = M.partsToPath(bm.lod0.parts);
     const lod1 = {};
@@ -39,7 +52,7 @@
     // The land's levels and the parts with their bounds (round 14, the atlas only, through M.landLevels): the land as one outline at five tolerances (M1), and
     // each lod0 part with its km box so a deeper view fills and strokes only the parts that meet it (a ring outside the view cannot change the even-odd fill inside it).
     const land = bm.land ? bm.land.levels.map(L => ({ tol: L.tolerance_km, path: M.partsToPath([{ rings: L.rings }]) })) : null;
-    const lod0Parts = bm.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = 0, y = 0; for (let i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; const X = x / 10, Y = y / 10; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; } } return { x0, y0, x1, y1, path: M.partsToPath([p]) }; });
+    const lod0Parts = bm.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = 0, y = 0; for (let i = 0; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; const X = x / 10, Y = y / 10; if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y; } } return { name: p.name, x0, y0, x1, y1, path: M.partsToPath([p]) }; });
     return { lod0, lod1, grat, extents: bm.extents, cities, lod1MinK: bm.lod1.use_when_px_per_km_at_least || 9, land, lod0Parts };
   };
   // The fine geometry (lod1) of a city window, when the viewport lies inside its box, or null.

@@ -11,9 +11,12 @@
   // Round 16, the author's two items of 27 October 2026, as picked the same day: the coordinate pairs shared by 100 or more firms (a ring sized by the pair's
   // firms in the Firms view, spB, and a layer in the Cells view) and the change in the statement share among state-related firms by region (one layer: the
   // author's revision dropped the unitary-enterprise layer; round 24 found those firms about half of the state-related ones). Their data load on first use.
-  let SHD = null, GRP = null, markShared = false; const dataPending = new Set();
+  const gridManifest = D.atlasGrids;
+  const SHD = { years: gridManifest ? gridManifest.years : CY.mapped_years, nat: gridManifest ? gridManifest.sharedNational : null, c100: {}, c25: {}, win: {} };
+  let GRP = null, markShared = false;
   const grpLayer = () => state.layer === 'gs';
-  const runState = { on: false, timer: 0, generation: 0 };   // the year run's state (round 15, item 7B)
+  let detailEnabled = false;  // Restore the whole initial view before requesting its files.
+  const runState = { on: false, timer: 0, generation: 0, advancing: false };   // the year run's state (round 15, item 7B)
   // Text audit (as the explainer's): ?__audit=1 records every text box per canvas; tools/atlas-audit.py
   // drives the page at several panel widths through window.__atlas and tests overlaps, bounds and sizes.
   if (new URLSearchParams(location.search).get('__audit') === '1') Motion.audit.on = true;
@@ -57,8 +60,8 @@
   const theme = readTheme();
 
   // ---- data ------------------------------------------------------------------------------------
-  const bmp = MM.buildBasemap(BM);
-  const partPaths = BM.lod0.parts.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } } return { name: p.name, path: MM.partsToPath([p]), x0, y0, x1, y1 }; });   // each part with its km bounds: the region lookup under the cursor tests the bounds before the path (25 October 2026)
+  const bmp = MM.buildBasemap(BM), partPaths = bmp.lod0Parts;
+
   const nat = MM.decodeDensity(DEN.national);
   const FINE_BREAKS = [55, 62, 68, 74], YEAR_BREAKS = [20, 35, 50, 60, 70], FIN_BREAKS = [-20, -10, 0, 10, 20];
   // The national 5 km grid (36,585 cells) is split into 500 km blocks, so a draw touches only the blocks in view and
@@ -106,9 +109,7 @@
   const fin = C100.fin, finIdx = [], finMap = new Map(); for (let i = 0; i < fin.ix.length; i++) if (fin.outcome[i] === 'revenue' && fin.moderator[i] === 'cash' && fin.year[i] === 2024) { finIdx.push(i); finMap.set(cellKey(fin.ix[i], fin.iy[i]), i); }
   // 25 km cells by year (M10, 24 October 2026): the step between the 100 km cells and the city windows, so a zoom
   // refines the cells across the country; without the file (older data) the 100 km cells simply stay.
-  // Round 31: the 25 km cells (cells25.js) and the industry layer's (industry25.js) load after the first draw, in idle time (ensureGrid25),
-  // since the country view does not draw them; until they are in, the 100 km cells stay, as they always did without the file.
-  let C25 = null, chg25 = null; const c25 = {}, G25 = 25;
+  let chg25 = null; const c25 = {}, G25 = 25;
   const decode25 = (r, cols) => { const d = { count: r.count, ix: MM.b64Int16(r.ix), iy: MM.b64Int16(r.iy), map: new Map() }; for (const [k, src, wide] of cols) d[k] = r[src] == null ? null : (wide ? MM.b64Int32(r[src]) : MM.b64Int16(r[src])); for (let i = 0; i < d.count; i++) d.map.set(cellKey(d.ix[i], d.iy[i]), i); return d; };
   const list25Counts = [0, 0, 0, 0];
   // ---- the industry layer (round 9, 25 October 2026): the division byte (1 to 99, 0 no OKVED 2 division code, 255 unknown) to its
@@ -136,7 +137,7 @@
   }
   // The 25 km grid fades in from 1.5 to 2.7 times the country view's zoom (round 14, the author's request: the 100 km cells hold at the country view on every screen;
   // it was k 0.45 to 0.8, about 2.7 to 4.8 times the fit on the author's laptop).
-  const alpha25 = k => (C25 ? Motion.step(k, 1.5 * kFit(), 1.2 * kFit(), Motion.ease.linear) : 0);
+  const alpha25 = k => Motion.step(k, 1.5 * kFit(), 1.2 * kFit(), Motion.ease.linear);
   // The Cells view's 1 km squares (round 14, the author's decision of 25 October 2026): the round-13 squares of the address files, everywhere, on the share, industry and
   // density layers (density in 2021), coming in over k 1.5 to 2.5 once the year's address file and its squares are ready (the 25 km cells stand until then); they
   // replace the 24 city windows' 1 km cells and the 2021 national 5 km shares in the drawing. The 2021 250 m windows stay, from k 24 to 40.
@@ -145,7 +146,6 @@
   const microReady = y => !!(FIRMS_OK && firmYears.has(y) && mosaicCache.has(y + '|1'));
   const microA = (k, y) => (MICRO_LAYERS.has(state.layer) && microReady(y) ? Motion.step(k, 1.5, 1.0, Motion.ease.linear) : 0);
   const fineA = k => ((state.layer === 'density' || (state.layer === 'share' && state.year === 2021)) ? Motion.step(k, 24, 16, Motion.ease.linear) : 0);
-  function ensureMicro(y) { if (!FIRMS_OK || firmYears.has(y)) return; ensureYear(y).catch(e => console.error(e)); }   // the address file loads once the camera nears k 1.5; prebuildBins draws the squares when they are ready
   // The year the red count in the Cells view's tile reads (the author's decision of 25 October 2026): each layer's own year, as its facts give it (LAYER_FACTS,
   // round 18), and the slider's year on the layers that follow it; the strip keeps the slider's year.
   const layerYear = () => { const L = layerOf(state.layer); return L && L.year != null ? L.year : state.year; };   // the layer's own year from its facts (round 18)
@@ -291,13 +291,16 @@
   let lastFieldKey = '', lastMarksKey = '';
   const layersKey = c => [state.mode, state.layer, state.year, markShared ? 1 : 0, theme.dark ? 1 : 0, c.cx, c.cy, c.k, stage.width, stage.height, stage.scale, firmYears.has(state.year) ? 1 : 0, microReady(microYear()) ? 1 : 0, mosaicOff ? 1 : 0, useGL() ? 1 : 0].join('|');
   const layersDirty = () => { lastFieldKey = ''; lastMarksKey = ''; };
+  let motionBorder = false;
   function drawMap(opts) {
     drawLog = [];
     const flight = !!(opts && opts.flight), motion = !!(opts && opts.motion);   // a flight frame skips the two DOM touches: the audit box and the legend; a wheel step (motion) leaves the strip to the settle
     Motion.audit.scene = 'map'; if (!flight) window.__atlasCanvases.map = { w: stage.width, h: stage.height }; if (!flight && !motion) queueMicrotask(updateContext);   // the strip follows every settled draw, never a flight frame or a wheel step   // the canvases' own size (the content box), for the audit
     const c = cam(); stage.base();
     mctx.fillStyle = theme.stage; mctx.fillRect(0, 0, stage.width, stage.height);
-    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: ghostAlpha(c.k), lod0Px: 1, afterLand: () => { if (state.mode !== 'firms' && grpLayer()) drawGroupFills(c); } }); drawLog.push('basemap');   // the regional borders as ghost-tone hairlines at the national zoom, gone by k 3 (round 10, G13b)
+    const borderAlpha = ghostAlpha(c.k);
+    motionBorder = (flight || motion) && stage.scale >= 2 && borderAlpha > 0;
+    MM.drawBasemap(mctx, stage, c, bmp, theme, { borderPx: c.k > 9 ? 1.2 : 0.8, lod0Colour: theme.ghost, lod0Alpha: borderAlpha, lod0Px: motionBorder ? 0.99 / stage.scale : 1, afterLand: () => { if (state.mode !== 'firms' && grpLayer()) drawGroupFills(c); } }); drawLog.push('basemap');
     markBox = { x: stage.width / 2 - 48, y: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 96, x1: stage.width / 2 + 48, y1: stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 };   // the mark's box, which the ghost names keep clear of (round 12, final)
     MM.markAGK(mctx, stage.width / 2, stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48, 96, theme.ink, 0.04); drawLog.push('mark');   // the authorship mark (round 10, the author's item 17): fixed in screen space at the lower edge, under every data layer, 4 percent
     const L = state.layer;
@@ -305,12 +308,12 @@
       const key = layersKey(c), fieldNew = key !== lastFieldKey; drawFirms(c, fieldNew); lastFieldKey = key;
       if (key !== lastMarksKey || pulse || found) { drawMarks(c); lastMarksKey = key; } else drawLog.push('ghost'); }   // the marks canvas keeps its frame (its ghost names included) when nothing it shows changed
     else if (L === 'density') { drawLog.push('density');
-      const am = microA(c.k, 2021); if (c.k >= 1.2 && !flight && !motion) ensureMicro(2021);
+      const am = microA(c.k, 2021);
       if (am < 1) drawNat(c, 1 - am);   // the national 5 km counts (2021), fading as the 1 km squares come in
       drawCellsSquares2d(c);
     } else if (L === 'share') { drawLog.push('share');
       // 100 km cells, then the 25 km cells, then the 1 km squares from the address files and the 2021 250 m windows (on the field canvas).
-      const y = state.year, a25 = c25[y] ? alpha25(c.k) : 0, am = microA(c.k, y); if (c.k >= 1.2 && !flight && !motion) ensureMicro(y);
+      const y = state.year, a25 = c25[y] ? alpha25(c.k) : 0, am = microA(c.k, y);
       const shareColour = cl => (cl === 'below' ? theme.below : theme.ramp6[cl]), shareAlpha = cl => (cl === 'below' ? 0.5 : 1);
       if (a25 < 1) { const paths = tiles('share' + y, () => { const idx = yearIndex[y]; return MM.buildTiles(idx.length, idx.map(i => CY.avail.ix[i]), idx.map(i => CY.avail.iy[i]), j => classOfShare(CY.avail.n[idx[j]], CY.avail.a[idx[j]], YEAR_BREAKS), { gapKm: 15 }); }); MM.drawTiles(mctx, stage, c, paths, shareColour, { alpha: 1 - a25, alphaOf: shareAlpha }); }
       if (c25[y]) { const d = c25[y], paths = tiles('share25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfShare(d.n[i], d.a[i], YEAR_BREAKS), { sizeKm: G25, gapKm: G25 * 0.12 }));   // built now, not mid-flight
@@ -329,7 +332,7 @@
       if (c25[2021]) { const d = c25[2021], paths = tiles('lists25', () => MM.buildTiles(d.count, d.ix, d.iy, i => (d.ns[i] >= 5 ? listClass(d.ns[i]) : null), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 > 0) MM.drawTiles(mctx, stage, c, paths, cl => theme.ramp5[cl + 1], { alpha: a25 }); }
     } else if (L === 'industry' && INDD) { drawLog.push('industry');
       // 100 km cells, then the 25 km cells, then the 1 km squares from the address files (on the field canvas); no 250 m layer.
-      const y = state.year, a25 = ind25[y] ? alpha25(c.k) : 0, am = microA(c.k, y); if (c.k >= 1.2 && !flight && !motion) ensureMicro(y);
+      const y = state.year, a25 = ind25[y] ? alpha25(c.k) : 0, am = microA(c.k, y);
       const indColour = cl => (cl === 'below' ? theme.below : theme.ind9[cl - 1]), indAlpha = cl => (cl === 'below' ? 0.5 : 1), classOfDom = dom => (dom === 255 ? 'below' : IND_CLASS[dom]);
       if (a25 < 1 && ind100[y]) { const d = ind100[y], paths = tiles('ind' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { gapKm: 15 })); MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: 1 - a25, alphaOf: indAlpha }); }
       if (ind25[y]) { const d = ind25[y], paths = tiles('ind25-' + y, () => MM.buildTiles(d.count, d.ix, d.iy, i => classOfDom(d.dom[i]), { sizeKm: G25, gapKm: G25 * 0.12 })); if (a25 * (1 - am) > 0) MM.drawTiles(mctx, stage, c, paths, indColour, { alpha: a25 * (1 - am), alphaOf: indAlpha }); }
@@ -350,7 +353,8 @@
   }
 
   // ---- firms view: loader, renderer, hover ------------------------------------------------------------
-  const firmYears = new Map(), firmPending = new Map(); let firmOrder = [], firmStatus = null;
+  const firmYears = new Map(), firmPending = new Map(), visibleYearLoads = new Set();
+  let firmStatus = null;
   const lowerBound = (arr, v) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] < v) lo = m + 1; else hi = m; } return lo; };
   // Data loaded on first use come as script twins injected on demand. A year's addresses come as the gzipped file itself
   // (data/firms/firms-YYYY.bin.gz), fetched and inflated here: the author's pick C of 29 October 2026, since the atlas left the
@@ -396,49 +400,216 @@
   function ensureYear(y) {
     if (firmYears.has(y)) return Promise.resolve(firmYears.get(y));
     if (firmPending.has(y)) return firmPending.get(y);
-    const p = loadYear(y).then(d => { firmYears.set(y, d); firmOrder.push(y); prebuildBins(y); while (firmOrder.length > 3) { const yy = firmOrder.shift(); firmYears.delete(yy); glFree(yy); for (const T of MOSAIC_LEVELS) mosaicCache.delete(yy + '|' + T); mosaicBitmaps.clear(); mosaicPathCache.clear(); } firmPending.delete(y); syncMix(); return d; }, e => { firmPending.delete(y); throw e; });
+    const p = loadYear(y).then(d => {
+      firmYears.set(y, d);
+      if (firmYears.size > 3) {
+        // Rapid year changes can finish out of order. Keep the year the reader is using.
+        const current = state.mode === 'firms' ? state.year : microYear();
+        const oldest = [...firmYears.keys()].find(year => year !== current);
+        firmYears.delete(oldest);
+        glFree(oldest);
+        mosaicCache.delete(oldest + '|1');
+        mosaicBitmaps.clear();
+        mosaicPathCache.clear();
+      }
+      return d;
+    }).finally(() => firmPending.delete(y));
     firmPending.set(y, p); return p;
   }
-  function decodeGrid25(key) {
-    const byYear = {};
-    if (key === 'cells25') {
-      const cells = D.cells25;
-      for (const [y, r] of Object.entries(cells.by_year)) byYear[y] = decode25(r, [['n', 'n', true], ['a', 'a', true], ['ns', 'ns', true], ['ng', 'ng', true]]);
-      const change = cells.change ? decode25(cells.change, [['n21', 'n21', true], ['a21', 'a21', true], ['n24', 'n24', true], ['a24', 'a24', true], ['cls', 'class', false], ['pp', 'change_pp_x1000', true]]) : null;
-      const d = byYear[2021];
-      if (d) for (let i = 0; i < d.count; i++) if (d.ns[i] >= 5) list25Counts[listClass(d.ns[i])]++;
-      Object.assign(c25, byYear);
-      chg25 = change;
-      C25 = cells;
-    } else if (INDD) {
-      const industry = D.industry25.grid25;
-      for (const [y, r] of Object.entries(industry.by_year)) byYear[y] = decodeInd(r, industry.topk);
-      Object.assign(ind25, byYear);
+  // Each key represents one immutable projection of the verified display inputs.
+  const gridJobs = new Map(), gridErrors = new Set(), gridComplete = new Set();
+  const histories = new Map(), rawGridFiles = new Map();
+  const gridID = (group, key) => group + ':' + key;
+  const shareCols = [['n', 'n', true], ['a', 'a', true]];
+  const annualCols = [...shareCols, ['ns', 'ns', true], ['ng', 'ng', true]];
+  const changeCols = [['n21', 'n21', true], ['a21', 'a21', true], ['n24', 'n24', true], ['a24', 'a24', true], ['cls', 'class', false], ['pp', 'change_pp_x1000', true]];
+
+  async function fetchGridJSON(path) {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error('Could not load ' + path + ' (' + response.status + ')');
+    return response.json();
+  }
+
+  // The unpackaged motion/explorer.html reads the original display JSON. Its
+  // destination-specific preview and the public build read individual JSON files.
+  async function readGrid(group, key) {
+    if (gridManifest) return fetchGridJSON(gridManifest.files[group][key]);
+    const source = ({ cells25: 'cells25', change25: 'cells25', industry100: 'industry', industry25: 'industry25',
+      shared100: 'shared', shared25: 'shared', sharedCity: 'shared-city', cityHistory: 'shared-city' })[group]
+      || (key === 'cells25' ? 'cells25' : 'shared');
+    let p = rawGridFiles.get(source);
+    if (!p) {
+      p = fetchGridJSON('data/' + source + '.json').catch(error => { rawGridFiles.delete(source); throw error; });
+      rawGridFiles.set(source, p);
+    }
+    const data = await p;
+    if (source === 'shared') SHD.nat = data.national;
+    switch (group) {
+      case 'cells25': return data.by_year[key];
+      case 'change25': return data.change;
+      case 'industry100': return data.grid100.by_year[key];
+      case 'industry25': return data.grid25.by_year[key];
+      case 'shared100': return data.cells100[key];
+      case 'shared25': return data.cells25[key];
+      case 'sharedCity': return data.city_1km[key];
+      case 'history': return key === 'cells25' ? data.by_year : key === 'shared100' ? data.cells100 : data.cells25;
+      case 'cityHistory': return Object.fromEntries(Object.entries(data.city_1km).filter(([, windows]) => windows[key]).map(([year, windows]) => [year, windows[key]]));
     }
   }
-  // The importer discovers these optional assets by their literal paths.
-  const grid25Files = { cells25: 'data/cells25.js', industry25: 'data/industry25.js' };
-  const loadedGrids25 = new Set();
-  let grid25P = null;
-  function ensureGrid25() {
-    if (grid25P) return grid25P;
-    const missing = Object.keys(grid25Files).filter(key => !loadedGrids25.has(key));
-    grid25P = Promise.allSettled(missing.map(async key => {
-      await loadScript(grid25Files[key]);
-      decodeGrid25(key);
-      loadedGrids25.add(key);
-    })).then(results => {
-      if (results.some(r => r.status === 'rejected')) grid25P = null;
-      if (results.some(r => r.status === 'fulfilled')) { layersDirty(); drawMap(); refreshHover(); }
+
+  function decodeSharedRow(r, origin, history = false) {
+    const d = decode25(r, shareCols);
+    d.origin = origin;
+    d.n100 = new Int32Array(d.count); d.a100 = new Int32Array(d.count);
+    if (!history) d.p100 = new Int32Array(d.count);
+    if (r.shared) {
+      const indices = MM.b64Int32(r.k), n = MM.b64Int32(r.n100), a = MM.b64Int32(r.a100);
+      const p = history ? null : MM.b64Int32(r.p100);
+      for (let j = 0; j < indices.length; j++) {
+        const i = indices[j]; d.n100[i] = n[j]; d.a100[i] = a[j]; if (p) d.p100[i] = p[j];
+      }
+    }
+    return d;
+  }
+
+  function installGrid(group, key, row) {
+    switch (group) {
+      case 'cells25': {
+        const d = decode25(row, annualCols);
+        if (+key === 2021) {
+          list25Counts.fill(0);
+          for (let i = 0; i < d.count; i++) if (d.ns[i] >= 5) list25Counts[listClass(d.ns[i])]++;
+        }
+        c25[key] = d; break;
+      }
+      case 'change25': chg25 = Object.assign(decode25(row, changeCols), { supported: row.supported, class_cells: row.class_cells }); break;
+      case 'industry100': ind100[key] = decodeInd(row, INDD.grid100.topk); break;
+      case 'industry25': ind25[key] = decodeInd(row, gridManifest ? gridManifest.industryTopK : INDD.grid25.topk); break;
+      case 'shared100': SHD.c100[key] = decodeSharedRow(row); break;
+      case 'shared25': SHD.c25[key] = decodeSharedRow(row); break;
+      case 'sharedCity': {
+        const windows = {};
+        for (const [label, r] of Object.entries(row)) if (DEN.windows_1km[label]) windows[label] = decodeSharedRow(r, DEN.windows_1km[label].origin);
+        SHD.win[key] = windows; break;
+      }
+      case 'history': case 'cityHistory': {
+        const rows = {};
+        for (const [y, r] of Object.entries(row)) rows[y] = key === 'cells25' ? decode25(r, shareCols) : decodeSharedRow(r, null, true);
+        histories.set(gridID(group, key), rows); break;
+      }
+      case 'groups': decodeGroups(); break;
+    }
+  }
+
+  function historyRequest(h) {
+    if (!h || h.gridStatus || h.grp) return null;
+    if (h.shared && h.n != null) return h.win ? ['cityHistory', h.win] : ['history', h.grid === 100 ? 'shared100' : 'shared25'];
+    if (!h.shared && (h.micro || h.grid === G25)) return ['history', 'cells25'];
+    return null;
+  }
+
+  function touchesCurrentGrid(group, key) {
+    if (group === 'history' || group === 'cityHistory') {
+      const matches = h => { const r = historyRequest(h); return r && r[0] === group && r[1] === key; };
+      return (cardOpen('cursor') && matches(state.hover)) || (pop.id === 'cursor' && matches(pop.cursor));
+    }
+    if (state.mode !== 'cells') return false;
+    const y = +key, l = state.layer, k = state.cam.k;
+    if (group === 'groups') return l === 'gs';
+    if (group === 'change25') return l === 'change' && k > 1.5 * kFit();
+    if (group === 'industry100') return l === 'industry' && state.year === y;
+    if (group === 'shared100') return l === 'shared' && state.year === y;
+    if (group === 'sharedCity') return l === 'shared' && state.year === y && k >= 1.5;
+    if (k <= 1.5 * kFit()) return false;
+    if (group === 'industry25') return l === 'industry' && state.year === y;
+    if (group === 'shared25') return l === 'shared' && state.year === y;
+    return (l === 'share' && state.year === y) || (l === 'lists' && y === 2021);
+  }
+
+  function requestGrid(group, key, retry = true) {
+    const id = gridID(group, key);
+    if (gridComplete.has(id)) return Promise.resolve(true);
+    if (gridJobs.has(id)) return gridJobs.get(id);
+    if (!retry && gridErrors.has(id)) return Promise.resolve(false);
+    gridErrors.delete(id);
+    const read = group === 'groups' ? loadScript('data/groups.js') : readGrid(group, key);
+    const job = read.then(row => {
+      installGrid(group, key, row);
+      gridComplete.add(id);
+      return true;
+    }).catch(() => { gridErrors.add(id); return false; }).then(ok => {
+      gridJobs.delete(id);
+      if (touchesCurrentGrid(group, key)) {
+        if (group === 'history' || group === 'cityHistory') {
+          drawCursorChart(state.hover); if (pop.id === 'cursor') drawCursorChart(pop.cursor, 'pochart');
+        } else {
+          layersDirty(); viewMix.key = ''; mixUI.key = ''; hoverUnit.key = null;
+          if (!flight && !press && !pinch && !settleTimer) {
+            drawMap(); refreshHover(); if (!state.hover) fillMixBox(null);
+          }
+        }
+      }
+      return ok;
     });
-    return grid25P;
+    gridJobs.set(id, job);
+    return job;
+  }
+
+  function ensureLayerBase(layer, y, retry = true) {
+    if (layer === 'industry' && !ind100[y]) return requestGrid('industry100', y, retry);
+    if (layer === 'shared') return requestGrid('shared100', y, retry);
+    if (layer === 'gs') return requestGrid('groups', 'fixed', retry);
+    return Promise.resolve(true);
+  }
+  function ensureLayerGrid(layer, y, retry = true) {
+    if (layer === 'change') return requestGrid('change25', 'fixed', retry);
+    if (layer === 'lists') return requestGrid('cells25', 2021, retry);
+    if (layer === 'share') return requestGrid('cells25', y, retry);
+    if (layer === 'industry') return requestGrid('industry25', y, retry);
+    if (layer === 'shared') return requestGrid('shared25', y, retry);
+    return Promise.resolve(true);
+  }
+  function ensureSharedCity(y, retry = true) { return requestGrid('sharedCity', y, retry); }
+  function cursorChartVisible(target) {
+    if (target === 'pochart') return pop.id === 'cursor';
+    if (!cardOpen('cursor')) return false;
+    const rect = $('cellchart').getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+  function ensureCursorHistory(h, retry = true) {
+    const request = historyRequest(h);
+    return request ? requestGrid(request[0], request[1], retry) : Promise.resolve(true);
+  }
+  function unavailableGrid(group, key, description) {
+    if (!gridErrors.has(gridID(group, key))) return 'Loading ' + description + '…';
+    const action = group === 'history' || group === 'cityHistory'
+      ? 'Point to or tap the cell again to retry.' : 'Select the layer again to retry.';
+    return description[0].toUpperCase() + description.slice(1) + ' unavailable. ' + action;
   }
   const onIdle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 3000 }) : setTimeout(f, 250));
-  // The bins of a loaded year are built in idle time (round 14), not in the first frame that needs them (a 312 ms stall on the first zoom past k 1.5).
-  function prebuildBins(y) {   // outside flights, drags, pinches and wheel runs (the build is one long task); the Cells view draws the squares once they exist
-    const build = () => { if (!firmYears.has(y)) return; if (flight || settleTimer || press || pinch) { onIdle(build); return; }
-      for (const T of MOSAIC_LEVELS) { const had = mosaicCache.has(y + '|' + T); mosaicBins(y, T); if (!had && state.mode !== 'firms' && microYear() === y && MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.5) { drawMap(); refreshHover(); } } };
-    onIdle(build);
+  const microPending = new Map();
+  function ensureMicro(y) {
+    if (!FIRMS_OK || microReady(y)) return Promise.resolve();
+    if (microPending.has(y)) return microPending.get(y);
+    const pending = ensureYear(y)
+      .then(async () => {
+        for (;;) {
+          await new Promise(resolve => onIdle(resolve));
+          if (state.mode !== 'cells' || !MICRO_LAYERS.has(state.layer) || microYear() !== y ||
+              state.cam.k < 1.2 || !firmYears.has(y)) return;
+          if (!flight && !settleTimer && !pinch && !(press && press.moved)) break;
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+        if (!microReady(y)) {
+          mosaicBins(y, 1);
+          layersDirty();
+          drawMap();
+          refreshHover();
+          syncMix();
+        }
+      }).finally(() => microPending.delete(y));
+    microPending.set(y, pending);
+    return pending;
   }
   // Mark rules by zoom (base, s, cap, floor), the Moscow rasters' three extents: pixel marks with blocks below
   // 20 px per km (the region extent's rule), the city discs to 60, the downtown discs above.
@@ -652,29 +823,18 @@ void main() {
     return { W: stage.width, H: stage.height, dpr: stage.scale, shift: [GL_R[0] - Cx, GL_R[1] - Cy], off: [c.ox + (Cx - camx) * kk, c.oy - (Cy - camy) * kk], kk, code: PixelField.layerCode(L), breaks: YEAR_BREAKS, pal: P.pal, alpha: P.alpha, back: hex2rgb(theme.neutral).map(v => v / 255) };
   }
   const dotsAlphas = k => { const dk = dotsK(); let t = Motion.step(k, dk, 0.4 * dk, Motion.ease.linear); if (t > 0.999999) t = 1; return { pix: 1 - t, dots: t }; };
-  // The year dissolve and the opening sweep (round 14, the author's decisions): the dissolve crossfades the previous year's pixel field into the new one over 0.25 s
-  // (kept under reduced motion, a crossfade); the sweep, once per tab on the first opening of the Firms view at the country view, lets every field pixel and every
-  // listed mark fade in as an invisible edge passes from west to east over 1.3 s; any input completes it, and it never runs under reduced motion.
-  const DISSOLVE_MS = 250, SWEEP_MS = 1300;
-  let fieldAnim = { dissolve: null, sweep: null, raf: 0 }, pixPrevKey = '', pixKey = '', pixDrawn = { cells: 0, engine: null, level: null, firms: 0 };
-  const sweepX = () => { const s = fieldAnim.sweep; if (!s) return null; const u = Math.min(1, (performance.now() - s.t0) / SWEEP_MS); return { x: Motion.lerp(-s.feather, stage.width + s.feather, Motion.ease.inOutSine(u)), feather: s.feather, done: u >= 1 }; };
+  // Year changes crossfade the previous and current pixel fields for a quarter second.
+  const DISSOLVE_MS = 250;
+  let fieldAnim = { dissolve: null, raf: 0 }, pixPrevKey = '', pixKey = '', pixDrawn = { cells: 0, engine: null, level: null, firms: 0 };
   const dissolveT = () => { const s = fieldAnim.dissolve; if (!s) return 1; const t = Math.min(1, (performance.now() - s.t0) / DISSOLVE_MS); return Motion.ease.inOutSine(t); };
   function fieldTick() {
-    fieldAnim.raf = 0; const sw = sweepX(); if (sw && sw.done) fieldAnim.sweep = null; if (fieldAnim.dissolve && dissolveT() >= 1) fieldAnim.dissolve = null;
-    if (state.mode !== 'firms') { fieldAnim.sweep = null; fieldAnim.dissolve = null; return; }
-    drawFieldOnly(cam()); if (fieldAnim.sweep || sw) drawMarks(cam());
-    if (fieldAnim.sweep || fieldAnim.dissolve) fieldAnim.raf = requestAnimationFrame(fieldTick);
+    fieldAnim.raf = 0;
+    if (state.mode !== 'firms') { fieldAnim.dissolve = null; return; }
+    if (fieldAnim.dissolve && dissolveT() >= 1) fieldAnim.dissolve = null;
+    drawFieldOnly(cam());
+    if (fieldAnim.dissolve) fieldAnim.raf = requestAnimationFrame(fieldTick);
   }
   function fieldAnimate() { if (!fieldAnim.raf) fieldAnim.raf = requestAnimationFrame(fieldTick); }
-  function maybeSweep() {
-    fieldAnim.sweepPending = false;
-    if (reduceMotion() || state.mode !== 'firms' || state.cam.k > 1.5 * kFit()) return false;
-    if (!firmYears.has(state.year)) { fieldAnim.sweepPending = true; return false; }   // the field arrives with the year's data: the sweep starts then
-    try { if (sessionStorage.getItem('atlas-sweep')) return false; sessionStorage.setItem('atlas-sweep', '1'); } catch (e) { /* no storage: sweep once per load */ if (fieldAnim.swept) return false; }
-    fieldAnim.swept = true; fieldAnim.sweep = { t0: performance.now(), feather: Math.max(60, stage.width * 0.12) }; fieldAnimate(); return true;
-  }
-  function endSweep() { if (!fieldAnim.sweep) return; fieldAnim.sweep = null; if (state.mode === 'firms') { drawFieldOnly(cam()); drawMarks(cam()); } }
-  ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach(t => window.addEventListener(t, endSweep, { capture: true, passive: true }));
   // The 2D path's pixel field: the CPU engine's image at the cells' resolution, drawn scaled by the device ratio without smoothing.
   function pixel2d(f, c, d, L, i0, i1, keepPrev) {
     const P = pixelParams(c, L), view = { cx: c.cx, cy: c.cy, k: c.k, ox: c.ox, oy: c.oy, W: P.W, H: P.H };
@@ -687,12 +847,11 @@ void main() {
     let cells = 0; for (let o = 3; o < pm.length; o += 4) if (pm[o]) cells++; return cells;
   }
   function blit2dCells(f, w) {
-    const ctx2 = f.ctx, W = f.canvas.width, H = f.canvas.height, t = dissolveT(), sw = sweepX();
+    const ctx2 = f.ctx, t = dissolveT();
     ctx2.save(); ctx2.setTransform(1, 0, 0, 1, 0, 0); ctx2.imageSmoothingEnabled = false;
     if (t < 1 && f.prev.width) { ctx2.globalAlpha = w * (1 - t); ctx2.drawImage(f.prev, 0, 0, f.prev.width * stage.scale, f.prev.height * stage.scale); ctx2.globalCompositeOperation = 'lighter'; }
     ctx2.globalAlpha = w * t; ctx2.drawImage(f.cells, 0, 0, f.cells.width * stage.scale, f.cells.height * stage.scale);
     ctx2.globalCompositeOperation = 'source-over';
-    if (sw) { const g = ctx2.createLinearGradient((sw.x - sw.feather) * stage.scale, 0, sw.x * stage.scale, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx2.globalCompositeOperation = 'destination-in'; ctx2.globalAlpha = 1; ctx2.fillStyle = g; ctx2.fillRect(0, 0, W, H); ctx2.globalCompositeOperation = 'source-over'; }
     ctx2.restore();
   }
   // ---- the address files' 1 km squares (round 13, the author's request of 25 October 2026; the Cells view's from round 14) -----------------------------------------
@@ -703,7 +862,7 @@ void main() {
   // view, on the GPU, or without WebGL2 on the map canvas: squares of 6 px and more filled per frame inside the view (the bins sorted by column, the x-band found by
   // a binary search), smaller ones rendered once into a bitmap of the view with a margin of its own size, redrawn when the view leaves it or the zoom drifts past
   // 40 percent.
-  const MOSAIC_DOTS_K = 20, MOSAIC_LEVELS = [1];
+  const MOSAIC_DOTS_K = 20;
   const dotsK = () => Math.min(MOSAIC_DOTS_K, minSide() / 20 / 1.4);   // the hand-over to the dots starts at k 20 and runs over a 1.4 x band (20 to 28), or lower on a map whose fine rung (the 250 m preset, minSide / 20) lies under 28, so that preset always shows the dots (a 400 px phone: 13.1 to 18.3)
   const binKey = (bx, by) => (bx + 20000) * 40000 + (by + 20000);
   const mosaicCache = new Map(), mosaicBitmaps = new Map(); let mosaicBuilds = 0, mosaicBitmapBuilds = 0, mosaicState = { level: null, mode: null, drawn: 0 }, mosaicOff = false;
@@ -785,8 +944,21 @@ void main() {
     const y = state.year, d = firmYears.get(y), camKey = [c.cx, c.cy, c.k, stage.width, stage.height, stage.scale].join('|');
     if (!d) {
       firmStatus = `Loading ${y} addresses…`; if (!(fieldAnim.dissolve && camKey === fieldCamKey)) { clearField(); fieldCamKey = ''; }   // a year change keeps the old year's field until the new one arrives and dissolves into it
-      ensureYear(y).then(() => { if (state.mode === 'firms' && state.year === y) { firmStatus = null; if (fieldAnim.sweepPending) maybeSweep(); drawMap(); countFirmsInView(); refreshHover(); prefetchYears(y); } })
-        .catch(e => { console.error(e); firmStatus = `Addresses for ${y} could not be loaded (${e.message}).`; if (state.mode === 'firms' && state.year === y) drawLegend(); });
+      if (detailEnabled && !visibleYearLoads.has(y)) {
+        visibleYearLoads.add(y);
+        ensureYear(y).then(() => {
+          if (state.mode !== 'firms' || state.year !== y) return;
+          drawMap(flight ? { flight: true } : undefined);
+          countFirmsInView();
+          refreshHover();
+          syncMix();
+        }, error => {
+          if (state.mode !== 'firms' || state.year !== y) return;
+          console.error(error);
+          firmStatus = `Addresses for ${y} could not be loaded (${error.message}).`;
+          drawLegend();
+        }).finally(() => visibleYearLoads.delete(y));
+      }
       return;
     }
     firmStatus = null;
@@ -795,7 +967,7 @@ void main() {
     drawFieldOnly(c); fieldCamKey = camKey;
   }
   // The field canvas from the year's addresses: the pixel field at weight 1 - dots, recomposed when the view, the year, the layer or the theme changed, then the
-  // discs at weight dots; the dissolve and the sweep only redraw the copy (fieldTick).
+  // discs at weight dots. The year dissolve redraws the copy through fieldTick.
   function drawFieldOnly(c) {
     const y = state.year, d = firmYears.get(y), L = state.layer; if (!d) return;
     const k = c.k, A = dotsAlphas(k), key = [y, L, theme.dark, c.cx, c.cy, c.k, stage.width, stage.height, stage.scale, useGL() ? 1 : 0].join('|');
@@ -808,7 +980,7 @@ void main() {
       if (field2d) field2d.canvas.hidden = true;
       glUpload(y, d); const buf = glYears.get(y); if (!buf) return;
       gl.viewport(0, 0, fieldC.width, fieldC.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-      if (A.pix > 0) { const P = pixelParams(c, L); if (fresh) { pfGL.compose(buf, p0, p1, P, keepPrev); pixKey = key; } const sw = sweepX(); pfGL.blit(fieldC.width, fieldC.height, P, A.pix, dissolveT(), sw ? sw.x : null, sw ? sw.feather : 1); }
+      if (A.pix > 0) { const P = pixelParams(c, L); if (fresh) { pfGL.compose(buf, p0, p1, P, keepPrev); pixKey = key; } pfGL.blit(fieldC.width, fieldC.height, P, A.pix, dissolveT()); }
       else if (fresh) pixKey = '';
       if (idx) glDiscs(c, glYears.get(y), L, idx, A.dots);
     } else {
@@ -820,8 +992,6 @@ void main() {
     if (keepPrev) { fieldAnim.dissolve.t0 = performance.now(); fieldAnimate(); }
     pixDrawn = { cells: pixDrawn.cells, engine: useGL() ? 'webgl2' : '2d', pix: A.pix, dots: A.dots, level: A.dots >= 1 ? 'dots' : A.pix >= 1 ? 'pixel' : 'both' };
   }
-  // The neighbouring years load in idle time once a year is shown (the cache holds three), so the slider's next step need not wait for the download.
-  function prefetchYears(y) { if (state.mode !== 'firms') return; for (const yy of [y + 1, y - 1]) if (FM && FM.files[yy] && !firmYears.has(yy)) onIdle(() => { if (state.mode === 'firms' && Math.abs(state.year - yy) === 1) ensureYear(yy).catch(() => {}); }); }
   // Listed firms on the marks layer, above the field (25 October 2026): before its listing year a firm keeps its ordinary
   // mark in the layer's colour for its own state and carries a thin red rim (membership visible from the first frame);
   // from its listing year it is red, solid with a statement and a ring without one. Undated members are red from 2014
@@ -979,7 +1149,6 @@ void main() {
         } else MM.listedMark(kctx, px, py, r, ch === '1' ? 1 : 0, LR.alpha, theme, LR.halo, null, LR);
       }
     }
-    { const sw = sweepX(); if (sw) { kctx.save(); kctx.setTransform(stage.scale, 0, 0, stage.scale, 0, 0); const g = kctx.createLinearGradient(sw.x - sw.feather, 0, sw.x, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)'); kctx.globalCompositeOperation = 'destination-in'; kctx.fillStyle = g; kctx.fillRect(0, 0, stage.width, stage.height); kctx.restore(); } }   // the opening sweep: the listed marks fade in with the field (round 14); the names and labels below are drawn whole
     drawGhostNames(kctx, c, 'marks'); drawLog.push('ghost');   // the floating names above the field and the marks (round 12, part D)
     if (found) foundRings(kctx, c);   // the firm found by name (round 14)
     drawLabels(kctx, c, 'marks');
@@ -1149,11 +1318,15 @@ void main() {
   const mixColour = code => theme.ind9[(IND_CLASS[code] || 9) - 1];
   function fillMixBox(h) {
     const el = $('mixbox'); if (el.hidden || !mixOpen()) return;
+    let waiting = null;
+    if (state.mode === 'firms' && !firmYears.has(state.year)) waiting = firmStatus || `Loading ${state.year} addresses…`;
+    if (state.mode === 'cells' && !ind100[state.year] && !(ind25[state.year] && alpha25(cam().k) >= 0.5) && microA(cam().k, state.year) < 0.5)
+      waiting = unavailableGrid('industry100', state.year, 'industry data');
     let m = mixRowsFor(h); if (!m) { computeViewMix(); m = viewMix.rows ? { rows: viewMix.rows, other: viewMix.other, unit: viewMix.unit, empty: !viewMix.rows.length } : null; }
-    const key = `${state.year}|${m ? m.unit + '|' + m.rows.map(r => r.code + ':' + r.share).join(',') + '|' + m.other : 'none'}`;
+    const key = `${state.year}|${m ? m.unit + '|' + m.rows.map(r => r.code + ':' + r.share).join(',') + '|' + m.other : waiting || 'none'}`;
     if (mixUI.key === key) return; mixUI.key = key;
     $('mixtitle').textContent = `Revenue mix, ${state.year}${state.year === 2025 ? '*' : ''}`; $('mixunit').textContent = m ? m.unit : '';
-    $('mixrows').innerHTML = !m ? '<div class="r muted"><span class="nm">no data in view</span></div>' : m.empty ? '<div class="r muted"><span class="nm">no firm with a revenue value here</span></div>'
+    $('mixrows').innerHTML = !m ? `<div class="r muted"><span class="nm">${esc(waiting || 'no data in view')}</span></div>` : m.empty ? '<div class="r muted"><span class="nm">no firm with a revenue value here</span></div>'
       : m.rows.map(r => `<div class="r"><span class="sw" style="background:${mixColour(r.code)}"></span><span class="nm" title="${esc(divLabel(r.code))}">${esc(divShort(r.code))}${r.code ? ` (${divPad(r.code)})` : ''}</span><span class="pc num">${r.share ? r.share + '%' : '<1%'}</span></div>`).join('')
         + (m.other > 0 ? `<div class="r muted"><span class="sw" style="background:transparent"></span><span class="nm">other divisions</span><span class="pc num">${m.other}%</span></div>` : '');
   }
@@ -1206,22 +1379,6 @@ void main() {
   }
   let hoverRegionName = null;   // the region under the cursor (round 10, G13b): the strip follows it below the city band and the overlay outlines it (its fill on the map went in round 30)
   // Round 16: the two layers' data, loaded on first use, and their drawing.
-  function ensureData(id) {   // 'shared' (data/shared.js and shared-city.js) or 'groups' (data/groups.js)
-    if ((id === 'shared' ? SHD : GRP) || dataPending.has(id)) return; dataPending.add(id);
-    const files = id === 'shared' ? ['data/shared.js', 'data/shared-city.js'] : ['data/groups.js'];
-    Promise.all(files.map(loadScript)).then(() => { if (id === 'shared') decodeShared(); else decodeGroups(); dataPending.delete(id); layersDirty(); drawMap(); drawCellPanel(state.hover); refreshHover(); }, () => { dataPending.delete(id); });
-  }
-  function decodeShared() {
-    const S1 = D.shared, SC = D['shared-city'];
-    const dec = (r, origin) => { const d = { count: r.count, ix: MM.b64Int16(r.ix), iy: MM.b64Int16(r.iy), n: MM.b64Int32(r.n), a: MM.b64Int32(r.a), n100: new Int32Array(r.count), a100: new Int32Array(r.count), p100: new Int32Array(r.count), map: new Map(), origin };
-      if (r.shared) { const k = MM.b64Int32(r.k), n1 = MM.b64Int32(r.n100), a1 = MM.b64Int32(r.a100), p1 = MM.b64Int32(r.p100); for (let j = 0; j < k.length; j++) { d.n100[k[j]] = n1[j]; d.a100[k[j]] = a1[j]; d.p100[k[j]] = p1[j]; } }
-      for (let i = 0; i < d.count; i++) d.map.set(cellKey(d.ix[i], d.iy[i]), i); return d; };
-    const out = { years: S1.years, nat: S1.national, c100: {}, c25: {}, win: {} };
-    for (const [y, r] of Object.entries(S1.cells100)) out.c100[+y] = dec(r);
-    for (const [y, r] of Object.entries(S1.cells25)) out.c25[+y] = dec(r);
-    if (SC) for (const [y, ws] of Object.entries(SC.city_1km)) { out.win[+y] = {}; for (const [label, r] of Object.entries(ws)) if (DEN.windows_1km[label]) out.win[+y][label] = dec(r, DEN.windows_1km[label].origin); }
-    SHD = out;
-  }
   function decodeGroups() {   // the state-related firms' rows (ownership); the file's unitary-enterprise rows are not read (the author's revision of 27 October 2026)
     const R = D.groups.regions, by = new Map(), tot = { n21: 0, a21: 0, n24: 0, a24: 0 };
     for (let i = 0; i < R.region.length; i++) { if (R.group[i] !== 'state' || R.dimension[i] !== 'ownership') continue;
@@ -1231,19 +1388,18 @@ void main() {
   }
   const SH_BREAKS = [2.5, 5, 10, 20], SH_LABELS = ['none', 'under 2.5%', '2.5–5%', '5–10%', '10–20%', '20% or more'];
   const sharedClass = (d, i) => { if (d.n[i] < 50) return 'below'; const s = 100 * d.n100[i] / d.n[i]; if (s === 0) return 0; let cl = 1; while (cl <= SH_BREAKS.length && s >= SH_BREAKS[cl - 1]) cl++; return cl; };
-  const sharedCityA = k => (SHD ? Motion.step(k, 1.5, 1.0, Motion.ease.linear) : 0);   // the 1 km squares inside the city windows, faded in as the share layer's squares are
+  const sharedCityA = k => Motion.step(k, 1.5, 1.0, Motion.ease.linear);   // the 1 km squares inside the city windows, faded in as the share layer's squares are
   const GL_BREAKS = [-20, -10, 0, 10, 20], GL_LABELS = ['≤ −20 points', '−20 to −10', '−10 to 0', '0 to +10', '+10 to +20', '> +20 points'], GRP_NAME = 'state-related firms';   // the breaks symmetric about zero, as the CHANGE layer's three amber and three cyan steps are
   const groupChange = s => (s && s.n21 >= 50 && s.n24 >= 50 ? 100 * s.a24 / s.n24 - 100 * s.a21 / s.n21 : null);
   const groupClass = s => { const ch = groupChange(s); if (ch == null) return 'below'; let cl = 0; while (cl < GL_BREAKS.length && ch > GL_BREAKS[cl]) cl++; return cl; };
   const BM_NAMES = new Set(BM.lod0.parts.map(p => p.name));   // the regions the basemap draws (regions.json also holds Russia and the firms outside the basemap's outline)
   function drawGroupFills(c) {   // each region in its class of the change among state-related firms, on the land and under the borders
-    if (!GRP) { ensureData('groups'); return; }
+    if (!GRP) return;
     mctx.save(); Motion.camTransform(mctx, stage, c);
     for (const [name, v] of GRP.byRegion) { if (!BM_NAMES.has(name)) continue; const cl = groupClass(v); mctx.fillStyle = cl === 'below' ? theme.below : theme.change6[cl]; mctx.globalAlpha = cl === 'below' ? 0.5 : 1; mctx.fill(regionPath(name), 'evenodd'); }
     mctx.restore();
   }
   function drawShared(c, flight, motion) {   // 100 km cells, 25 km cells closer in, and the 1 km squares inside the city windows, the 25 km cells cut out under them
-    if (!SHD) { ensureData('shared'); return; }
     const y = state.year, a25 = SHD.c25[y] ? alpha25(c.k) : 0, a1 = SHD.win[y] ? sharedCityA(c.k) : 0;
     const colour = cl => (cl === 'below' ? theme.below : theme.ramp6[cl]), alphaOf = cl => (cl === 'below' ? 0.5 : 1);
     const wins = []; if (a1 > 0) for (const [label, d] of Object.entries(SHD.win[y])) { const o = d.origin, [x0, y0] = Motion.project(c, o[0], o[1] + 90), s = 90 * c.k; if (x0 < stage.width && y0 < stage.height && x0 + s > 0 && y0 + s > 0) wins.push({ label, d, x0, y0, s }); }
@@ -1352,23 +1508,11 @@ void main() {
   const glyphs = new Map();
   const decodeRing = r => { const p = []; let x = r[0], y = r[1]; p.push([x / 10, y / 10]); for (let i = 2; i < r.length; i += 2) { x += r[i]; y += r[i + 1]; p.push([x / 10, y / 10]); } return p; };
   const ringArea = p => { let a = 0; for (let i = 0, j = p.length - 1; i < p.length; j = i++) a += (p[j][0] + p[i][0]) * (p[j][1] - p[i][1]); return Math.abs(a) / 2; };
-  function simplify(p, tol) {   // Douglas-Peucker on an open or closed ring
-    if (p.length <= 3) return p;
-    const keep = new Uint8Array(p.length); keep[0] = keep[p.length - 1] = 1; const stack = [[0, p.length - 1]];
-    while (stack.length) { const [a, b] = stack.pop(); let best = -1, bd = 0; const [ax, ay] = p[a], [bx, by] = p[b], dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1e-12;
-      for (let i = a + 1; i < b; i++) { const t = Math.max(0, Math.min(1, ((p[i][0] - ax) * dx + (p[i][1] - ay) * dy) / L2)), ex = ax + t * dx - p[i][0], ey = ay + t * dy - p[i][1], d = ex * ex + ey * ey; if (d > bd) { bd = d; best = i; } }
-      if (best >= 0 && bd > tol * tol) { keep[best] = 1; stack.push([a, best], [best, b]); } }
-    return p.filter((_, i) => keep[i]);
-  }
-  function fitPath(rings) {   // rings in km -> an SVG path in the 22 by 22 box with 1 px padding, y up in km, down on screen
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const r of rings) for (const [x, y] of r) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-    const sc = 20 / Math.max(x1 - x0, y1 - y0, 1e-9), xc = (x0 + x1) / 2, yc = (y0 + y1) / 2;
-    return rings.map(r => 'M' + r.map(([x, y]) => `${(11 + sc * (x - xc)).toFixed(1)} ${(11 - sc * (y - yc)).toFixed(1)}`).join('L') + 'Z').join('');
-  }
+  const simplify = MM.simplifyRing, fitPath = MM.fitGlyphPath;
   function regionGlyph(name) {
     if (glyphs.has(name)) return glyphs.get(name);
     let d = '';
-    if (name === 'Russia') d = russiaGlyph();
+    if (name === 'Russia') d = window.ATLAS_OUTLINES.glyph;
     else {
       const rings = []; for (const p of BM.lod0.parts) if (p.name === name) for (const r of p.rings) rings.push(decodeRing(r));
       if (rings.length) {
@@ -1379,20 +1523,6 @@ void main() {
       }
     }
     glyphs.set(name, d); return d;
-  }
-  function russiaGlyph() {   // the mainland's outer boundary: fill every part at 0.03 px per km, trace the contour (Moore neighbourhood), simplify
-    const S = 0.03; let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;   // the bounds of every part
-    for (const p of BM.lod0.parts) for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } }
-    const W = Math.ceil((x1 - x0) * S) + 4, H = Math.ceil((y1 - y0) * S) + 4, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true });
-    g.setTransform(S, 0, 0, -S, 2 - x0 * S, H - 2 + y0 * S); g.fillStyle = '#fff'; g.fill(MM.partsToPath(BM.lod0.parts), 'evenodd');
-    const a = g.getImageData(0, 0, W, H).data, land = (x, y) => x >= 0 && y >= 0 && x < W && y < H && a[4 * (y * W + x) + 3] > 127;
-    const cxp = Math.round(2 + (0 - x0) * S), cyp = Math.round(H - 2 - (0 - y0) * S); let sx = cxp, sy = cyp; while (sx > 0 && land(sx - 1, sy)) sx--;   // walk west from the plane's origin to the coast
-    if (!land(sx, sy)) { for (let x = 0; x < W; x++) if (land(x, cyp)) { sx = x; break; } }
-    const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], path = []; let x = sx, y = sy, dir = 6, guard = 0;
-    do { path.push([x, y]); let found = false; for (let k = 0; k < 8; k++) { const nd = (dir + 5 + k) % 8, nx = x + dirs[nd][0], ny = y + dirs[nd][1]; if (land(nx, ny)) { x = nx; y = ny; dir = nd; found = true; break; } } if (!found) break; } while ((x !== sx || y !== sy) && ++guard < 200000);
-    const km = path.map(([px, py]) => [x0 + (px - 2) / S, y0 + (H - 2 - py) / S]);
-    let tol = 20, out = km; for (let it = 0; it < 12; it++) { out = simplify(km, tol); if (out.length <= 80) break; tol *= 1.5; }
-    return fitPath([out]);
   }
   function setGlyph(name) {
     if (!name || name === stripState.glyphName) return;
@@ -1477,16 +1607,16 @@ void main() {
       if (micro && y !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
       const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
-      const grid25 = chg25 && alpha25(c.k) >= 0.5, counts = grid25 ? C25.change.class_cells : C100.change_classes.cells;
+      const grid25 = chg25 && alpha25(c.k) >= 0.5, counts = grid25 ? chg25.class_cells : C100.change_classes.cells;
       title = `<b>Change in the share, 2024 against 2021</b> <span class="u">(${grid25 ? '25' : '100'} km)</span>`;
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${bar(theme.change6[i])}${labels[i]} (${fmt.int(counts[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
-      note = `${fmt.int(grid25 ? C25.change.supported : C100.change.supported.reduce((t, v) => t + (v ? 1 : 0), 0))} cells have 50 or more located firms in both years. Across all located firms, the share with a statement moves from ${fmt.pct(C100.change_totals.availability_share_percent[0])} in 2021 to ${fmt.pct(C100.change_totals.availability_share_percent[1])} in 2024. Each year counts the firms registered then, not the same firms.`;   // the 100 km count read from the data (round 15; 658 had been typed in)
+      note = `${fmt.int(grid25 ? chg25.supported : C100.change.supported.reduce((t, v) => t + (v ? 1 : 0), 0))} cells have 50 or more located firms in both years. Across all located firms, the share with a statement moves from ${fmt.pct(C100.change_totals.availability_share_percent[0])} in 2021 to ${fmt.pct(C100.change_totals.availability_share_percent[1])} in 2024. Each year counts the firms registered then, not the same firms.`;   // the 100 km count read from the data (round 15; 658 had been typed in)
     } else if (L === 'shared') {   // round 16
-      const y = state.year, win = SHD && sharedCityA(c.k) >= 0.5, grid25 = SHD && alpha25(c.k) >= 0.5;
+      const y = state.year, win = SHD.win[y] && sharedCityA(c.k) >= 0.5, grid25 = SHD.c25[y] && alpha25(c.k) >= 0.5;
       title = `<b>Firms at locations shared by 100+, ${y}</b> <span class="u">(${win ? '1 km in the windows' : grid25 ? '25 km' : '100 km'})</span>`;
       html = theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${SH_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms, share not shown</div>`;
       read = '<div class="row p">Firms on no list with a house- or street-level geocode, as in the Firms view.</div>';
-      if (SHD) { const N = SHD.nat, i = N.year.indexOf(y); if (i >= 0) { const f = N.firms[i], s = N.statements[i], f1 = N.firms_100[i], s1 = N.statements_100[i]; note = `${y}${y === 2025 ? '*' : ''}: ${fmt.int(f1)} of ${fmt.int(f)} such firms (${fmt.pct(100 * f1 / f)}) are at ${fmt.int(N.pairs_100[i])} coordinate pairs shared by 100 or more firms. ${fmt.pct(100 * s1 / f1)} of them have a statement, against ${fmt.pct(100 * (s - s1) / (f - f1))} of the firms elsewhere.`; } }
+      if (SHD.nat) { const N = SHD.nat, i = N.year.indexOf(y); if (i >= 0) { const f = N.firms[i], s = N.statements[i], f1 = N.firms_100[i], s1 = N.statements_100[i]; note = `${y}${y === 2025 ? '*' : ''}: ${fmt.int(f1)} of ${fmt.int(f)} such firms (${fmt.pct(100 * f1 / f)}) are at ${fmt.int(N.pairs_100[i])} coordinate pairs shared by 100 or more firms. ${fmt.pct(100 * s1 / f1)} of them have a statement, against ${fmt.pct(100 * (s - s1) / (f - f1))} of the firms elsewhere.`; } }
     } else if (grpLayer()) {   // round 16
       const name = GRP_NAME, counts = [0, 0, 0, 0, 0, 0]; let below = 0;
       if (GRP) for (const [nm, v] of GRP.byRegion) { if (!BM_NAMES.has(nm)) continue; const cl = groupClass(v); if (cl === 'below') below++; else counts[cl]++; }
@@ -1514,6 +1644,10 @@ void main() {
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${bar(theme.change6[i])}${labels[i]}</div>`).join('');
       note = 'Firms of the revenue cohort by cash share, in cells with 50 or more observed firms. Descriptive: the firms observed change from year to year.' + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     }
+    if (state.mode === 'cells' && grpLayer() && !GRP) {
+      html = '<div class="row p">' + unavailableGrid('groups', 'fixed', 'regional data') + '</div>';
+      note = '';
+    }
     if (state.mode !== 'firms' && TRN && !grpLayer()) {   // the tile's red count (round 14), in the layer's own year: its key row, and its definition on the reading side; none on the state-related layer, whose tile has no red count (round 18)
       const ly = layerYear();
       html += `<div class="row"><span class="sw dot" style="background:${theme.treated}"></span><b class="lcn">N</b> on any of the five lists, ${ly}</div>`;
@@ -1537,14 +1671,14 @@ void main() {
     const c = cam(); const L = state.layer; const ix = Math.floor(km.x / 100), iy = Math.floor(km.y / 100), key = cellKey(ix, iy);
     const out = { ix, iy, grid: 100, region: regionAt(km.px, km.py), kmx: km.x, kmy: km.y };
     if (L === 'shared') {   // round 16: the 1 km square inside a city window, the 25 km or the 100 km cell
-      if (!SHD) return out; const y = state.year, hit = (d, i) => { if (i != null) Object.assign(out, { n: d.n[i], a: d.a[i], n100: d.n100[i], a100: d.a100[i], p100: d.p100[i] }); return out; };
+      const y = state.year, hit = (d, i) => { if (i != null) Object.assign(out, { n: d.n[i], a: d.a[i], n100: d.n100[i], a100: d.a100[i], p100: d.p100[i] }); return out; };
       Object.assign(out, { shared: true, n: null });
       if (SHD.win[y] && sharedCityA(c.k) >= 0.5) for (const [label, d] of Object.entries(SHD.win[y])) { const o = d.origin; if (km.x < o[0] || km.x >= o[0] + 90 || km.y < o[1] || km.y >= o[1] + 90) continue;
         const jx = Math.floor(km.x - o[0]), jy = Math.floor(km.y - o[1]); Object.assign(out, { grid: 1, ix: jx, iy: jy, win: label, origin: o }); return hit(d, d.map.get(cellKey(jx, jy))); }   // the window's own grid, for the listed count and the outline
       const g = alpha25(c.k) >= 0.5 && SHD.c25[y] ? G25 : 100, d = g === 100 ? SHD.c100[y] : SHD.c25[y], jx = Math.floor(km.x / g), jy = Math.floor(km.y / g);
-      Object.assign(out, { grid: g, ix: jx, iy: jy }); return d ? hit(d, d.map.get(cellKey(jx, jy))) : out;
+      Object.assign(out, { grid: g, ix: jx, iy: jy }); return d ? hit(d, d.map.get(cellKey(jx, jy))) : Object.assign(out, { gridStatus: unavailableGrid('shared100', y, 'shared-location data') });
     }
-    if (grpLayer()) { Object.assign(out, { grp: true, gv: out.region && GRP ? GRP.byRegion.get(out.region) || null : null }); return out; }   // round 16: the state-related firms' two years in the region
+    if (grpLayer()) { Object.assign(out, { grp: true, gv: out.region && GRP ? GRP.byRegion.get(out.region) || null : null, gridStatus: GRP ? null : unavailableGrid('groups', 'fixed', 'regional data') }); return out; }   // round 16: the state-related firms' two years in the region
     // Round 14: the 2021 250 m windows where they are drawn at half strength or more (the density layer, the share layer in 2021), then the 1 km squares from the
     // address files once they are, then the national 5 km counts on the density layer; the 25 km and 100 km cells below answer elsewhere.
     if (fineA(c.k) >= 0.5) {
@@ -1567,7 +1701,7 @@ void main() {
       for (let i = 0; i < nat.count; i++) if (nat.ix[i] === jx && nat.iy[i] === jy) { out.n = nat.n[i]; out.a = nat.a[i] >= 0 ? nat.a[i] : null; break; }
       return out;
     }
-    if (alpha25(c.k) >= 0.5 && (L === 'share' || L === 'change' || L === 'lists' || (L === 'industry' && ind25[state.year]))) {   // the 25 km cells (M10, and M11 for the industry layer)
+    if (alpha25(c.k) >= 0.5 && ((L === 'share' && c25[state.year]) || (L === 'change' && chg25) || (L === 'lists' && c25[2021]) || (L === 'industry' && ind25[state.year]))) {   // the 25 km cells (M10, and M11 for the industry layer)
       const jx = Math.floor(km.x / G25), jy = Math.floor(km.y / G25), k25 = cellKey(jx, jy);
       out.grid = G25; out.ix = jx; out.iy = jy;
       if (L === 'share') { const d = c25[state.year]; if (d) { const i = d.map.get(k25); if (i != null) Object.assign(out, { n: d.n[i], a: d.a[i], ns: d.ns[i] > 0 ? d.ns[i] : null }); } }
@@ -1581,7 +1715,7 @@ void main() {
     else if (L === 'cohort') { const i = cohMap.get(key); if (i != null) Object.assign(out, { n: coh.n[i], c: coh.c[i], pct: coh.pct[i], supported: coh.supported[i] }); }
     else if (L === 'lists') { const i = listMap.get(key); if (i != null) Object.assign(out, { n: lists.n[i], sanctioned: lists.sanctioned[i], gov: lists.govstrategic[i] }); }
     else if (L === 'fin') { const i = finMap.get(key); if (i != null) Object.assign(out, { n_base: fin.n_base[i], n_obs: fin.n_obs[i], change: fin.change_pct[i] }); }
-    else if (L === 'industry') { const d = ind100[state.year]; if (d) { const i = d.map.get(key); if (i != null) Object.assign(out, indHit(d, i)); } }
+    else if (L === 'industry') { const d = ind100[state.year]; if (!d) out.gridStatus = unavailableGrid('industry100', state.year, 'industry data'); else { const i = d.map.get(key); if (i != null) Object.assign(out, indHit(d, i)); } }
     return out;
   }
   const cellShareSuffix = (a, n) => n < 50 ? ' (share not shown under 50 firms)' : a == null ? '' : ` (${fmt.pct(100 * a / n)})`;
@@ -1661,7 +1795,8 @@ void main() {
   }
   function tipBody(h) {
     const L = state.layer; const lines = [];
-    if (h.region) lines.push(`<b class="loc">${esc(h.region)}</b>`);   // the region line in tracked capitals (round 10)
+    if (h.region) lines.push(`<b class="loc">${esc(h.region)}</b>`);
+    if (h.gridStatus) { lines.push(esc(h.gridStatus)); return lines.join('<br>'); }   // the region line in tracked capitals (round 10)
     if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none' || h.kind === 'bin' || h.kind === 'pixel') {
       const ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin, pxh = h.kind === 'pixel' ? h : h.pixel;
       if (pxh) {   // the pixel under the cursor (round 14): its firms on no list, their statements, the layer's statistic
@@ -1733,7 +1868,7 @@ void main() {
     }
     if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
     if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a ${h.yearShown || 2021} statement${cellShareSuffix(h.a, h.n)}` : h.n >= 50 ? '' : '. Share not shown under 50 firms')); return lines.join('<br>'); }
-    if (L === 'share') { if (h.n == null) lines.push('No located firms in this 100 km cell'); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement${cellShareSuffix(h.ar, h.nr)}`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members: ${fmt.int(h.ns)}`); } }
+    if (L === 'share') { if (h.n == null) lines.push(`No located firms in this ${h.grid} km cell`); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement${cellShareSuffix(h.ar, h.nr)}`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members: ${fmt.int(h.ns)}`); } }
     else if (L === 'change') { if (h.n21 == null) lines.push('No located firms'); else lines.push(`2021: ${fmt.int(h.a21)} of ${fmt.int(h.n21)}${cellShareSuffix(h.a21, h.n21)}<br>2024: ${fmt.int(h.a24)} of ${fmt.int(h.n24)}${cellShareSuffix(h.a24, h.n24)}<br>` + (h.supported ? `Change <b>${fmt.signed(h.change)} points</b>` : 'Fewer than 50 firms in a year: not classed')); }
     else if (L === 'cohort') { if (h.n == null) lines.push('No located firms'); else lines.push(`${fmt.int(h.c)} of ${fmt.int(h.n)} located eligible firms in the revenue cohort by cash share` + (h.supported ? ` (<b>${fmt.pct(h.pct)}</b>)` : ' (fewer than 50 eligible: not classed)')); }
     else if (L === 'lists') { if (h.n == null) lines.push('No list members shown'); else lines.push(`${fmt.int(h.n)} located eligible firms<br>Sanctions list: ${h.sanctioned == null ? 'under 5 or none' : fmt.int(h.sanctioned)}<br>Government strategic list: ${h.gov == null ? 'under 5 or none' : fmt.int(h.gov)}`); }
@@ -1762,7 +1897,14 @@ void main() {
   // a viewer who prefers reduced motion jumps too.
   const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let flight = null;
-  function cancelFlight() { if (!flight) return; const f = flight; flight = null; cancelAnimationFrame(f.raf); f.resolve({ done: false, frames: f.frames, ms: performance.now() - f.t0 }); }
+  function cancelFlight(settle = true) {
+    if (!flight) return;
+    const f = flight;
+    flight = null;
+    cancelAnimationFrame(f.raf);
+    if (settle) { drawMap(); afterCameraMove(); }
+    f.resolve({ done: false, frames: f.frames, ms: performance.now() - f.t0 });
+  }
   // The flight's path: Motion.camera's directed interpolation over one segment, or two for a long pan (the centre moving
   // more than two viewport diagonals at the smaller k), which pulls out and back in through a middle keyframe.
   function flightPath(from, to, ms) {
@@ -1771,9 +1913,37 @@ void main() {
     if (dpx > 2 * Math.hypot(W, H)) kf.splice(1, 0, { t: ms / 2, cx: (from.cx + to.cx) / 2, cy: (from.cy + to.cy) / 2, k: Math.max(kFit(), Math.min(from.k, to.k, 0.8 * minSide() / dist)) });
     return Motion.camera(kf, W, H);
   }
+  // A destination supplies its zoom before the first flight frame. The address rows
+  // can arrive in transit; build 1 km squares only for the view that actually settles.
+  function requestYearDetail(year, target = state.cam, settled = false) {
+    if (!detailEnabled) return Promise.resolve();
+    if (state.mode === 'firms') return ensureYear(year);
+    const layer = state.layer, shownYear = layerOf(layer).year ?? year;
+    const jobs = [ensureLayerBase(layer, shownYear), ensureLayerGrid(layer, shownYear)];
+    if (layer === 'shared' && target.k >= 1.2) jobs.push(ensureSharedCity(shownYear));
+    if (FIRMS_OK && MICRO_LAYERS.has(layer) && target.k >= 1.2) {
+      jobs.push(settled ? ensureMicro(shownYear) : ensureYear(shownYear));
+    }
+    return Promise.all(jobs);
+  }
+
+  let lastDetailDemand = '';
+  function scheduleMapDetail(target, settled = true, retry = false) {
+    if (!detailEnabled) return;
+    const detailed = target.k >= 1.2 && (MICRO_LAYERS.has(state.layer) || state.layer === 'shared');
+    const key = [state.mode, state.layer, state.year, detailed, detailed && settled].join('|');
+    if (!retry && key === lastDetailDemand) return;
+    lastDetailDemand = key;
+    const retryOnNextAction = () => { if (lastDetailDemand === key) lastDetailDemand = ''; };
+    requestYearDetail(state.year, target, settled).then(results => {
+      if (Array.isArray(results) && results.includes(false)) retryOnNextAction();
+    }, retryOnNextAction);
+  }
+
   function flyTo(target, { instant = false, duration = null } = {}) {
-    cancelFlight(); if (!target.pull) pullFrom = null;   // a flight to a place, and the floor's settle, forget the zoom-out anchor
+    cancelFlight(false); if (!target.pull) pullFrom = null;   // a flight to a place, and the floor's settle, forget the zoom-out anchor
     const from = { cx: state.cam.cx, cy: state.cam.cy, k: state.cam.k }, to = { cx: target.cx, cy: target.cy, k: clampK(target.k) };
+    scheduleMapDetail(to, false, true);
     const dk = Math.abs(Math.log2(to.k / from.k)), dpx = Math.hypot(to.cx - from.cx, to.cy - from.cy) * Math.min(from.k, to.k);
     if (instant || reduceMotion() || (dk < 0.01 && dpx < 0.5)) { hideHover(); state.cam = to; drawMap(); afterCameraMove(); return Promise.resolve({ done: true, frames: 0, ms: 0 }); }
     const ms = duration || Motion.clamp(600 + 250 * dk, 400, 1400);
@@ -1793,7 +1963,7 @@ void main() {
   }
   // Drag and wheel redraws are coalesced into one frame; drawMap itself stays synchronous.
   let drawQueued = false, drawAfter = null, drawMotion = false;
-  function requestDraw(after, motion) { if (after) drawAfter = after; drawMotion = !!motion; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; drawMap(drawMotion ? { motion: true } : undefined); drawMotion = false; const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
+  function requestDraw(after, motion) { if (after) drawAfter = after; drawMotion = !!motion; if (drawQueued) return; drawQueued = true; requestAnimationFrame(() => { drawQueued = false; scheduleMapDetail(state.cam, false); drawMap(drawMotion ? { motion: true } : undefined); drawMotion = false; const fn = drawAfter; drawAfter = null; if (fn) fn(); }); }
   function syncPresetPressed() {   // the preset the camera sits at reads as pressed (round 10, item 21): the city rung at its city
     const c = state.cam; for (const p of PRESETS) { const t = p.target(), on = String(Math.abs(t.cx - c.cx) < 0.01 && Math.abs(t.cy - c.cy) < 0.01 && Math.abs(t.k / c.k - 1) < 1e-6); p.button.setAttribute('aria-pressed', on); if (p.node) p.node.setAttribute('aria-pressed', on); }
   }
@@ -1804,12 +1974,10 @@ void main() {
   function afterWheelStep() { syncZoomButtons(); refreshHover(); if (settleTimer) clearTimeout(settleTimer); settleTimer = setTimeout(() => { settleTimer = 0; afterCameraMove(); }, 150); }
   function afterCameraMove() {
     if (settleTimer) { clearTimeout(settleTimer); settleTimer = 0; }
+    if (motionBorder) drawMap();
     findPin = -1;   // a found firm leads the tooltip's names only until the camera moves on
     writeHash();
-    if (state.mode !== 'firms') {
-      if (!grid25P && state.cam.k > 1.5 * kFit()) ensureGrid25();
-      if (MICRO_LAYERS.has(state.layer) && state.cam.k >= 1.2) ensureMicro(microYear());
-    }
+    scheduleMapDetail(state.cam);
     syncZoomButtons(); countFirmsInView(); hoverUnit.key = null; refreshHover(); updateContext();
     if (!state.hover) fillMixBox(null);
     syncPresetPressed();
@@ -1980,7 +2148,9 @@ void main() {
     stillTimer = setTimeout(() => { stillTimer = 0; cursorStill = true; wrap.classList.remove('cursor-live'); drawOverlay(state.hover); maybeTip(); }, 200);
   }
   function showHoverAt(x, y, opts = {}) {
-    const km = kmFromPx(x, y); const h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
+    const km = kmFromPx(x, y); const former = state.hover, h = hitAt(km); h.kmx = km.x; h.kmy = km.y; h.px0 = x; h.py0 = y; state.hover = h;
+    if (!opts.tick && historyRequest(h) && (opts.touch || !former || former.grid !== h.grid || former.ix !== h.ix || former.iy !== h.iy)
+        && (cursorChartVisible('cellchart') || pop.id === 'cursor')) ensureCursorHistory(h);
     if (h.region === undefined) h.region = regionAt(x, y);
     { const rn = h.region && regIndex.has(h.region) ? h.region : null; if (rn !== hoverRegionName) { hoverRegionName = rn; updateContext(); } }   // the strip follows the cursor's region (round 10); the overlay outlines it
     const tip = $('tip'), key = unitKey(h), fresh0 = key !== hoverUnit.key, prof = profileFor(h), pkey = prof ? prof.id : '', fresh = fresh0 || pkey !== hoverUnit.prof;
@@ -2009,7 +2179,7 @@ void main() {
   let hoverQueued = false;
   function refreshHover() { if (press || pinch || flight || !lastPointer || !lastPointer.inside) return; showHoverAt(lastPointer.x, lastPointer.y, { tick: true, touch: cursorStill }); }
   function startPinch() { const [p, q] = [...pointers.values()]; return { d: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), mid: { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 } }; }
-  function movePinch() { const [p, q] = [...pointers.values()]; const d = Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }, c = cam(); const km = { x: c.cx + (pinch.mid.x - c.ox) / c.k, y: c.cy - (pinch.mid.y - c.oy) / c.k, px: mid.x, py: mid.y }; const t = zoomStep(d / pinch.d, km); state.cam = { cx: t.cx, cy: t.cy, k: t.k }; pinch.d = d; pinch.mid = mid; requestDraw(); }   // the point under the previous midpoint stays under the new one (zoom and pan), through zoomStep for the pull
+  function movePinch() { const [p, q] = [...pointers.values()]; const d = Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), mid = { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 }, c = cam(); const km = { x: c.cx + (pinch.mid.x - c.ox) / c.k, y: c.cy - (pinch.mid.y - c.oy) / c.k, px: mid.x, py: mid.y }; const t = zoomStep(d / pinch.d, km); state.cam = { cx: t.cx, cy: t.cy, k: t.k }; pinch.d = d; pinch.mid = mid; requestDraw(null, true); }   // the point under the previous midpoint stays under the new one (zoom and pan), through zoomStep for the pull
   wrap.addEventListener('pointerdown', ev => {
     if (overControl(ev, MAP_UI) || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
     cancelFlight(); try { wrap.setPointerCapture(ev.pointerId); } catch (e) { /* capture is optional */ }
@@ -2023,7 +2193,7 @@ void main() {
     if (pinch) { if (pointers.size === 2) movePinch(); return; }
     if (press && press.id === ev.pointerId) {
       if (!press.moved && Math.hypot(p.x - press.x, p.y - press.y) > PRESS_PX) { press.moved = true; wrap.classList.add('dragging'); hideHover(); }
-      if (press.moved) { pullFrom = null; const c = cam(); state.cam.cx -= (p.x - press.last.x) / c.k; state.cam.cy += (p.y - press.last.y) / c.k; press.last = p; requestDraw(); }
+      if (press.moved) { pullFrom = null; const c = cam(); state.cam.cx -= (p.x - press.last.x) / c.k; state.cam.cy += (p.y - press.last.y) / c.k; press.last = p; requestDraw(null, true); }
       return;
     }
     if (ev.pointerType !== 'touch') { lastPointer = { x: p.x, y: p.y, inside: true }; if (!flight && !overControl(ev, '.zoombox, .toggle, button, input, .popout')) showHoverAt(p.x, p.y); }
@@ -2048,7 +2218,7 @@ void main() {
   wrap.addEventListener('wheel', ev => {
     if (overControl(ev, '.zoombox')) return;
     if (gestureOn && ev.ctrlKey) { ev.preventDefault(); return; }   // a pinch Safari also reports as a wheel is zoomed once, by the gesture
-    ev.preventDefault(); cancelFlight();
+    ev.preventDefault(); cancelFlight(false);
     // A trackpad pinch arrives as a wheel with the Ctrl flag and small deltas (the phone's pinch is a touch gesture,
     // handled apart); it takes PINCH_RATE against the wheel's WHEEL_RATE. Line- and page-based wheels are scaled to pixels.
     const dy = ev.deltaY * (ev.deltaMode === 1 ? 20 : ev.deltaMode === 2 ? 400 : 1);
@@ -2068,7 +2238,7 @@ void main() {
     ev.preventDefault();
     const f = ev.scale / gestureScale; gestureScale = ev.scale;
     if (pointers.size || !(f > 0) || f === 1 || overControl(ev, '.zoombox')) return;
-    cancelFlight();
+    cancelFlight(false);
     const km = Number.isFinite(ev.clientX) ? kmAt(ev) : null, t = zoomStep(f, km);
     if (km) lastPointer = { x: km.px, y: km.py, inside: true };
     hideHover({ keepRegion: true });
@@ -2134,7 +2304,8 @@ void main() {
       if (h.n == null) row('Firms', 'none on no list at house- or street-level geocodes');
       else { row('Firms', `${fmt.int(h.n)} on no list at ${fmt.int(h.p)} pair${h.p === 1 ? '' : 's'}`); row(`${h.yearShown} statement`, `${fmt.int(h.a)}` + (h.n < 50 ? ', share not shown under 50 firms' : ` (${pct(h.a, h.n)})`)); if (L === 'industry') row('Leading', h.lead ? lead(h.lead.div, h.lead.share) : 'no firm with a revenue value'); }
     }
-    if (cellHit && h.shared) {   // round 16
+    if (cellHit && h.gridStatus) row('Data', esc(h.gridStatus));
+    else if (cellHit && h.shared) {   // round 16
       row('Cell', h.win ? `1 km, the ${esc(h.win)} window` : `${h.grid} km (${h.ix}, ${h.iy})`);
       if (h.n == null) row('Firms', 'none on no list at house- or street-level geocodes');
       else { row('Firms', `${fmt.int(h.n)} on no list`); const rn = h.n - h.n100;
@@ -2189,6 +2360,7 @@ void main() {
   // title names that unit's region.
   function drawCursorChart(h, target) {
     const id = target || 'cellchart', big = !!target, sz = big ? 14 : 12, L = big ? 56 : 44;
+    if (!big && !cardOpen('cursor')) return;
     if (big) { const t = $('h2-cursor').textContent + (h && h.region ? ' · ' + h.region : ''); $('potitle').textContent = t; $('popout').setAttribute('aria-label', t); placePopout(); }
     const { ctx, w, hgt = 0 } = chartCtx(id); const hh = $(id).getBoundingClientRect().height;
     if (!h) { if (big) Motion.paragraph(ctx, state.mode === 'firms' ? 'Hover a mark' : 'Hover a cell', 8, 24, w - 16, { size: 14, color: theme.muted }); return; }
@@ -2198,10 +2370,17 @@ void main() {
       const cap = Motion.measure(ctx, caption, big ? 12 : 11, 400) <= w - 16 ? caption : caption.replace(/, (\d{4} to \d{4}|by year)$/, '');   // a caption wider than the canvas drops its year suffix, which the axis shows (round 10)
       Motion.text(ctx, cap, 8, hh - 2, { size: big ? 12 : 11, color: theme.dim });
     };
+    if (h.gridStatus) return note(h.gridStatus);
+    const request = historyRequest(h);
+    const history = request && histories.get(gridID(request[0], request[1]));
+    if (request && !history) {
+      if (cursorChartVisible(id)) ensureCursorHistory(h, false);
+      return note(unavailableGrid(request[0], request[1], 'statement history'));
+    }
     if (h.shared) {   // round 16: the share with a statement at shared pairs and elsewhere in this cell or square, by year
-      if (h.n == null || !SHD) return note('No firms on no list at house- or street-level geocodes');
+      if (h.n == null) return note('No firms on no list at house- or street-level geocodes');
       const there = [], rest = [];
-      for (const yy of SHD.years) { const d = h.win ? (SHD.win[yy] || {})[h.win] : h.grid === 100 ? SHD.c100[yy] : SHD.c25[yy]; if (!d) continue; const i = d.map.get(cellKey(h.ix, h.iy)); if (i == null) continue;
+      for (const yy of SHD.years) { const d = history[yy]; if (!d) continue; const i = d.map.get(cellKey(h.ix, h.iy)); if (i == null) continue;
         if (d.n100[i] >= 50) there.push({ x: yy, y: 100 * d.a100[i] / d.n100[i] }); const rn = d.n[i] - d.n100[i]; if (rn >= 50) rest.push({ x: yy, y: 100 * (d.a[i] - d.a100[i]) / rn }); }
       if (!there.length) return note('Fewer than 50 firms at shared pairs in every year');
       const margin = Math.max(...[['shared', there], ['elsewhere', rest]].filter(([, p]) => p.length).map(([t, p]) => Motion.measure(ctx, t + ' ' + Motion.fmt.pct(p[p.length - 1].y, 1), sz, 500))) + 22;   // the longer end label fits, as the national chart's
@@ -2212,7 +2391,7 @@ void main() {
     if (h.grp) return note('The group layer compares 2021 and 2024: the rows give both years');
     if (h.micro) {   // the 25 km cell around the square, by year: an address file carries one year, the 25 km cells carry every year
       const key25 = cellKey(Math.floor(h.kmx / G25), Math.floor(h.kmy / G25)), pts = [];
-      if (C25) for (const y of years) { const d = c25[y]; if (!d) continue; const i = d.map.get(key25); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); }
+      for (const y of years) { const d = history[y]; if (!d) continue; const i = d.map.get(key25); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); }
       if (!pts.length) return note('Fewer than 50 located firms in every year in the 25 km cell around this square');
       return chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], 'share with a statement, its 25 km cell, by year');
     }
@@ -2222,11 +2401,18 @@ void main() {
       return note(h.grid < 1 ? '250 m cells carry 2021 only' : '5 km density cells carry 2021 only');   // a fine hit is a 250 m or a 5 km cell (round 31: the 1 km series branch here could not be reached)
     }
     const key = cellKey(h.ix, h.iy); const pts = [];
-    if (h.grid === G25 && C25) { for (const y of years) { const d = c25[y]; if (!d) continue; const i = d.map.get(key); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); } }
+    if (h.grid === G25) { for (const y of years) { const d = history[y]; if (!d) continue; const i = d.map.get(key); if (i != null && d.n[i] >= 50) pts.push({ x: y, y: 100 * d.a[i] / d.n[i] }); } }
     else for (const y of years) { const d = yearCells[y].get(key); if (d && d.n >= 50) pts.push({ x: y, y: 100 * d.a / d.n }); }
     if (!pts.length) return note('Fewer than 50 located firms in every year');
     chart(pts, [2013.5, 2025.5], [2014, 2018, 2021, 2025], [{ from: 2018.5, to: 2025.5, color: theme.highlightBand }], `share with a statement, this ${h.grid} km cell, by year`);
   }
+  // A tapped square may be above a phone's visible cursor chart. Load its
+  // history when the reader scrolls the chart into view or opens the pop-out.
+  if (window.IntersectionObserver) new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting) && cardOpen('cursor') && state.hover) {
+      ensureCursorHistory(state.hover); drawCursorChart(state.hover);
+    }
+  }).observe($('cellchart'));
   // The three column charts draw into their card or, enlarged, into the pop-out (round 15, the author's item 5.4): target 'pochart' draws the same chart at the
   // pop-out's size with 14 px text; a card's chart that is out in the pop-out is drawn in the card as well.
   function drawNational(target) {
@@ -2325,7 +2511,7 @@ void main() {
   const syncProv = () => { const Lx = LAYERS.find(x => x.id === state.layer), el = $('layerprov');   // round 16: a layer with a reading text shows it in standard terms
     if (state.mode !== 'firms' && Lx.read) el.innerHTML = Lx.read().map(([t, x]) => `<span class="rb"><span class="h">${esc(t)}</span> ${esc(x)}</span>`).join(''); else el.textContent = state.mode === 'firms' ? FIRMS_PROV : Lx.prov;
     for (const e of layersEl.querySelectorAll('.fmark')) e.style.display = state.mode === 'firms' ? '' : 'none'; };
-  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { if (runState.on) runEnd(); state.layer = L.id; ui.group = null; syncGroupTabs(); endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button[data-id]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
+  LAYERS.forEach(L => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = L.label; b.dataset.id = L.id; b.setAttribute('aria-pressed', String(L.id === state.layer)); b.addEventListener('click', () => { if (runState.on) runEnd(); state.layer = L.id; scheduleMapDetail(state.cam, true, true); ui.group = null; syncGroupTabs(); endCellPulse(); queueMicrotask(writeHash); layersEl.querySelectorAll('button[data-id]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.id === L.id))); syncYearRow(); syncPulseButton(); syncProv(); drawMap(); drawNational(); syncMix(); updateContext(true); }); layersEl.appendChild(b); });
   // The LAYER card's groups (round 15, the author's choice of 27 October 2026: C, revised): each name at the left of its buttons, as VIEW is
   { const GROUPS = GROUP_ORDER.map(g => [g, LAYERS.filter(L => L.group === g).map(L => L.id)]), by = id => layersEl.querySelector('.btn[data-id="' + id + '"]'), loose = [...layersEl.querySelectorAll('.btn')];
     // Round 32 (the author's request of 1 November 2026, the card at GO TO's height): the three group names are a row of tabs under VIEW, and only the pressed
@@ -2346,31 +2532,42 @@ void main() {
   const modesEl = $('modes');
   if (FIRMS_OK) {
     const lab = document.createElement('span'); lab.className = 'modelabel'; lab.textContent = 'View'; modesEl.appendChild(lab);
-    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; if (runState.on) runEnd(); state.mode = m; endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); if (m === 'firms') maybeSweep(); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
+    [['cells', 'Cells'], ['firms', 'Firms']].forEach(([m, label]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label; b.dataset.mode = m; b.setAttribute('aria-pressed', String(m === state.mode)); b.addEventListener('click', () => { if (state.mode === m) return; if (runState.on) runEnd(); state.mode = m; scheduleMapDetail(state.cam, true, true); endPulse(); endCellPulse(); if (!finding) endFound(); queueMicrotask(writeHash); syncProv(); modesEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.mode === m))); hideHover(); syncYearRow(); syncPulseButton(); drawMap(); countFirmsInView(); syncMix(); drawCellPanel(null); updateContext(true); }); modesEl.appendChild(b); });
   } else modesEl.hidden = true;
   syncProv(); syncYearRow(); syncYearPos();
   function syncYearPos() { const e = $('year'), p = (+e.value - +e.min) / (+e.max - +e.min); $('yearslider').style.setProperty('--pct', p.toFixed(4)); }   // the slider's fill and the mark's place follow the value (round 10, the author's correction of 25 October)
-  $('year').addEventListener('input', () => { syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); });
+  $('year').addEventListener('input', () => { if (runState.on && !runState.advancing) runEnd(); syncYearPos(); queueMicrotask(writeHash); const prev = state.year; state.year = +$('year').value; $('yearlabel').textContent = state.year + (state.year === 2025 ? '*' : ''); if (state.mode === 'firms') { startPulse(prev, state.year); if (state.year !== prev) fieldAnim.dissolve = { t0: null }; } else endCellPulse(); syncPulseButton(); scheduleMapDetail(state.cam); drawMap(); countFirmsInView(); drawNational(); syncMix(); updateContext(true); });
   // ---- the author's extras (round 15, item 7; each labelled optional in the review): the year run; the blink comparator (7A) was removed in round 30 --
   // 7B, the year run: a play button by YEAR runs the years from 2014 (or from the year shown, after a pause) to 2025, one a second, through the slider, so every year
   // change is the ordinary one (the Firms view's pulse for each forward year, the dissolve, the charts' year line).
-  function setYear(y) { const yEl = $('year'); yEl.value = String(y); yEl.dispatchEvent(new Event('input')); }
+  function setYear(y) {
+    const slider = $('year');
+    slider.value = String(y);
+    runState.advancing = true;
+    try { slider.dispatchEvent(new Event('input')); }
+    finally { runState.advancing = false; }
+  }
   function runStart() {
     if (runState.on) return;
     runState.generation++;
     runState.on = true; syncYearLine2();
     if (+$('year').value >= 2025) setYear(2014);
-    runState.timer = setTimeout(runStep, 1000);
+    scheduleRunStep();
   }
-  function runStep() {
-    runState.timer = 0; if (!runState.on) return; const y = +$('year').value; if (y >= 2025) { runEnd(); return; }
-    const next = y + 1, generation = runState.generation;
-    const go = () => {
-      if (!runState.on || generation !== runState.generation) return;
-      setYear(next);
-      runState.timer = setTimeout(runStep, 1000);
-    };
-    if (FIRMS_OK && state.mode === 'firms') ensureYear(next).then(go, go); else go();
+  function scheduleRunStep() {
+    const y = +$('year').value, generation = runState.generation;
+    // Use the displayed year's one-second dwell to prepare just the upcoming playback year.
+    // A failed look-ahead still enters the ordinary selected-year retry and status path.
+    const ready = y < 2025 ? requestYearDetail(y + 1).catch(() => {}) : null;
+    runState.timer = setTimeout(() => {
+      runState.timer = 0;
+      if (!ready) { runEnd(); return; }
+      ready.then(() => {
+        if (!runState.on || generation !== runState.generation || +$('year').value !== y) return;
+        setYear(y + 1);
+        scheduleRunStep();
+      });
+    }, 1000);
   }
   function runEnd() {
     if (!runState.on) return; runState.on = false; if (runState.timer) clearTimeout(runState.timer); runState.timer = 0;
@@ -2434,8 +2631,6 @@ void main() {
   const MM_F = 1.19, MM_VX0 = MM_W * (1 - 1 / MM_F);
   const MM_LAYOUT_F = { 'Kaliningrad': ['X', 116, 0], 'St Petersburg': ['X', 202, 0], 'Moscow': ['X', 63, 22], 'Kazan': ['X', 63, 50], 'Voronezh': ['X', 63, 68], 'Rostov-on-Don': ['X', 60.1, 87.5], 'Krasnodar': ['X', 63, 108], 'Volgograd': ['X', 63, 122], 'Samara': ['X', 69, 144], 'Ufa': ['X', 79, 158], 'Khabarovsk': ['X', 302.5, 94] , 'Chelyabinsk': ['X', 99, 182] };   // city labels fitted to the enlarged crop; geographic city positions are unchanged
   const MM_SHORT = { 'Rostov-on-Don': 'Rostov' };   // round 29: the minimap's label where the full name has no room (the group's title and the button keep the full name)
-  let mmTry = null;   // retained optional trial positions, over MM_LAYOUT_F's
-  const MM_TRACE = [0.06, 16]; let mmTrace = null;   // the land's trace: px per km and the smallest component kept, in px (a trial from minimapTry's second argument). Round 29 (the author's pick A, 30 October 2026): 0.06, twice round 10's 0.03, so a small shape such as Crimea keeps about four-fifths of its area and the coasts step half as far; 16 px keeps round 10's smallest component, 4,444 km2
   const MM_LAYOUT = {   // ['L', top]: the left column, the box's right edge at x 98; ['X', left, top]: the box's left edge and top; ['R', right, top]: the box's right edge and top
     'St Petersburg': ['L', 0], 'Kaliningrad': ['L', 14], 'Moscow': ['L', 42], 'Kazan': ['L', 56], 'Voronezh': ['L', 70], 'Rostov-on-Don': ['L', 84], 'Krasnodar': ['L', 98], 'Volgograd': ['L', 112], 'Samara': ['L', 126], 'Ufa': ['L', 140],
     'Murmansk': ['X', 190, 25], 'Nizhny Novgorod': ['X', 158, 60], 'Perm': ['X', 161, 74], 'Yekaterinburg': ['X', 196, 80], 'Tyumen': ['X', 196, 97], 'Krasnoyarsk': ['X', 206, 111], 'Omsk': ['X', 178, 127], 'Novosibirsk': ['X', 182, 141], 'Irkutsk': ['X', 272, 137], 'Khabarovsk': ['R', 372, 117],
@@ -2462,23 +2657,6 @@ void main() {
     g.innerHTML = `<path d="${d}"/>`;
   }
   let MMAP = null, mmBuilds = 0;   // the built geometry, for the checker and the audit; the build count (a verify may rebuild once)
-  function mooreTrace(land, W, H, sx, sy) {   // the outer contour of the component holding (sx, sy), Moore neighbourhood, as pixel pairs
-    const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], path = []; let x = sx, y = sy, dir = 6, guard = 0;
-    do { path.push([x, y]); let found = false; for (let k = 0; k < 8; k++) { const nd = (dir + 5 + k) % 8, nx = x + dirs[nd][0], ny = y + dirs[nd][1]; if (land(nx, ny)) { x = nx; y = ny; dir = nd; found = true; break; } } if (!found) break; } while ((x !== sx || y !== sy) && ++guard < 200000);
-    return path;
-  }
-  function landRings(S, minPx) {   // every land component at S px per km traced and returned as km rings, largest first
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    for (const p of BM.lod0.parts) for (const r of p.rings) { let x = r[0] / 10, y = r[1] / 10; const upd = () => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }; upd(); for (let i = 2; i < r.length; i += 2) { x += r[i] / 10; y += r[i + 1] / 10; upd(); } }
-    const W = Math.ceil((x1 - x0) * S) + 4, H = Math.ceil((y1 - y0) * S) + 4, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true });
-    g.setTransform(S, 0, 0, -S, 2 - x0 * S, H - 2 + y0 * S); g.fillStyle = '#fff'; g.fill(MM.partsToPath(BM.lod0.parts), 'evenodd');
-    const a = g.getImageData(0, 0, W, H).data, land = (x, y) => x >= 0 && y >= 0 && x < W && y < H && a[4 * (y * W + x) + 3] > 127;
-    const comp = new Int32Array(W * H).fill(-1), sizes = [], starts = []; let n = 0;
-    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { if (!land(x, y) || comp[y * W + x] >= 0) continue; const st = [[x, y]], rows = new Map(); comp[y * W + x] = n; let size = 0; while (st.length) { const [cx, cy] = st.pop(); size++; const rw = rows.get(cy); if (!rw) rows.set(cy, [1, cx]); else { rw[0]++; if (cx < rw[1]) rw[1] = cx; } for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (land(nx, ny) && comp[ny * W + nx] < 0) { comp[ny * W + nx] = n; st.push([nx, ny]); } } }
-      let best = null; for (const [ry, [cnt, minx]] of rows) if (!best || cnt > best[0]) best = [cnt, minx, ry]; sizes.push(size); starts.push([best[1], best[2]]); n++; }   // the start: the leftmost pixel of the component's fullest row
-    const order = sizes.map((sz, i) => i).filter(i => sizes[i] >= minPx).sort((i, j) => sizes[j] - sizes[i]);
-    return order.map(i => mooreTrace((x, y) => land(x, y) && comp[y * W + x] === i, W, H, starts[i][0], starts[i][1]).map(([px, py]) => [x0 + (px - 2) / S, y0 + (H - 2 - py) / S]));
-  }
   function buildMinimap() {
     const svg = $('minimap'); if (!svg || MMAP) return;
     svg.setAttribute('viewBox', `${+MM_VX0.toFixed(3)} -2 ${+(MM_W - MM_VX0).toFixed(3)} ${MM_H + 2}`);   // round 15 (the author's item 5.3): the empty band under the lowest labels trimmed, the drawing centred with 2 units above and below; round 16: cropped to the size's right 376/f units
@@ -2486,9 +2664,8 @@ void main() {
     MMAP = { cities: [], rings: 0, widths: {}, builds: ++mmBuilds };
     const defs = el('defs'); el('clipPath', { id: 'mmclip' }, defs); el('rect', { x: MM_X0, y: MM_Y0, width: 272, height: 154 }, defs.firstChild);
     const land = el('g', { class: 'landg', 'clip-path': 'url(#mmclip)' });
-    const rings = landRings(...(mmTrace || MM_TRACE)); MMAP.rings = rings.length;
-    let d = ''; MMAP.isles = []; for (const ring of rings) { const r = simplify(ring, ring === rings[0] ? 12 : 8); if (r.length < 3) continue; const pts = r.map(([x, y]) => [mmX(x), mmY(y)]); d += 'M' + pts.map(([x, y]) => x.toFixed(1) + ' ' + y.toFixed(1)).join('L') + 'Z';
-      if (ring !== rings[0]) MMAP.isles.push({ x: Math.min(...pts.map(q => q[0])), y: Math.min(...pts.map(q => q[1])), x1: Math.max(...pts.map(q => q[0])), y1: Math.max(...pts.map(q => q[1])) }); }   // round 29: every land ring but the mainland, for minimapCheck's box-land rule
+    const { land: d, rings, isles } = window.ATLAS_OUTLINES;
+    MMAP.rings = rings; MMAP.isles = isles;
     el('path', { class: 'land', d, 'fill-rule': 'evenodd' }, land);
     // The graticule (round 15, the author's item 14A, revised): the basemap's own projection extended across the whole GO TO card (drawCardGraticule), and here
     // the same lines once more over the land, clipped to it, since the land is opaque. Round 10's minimap graticule had never drawn (Float64Array.prototype.map
@@ -2502,7 +2679,7 @@ void main() {
     const measure = txt => { const w = Motion.measure(mctx, txt, 9, 500, 9 * 0.08); MMAP.widths[txt] = w; return w; };
     const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
     for (const city of bmp.cities) {
-      const lay = (mmTry && mmTry[city.label]) || MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = (MM_SHORT[city.label] || city.label).toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
+      const lay = MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = (MM_SHORT[city.label] || city.label).toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
       const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
       const dx = mmX(city.x), dy = mmY(city.y), box = { x: left, y: top, x1: left + w, y1: top + MM_BOX_H };
       const mids = [[box.x, (box.y + box.y1) / 2], [box.x1, (box.y + box.y1) / 2], [(box.x + box.x1) / 2, box.y], [(box.x + box.x1) / 2, box.y1]];   // the edge midpoints: left, right, top, bottom
@@ -2576,13 +2753,18 @@ void main() {
     return Object.keys(v).length ? v : null;
   }
   function viewTarget(v) { if (v.fit) return fitTarget(); if (!v.at) return null; const [x, y] = forwardLAEA(v.at[0], v.at[1]); return { cx: x, cy: y, k: clampK(v.span ? minSide() / v.span : state.cam.k) }; }
-  function applyView(v, instant) {   // the camera first at load (so the Firms view's opening sweep reads the view it opens on), the year before the view (no bloom on the way in)
+  function applyView(v, instant) {   // Apply the camera and year before activating the restored mode.
     const A = window.__atlas, t = viewTarget(v);
     if (t && instant) state.cam = { cx: t.cx, cy: t.cy, k: t.k };
-    if (v.layer && v.layer !== state.layer) A.layer(v.layer);
-    if (v.year && v.year !== state.year) { A.year(v.year); endPulse(); }
-    if (v.mode && v.mode !== state.mode && (v.mode === 'cells' || FIRMS_OK)) A.mode(v.mode);
+    const active = detailEnabled;
+    detailEnabled = false;
+    try {
+      if (v.layer && v.layer !== state.layer) A.layer(v.layer);
+      if (v.year && v.year !== state.year) { A.year(v.year); endPulse(); }
+      if (v.mode && v.mode !== state.mode && (v.mode === 'cells' || FIRMS_OK)) A.mode(v.mode);
+    } finally { detailEnabled = active; }
     if (t && !instant) flyTo(t);
+    else if (active) { scheduleMapDetail(state.cam, true, true); drawMap(); }
   }
   let hashOn = false;   // the address keeps the anchor it opened with until the view first changes
   function writeHash() { if (!hashOn) return; const h = '#' + viewHash(); if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) { /* a frame without access to its history */ } } }
@@ -2647,7 +2829,7 @@ void main() {
     let y = state.year;
     if (TRN.filed[i][y - 2014] === '-') { let best = null; for (let d = 1; d <= 11 && best == null; d++) { if (y - d >= 2014 && TRN.filed[i][y - d - 2014] !== '-') best = y - d; else if (y + d <= 2025 && TRN.filed[i][y + d - 2014] !== '-') best = y + d; } if (best != null) y = best; }
     if (y !== state.year) { window.__atlas.year(y); endPulse(); }
-    if (FIRMS_OK && state.mode !== 'firms') { window.__atlas.mode('firms'); endSweep(); }
+    if (FIRMS_OK && state.mode !== 'firms') window.__atlas.mode('firms');
     finding = false;
     const k = clampK(Math.max(state.cam.k, minSide() / 20)), low = narrow() && stage.height < 450 ? 0.62 : 0.5;   // on a phone map under 450 px tall the firm lands at 62 percent of its height, leaving the docked tile room above it (the author's decision of 25 October 2026)
     const t = { cx: TRN.x[i], cy: TRN.y[i] + (low - 0.5) * stage.height / k, k };
@@ -2850,7 +3032,7 @@ void main() {
     const fixed = []; if (verifyMinimap()) fixed.push('minimap');
     dropObstacles(); layoutsVerified.push({ reason, fixed, t: Math.round(performance.now()) }); if (layoutsVerified.length > 20) layoutsVerified.shift(); return fixed;
   }
-  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
+  function onResize() { dropObstacles(); pullFrom = null; const w0 = stage.width, h0 = stage.height; sizeCanvases(); if (w0 <= 1 || h0 <= 1) { const hp = presetFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); } else if (w0 > 0 && stage.width !== w0) state.cam.k *= stage.width / w0; redrawAll(); scheduleMapDetail(state.cam); syncZoomButtons(); refreshHover(); applyStrip(); applyMix(); updateContext(true); verifyLayouts('resize'); }   // the strip's and the mix box's forms follow the shown size here too: a frame shown without a resize event (round 12, part D)
   window.addEventListener('resize', onResize);
   // The overlays' boxes relative to the map, for the audit's DOM check.
   // Interface labels in tracked capitals (round 10): no label may run past its card, panel or strip, and none may overflow its own box.
@@ -2917,7 +3099,6 @@ void main() {
       const blocks = [0, 0, 0, 0]; for (let j = 0; j < C.size.length; j++) blocks[C.size[j]]++;
       return { k, cells, sumN, inView, blocks, gpuDiff, engine: useGL() ? 'webgl2' : '2d', layer: L, year: state.year };
     },
-    sweep(on) { if (on === false) endSweep(); else if (on) { try { sessionStorage.removeItem('atlas-sweep'); } catch (e) { /* no storage */ } fieldAnim.swept = false; maybeSweep(); } const sw = sweepX(); return { on: !!fieldAnim.sweep, pending: !!fieldAnim.sweepPending, x: sw ? sw.x : null, raf: fieldAnim.raf }; },   // the opening sweep (round 14): start it again, end it, or read it
     dissolve() { return { on: !!fieldAnim.dissolve, t: dissolveT(), started: !!(fieldAnim.dissolve && fieldAnim.dissolve.t0 != null) }; },
     loseContext() { if (glLoseExt) glLoseExt.loseContext(); return !!glLoseExt; },
     restoreContext() { if (glLoseExt) glLoseExt.restoreContext(); return !!glLoseExt; },
@@ -2959,7 +3140,19 @@ void main() {
     contextCost(n = 30) { const t0 = performance.now(); let mx = 0; for (let i = 0; i < n; i++) { const a = performance.now(); updateContext(true); mx = Math.max(mx, performance.now() - a); } return { mean: +((performance.now() - t0) / n).toFixed(3), max: +mx.toFixed(3) }; },
     listedRule() { const c = cam(), L = MM.listedRule(markRule(c.k), c.k, kFit()), rMax = MM.listedRadius(L, 65535), rMin = MM.listedRadius(L, 1); return Object.assign({ k: c.k, rMin, rMax, cull: MARK_MARGIN, pulseMs: PULSE_MS, decayMs: DECAY_MS, flashMax: MM.flashPeak(rMax), glowMax: 2 * (rMax + MM.flashPeak(rMax)) }, L); },   // the rule at the current zoom, for the audit
     pulseAt(ms) { if (ms == null) { endPulse(); drawMarks(cam()); return 0; } const m = manualMask(state.year); if (!m.count) return 0; endPulse(); pulse = { t0: performance.now() - ms, mask: m.mask, count: m.count, static: false, at: ms }; setLive(true); drawMarks(cam()); return m.count; },   // a frozen pulse frame at ms, for the comparison pictures; pulseAt(null) clears it
-    ready() { const micro = state.mode !== 'firms' && MICRO_LAYERS.has(state.layer) && FIRMS_OK, y = microYear(); return Promise.all([ensureGrid25(), state.mode === 'firms' ? ensureYear(state.year) : micro ? ensureYear(y).then(() => { if (!mosaicCache.has(y + '|1')) { mosaicBins(y, 1); layersDirty(); drawMap(); } }) : Promise.resolve()]).then(() => {}); },
+    async ready() {
+      const { year, layer, mode } = state, k = state.cam.k;
+      if (mode === 'firms') { await ensureYear(year); return; }
+      const needed = [ensureLayerBase(layer, year)];
+      if (k >= 1.5 * kFit()) needed.push(ensureLayerGrid(layer, year));
+      if (layer === 'shared' && k >= 1.5) needed.push(ensureSharedCity(year));
+      if (MICRO_LAYERS.has(layer) && FIRMS_OK && k >= 1.2) {
+        const y = microYear();
+        needed.push(ensureYear(y).then(() => { if (!mosaicCache.has(y + '|1')) { mosaicBins(y, 1); layersDirty(); } }));
+      }
+      await Promise.all(needed); drawMap(); syncMix(); refreshHover();
+      if (cursorChartVisible('cellchart') && state.hover) await ensureCursorHistory(state.hover);
+    },
     cities: Object.fromEntries(bmp.cities.map(c => [c.label, [c.x, c.y]])),
     twinNote(y) { return twinNotes[y] == null ? null : twinNotes[y]; },   // the gzip comment of a loaded twin (round 10)
     drawOrder() { return drawLog.slice(); },   // the last drawMap's steps: basemap, mark, then the layer
@@ -2985,5 +3178,5 @@ void main() {
     methodState() { const m = $('method'), t = $('methodtext'), r = t.getBoundingClientRect(); return { open: !m.hidden && getComputedStyle(m).display !== 'none', more: methodMore(), height: r.height, lineHeight: parseFloat(getComputedStyle($('methodintro')).lineHeight), moreLabel: $('methodmore').textContent, pressed: $('methodbtn').getAttribute('aria-expanded'), intro: $('methodintro').textContent.slice(0, 60), prov: $('layerprov').textContent.slice(0, 40), read: $('methodread').textContent.slice(0, 40) }; },
     markAt() { const cx = Math.round(stage.width / 2), cy = Math.round(stage.height - (stripOpen() ? (narrow() ? 44 : 26) : 0) - 44 - 48); const px = (x, y) => Array.from($('map').getContext('2d').getImageData(Math.round(x * (window.devicePixelRatio || 1)), Math.round(y * (window.devicePixelRatio || 1)), 1, 1).data); return { cx, cy, on: px(cx - 40, cy - 28), off: px(cx - 52, cy - 28), stage: theme.stage, land: theme.land, ink: theme.ink }; },   // the authorship mark's pixel (on the left bracket's arm) and the stage beside it (round 10)
   };
-  Promise.all([document.fonts.ready, document.fonts.load('400 13px "Geist Mono"'), document.fonts.load('500 13px "Geist Mono"'), document.fonts.load('700 13px "Geist Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); onIdle(ensureGrid25); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
+  Promise.all([document.fonts.ready, document.fonts.load('400 13px "Geist Mono"'), document.fonts.load('500 13px "Geist Mono"'), document.fonts.load('700 13px "Geist Mono"')].map(p => p.catch(() => null))).then(() => { sizeCanvases(); applyStrip(); applyMix(); const hp = presetFromHash(), hv = hp ? null : viewFromHash(); state.cam = hp ? hp.preset.target() : fitTarget(); syncPulseButton(); if (hp && hp.firms && FIRMS_OK) window.__atlas.mode('firms'); if (hv) applyView(hv, true); detailEnabled = true; redrawAll(); hashOn = true; syncZoomButtons(); syncMix(); buildMinimap(); drawCardGraticule(); syncPresetPressed(); if (hp || hv) scheduleMapDetail(state.cam); else requestAnimationFrame(() => setTimeout(() => scheduleMapDetail(state.cam), 0)); if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => verifyLayouts('fonts')); if (window.ResizeObserver) new ResizeObserver(() => { if (Math.round(wrap.clientWidth) !== stage.width || Math.round(wrap.clientHeight) !== stage.height) onResize(); }).observe(wrap); if (window.ResizeObserver) { let gk = ''; new ResizeObserver(() => { const c = $('card-goto'), m = $('minimap'), k = [c.clientWidth, c.clientHeight, m.clientWidth, m.clientHeight].join(','); if (k !== gk) { gk = k; drawCardGraticule(); } }).observe($('card-goto')); } });
 })();
