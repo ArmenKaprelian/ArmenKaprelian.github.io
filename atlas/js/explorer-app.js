@@ -361,41 +361,48 @@
   // artifact host, which served only listed file types (until then the bytes travelled as base64 in a script twin).
   const loadScript = src => new Promise((ok, fail) => { const el = document.createElement('script'); el.src = src; el.onload = () => { el.remove(); ok(); }; el.onerror = () => { el.remove(); fail(new Error('could not load ' + src)); }; document.head.appendChild(el); });   // round 17: the element goes once it has run (a revisited year loads again under the three-year cache, and each load had left its element and two handlers in the head)
   const twinNotes = {};   // the comment field of each address file's gzip header (round 10, the authorship mark; the bytes inside are unchanged)
-  function gzipComment(u8) { const flg = u8[3]; let p = 10; if (flg & 4) p += 2 + (u8[p] | (u8[p + 1] << 8)); if (flg & 8) { while (u8[p]) p++; p++; } if (!(flg & 16)) return ''; let s = ''; while (u8[p]) s += String.fromCharCode(u8[p++]); return s; }
-  async function fetchInflated(path, key) {   // a gzipped file under data/, its header's comment kept in twinNotes[key]
-    const res = await fetch('data/' + path); if (!res.ok) throw new Error('could not load data/' + path + ' (' + res.status + ')');
-    let buf = await res.arrayBuffer();   // a server that inflates the file on the way hands over the raw bytes, which the header checks let through
-    const head = new Uint8Array(buf, 0, 2);
-    if (head[0] === 0x1f && head[1] === 0x8b) { twinNotes[key] = gzipComment(new Uint8Array(buf)); buf = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(); }
-    return buf;
+  // Start both HTTP requests on selection. The worker retains the decoded coordinate
+  // dictionary and transfers the validated year's typed arrays back without copying.
+  let addressWorker = null, coordsJob = null, nextAddressJob = 0;
+  const addressJobs = new Map();
+  function workerForAddresses() {
+    if (addressWorker) return addressWorker;
+    const worker = new Worker('js/atlas-addresses.js');
+    worker.onmessage = ({data}) => {
+      const job = addressJobs.get(data.id);
+      if (!job) return;
+      addressJobs.delete(data.id);
+      if (data.note) twinNotes[job.key] = data.note;
+      if (data.error) job.reject(new Error(data.error)); else job.resolve(data.result);
+    };
+    worker.onerror = () => {
+      worker.terminate(); addressWorker = null; coordsJob = null;
+      for (const job of addressJobs.values()) job.reject(new Error('address worker unavailable'));
+      addressJobs.clear();
+    };
+    worker.postMessage({init: true, FM, IND_CLASS, YEAR_BREAKS});
+    return addressWorker = worker;
   }
-  const magicOf = dv => String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3));
-  // Version 4 (round 31): every address of every year once, fetched with the first year (M9's firms-coords.bin.gz). x comes as the
-  // step from the previous address, and y as the step from the previous address where x repeats, else y itself.
-  let coordsP = null;
-  const loadCoords = () => coordsP || (coordsP = fetchInflated(FM.coords.file, 'coords').then(buf => {
-    const dv = new DataView(buf), magic = magicOf(dv), U = dv.getUint32(4, true), ver = dv.getUint16(18, true);
-    if (magic !== 'FRC1' || ver !== 4 || U !== FM.coords.addresses || buf.byteLength !== 32 + 8 * U) throw new Error(`bad coordinates file (${magic} v${ver}, ${U} addresses, ${buf.byteLength} bytes)`);
-    const dx = new Int32Array(buf, 32, U), dy = new Int32Array(buf, 32 + 4 * U, U), X = new Int32Array(U), Y = new Int32Array(U);
-    let x = 0, y = 0; for (let i = 0; i < U; i++) { if (dx[i]) { x += dx[i]; y = dy[i]; } else y += dy[i]; X[i] = x; Y[i] = y; }
-    return { U, X, Y };
-  }).catch(e => { coordsP = null; throw e; }));
+  async function readAddress(path) {
+    const url = D.packedAddresses?.[path] || 'data/' + path;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('could not load ' + url + ' (' + response.status + ')');
+    return response.arrayBuffer();
+  }
+  function decodeAddress(worker, key, bytes) {
+    if (worker !== addressWorker) return Promise.reject(new Error('address worker unavailable'));
+    const id = ++nextAddressJob;
+    return new Promise((resolve, reject) => {
+      addressJobs.set(id, {key, resolve, reject});
+      worker.postMessage({id, key, bytes}, [bytes]);
+    });
+  }
   async function loadYear(y) {
-    const [C, buf] = await Promise.all([loadCoords(), fetchInflated(FM.files[y], y)]);
-    const dv = new DataView(buf), magic = magicOf(dv), n = dv.getUint32(4, true), U = dv.getUint32(8, true), year = dv.getUint16(16, true), ver = dv.getUint16(18, true), exp = FM.by_year[y];
-    const MK = FM.layout.mix_rows || 8, RB = FM.layout.record_bytes || (9 + 2 * MK), W = (C.U + 31) >>> 5, o = 32 + 4 * W;   // a bitmap over the coordinates, then n, a, f, rv, cls and MK (ind, ish) pairs by share descending
-    if (magic !== 'FRM1' || ver !== 4 || year !== +y || U !== C.U || n !== exp.addresses || buf.byteLength !== o + RB * n) throw new Error(`bad file (${magic} v${ver} ${year}, ${n} records, ${buf.byteLength} bytes)`);
-    const bits = new Uint32Array(buf, 32, W), x = new Int32Array(n), yv = new Int32Array(n); let j = 0;
-    for (let w = 0; w < W; w++) for (let b = bits[w]; b; ) { const t = b & -b, i = (w << 5) + 31 - Math.clz32(t); if (j < n) { x[j] = C.X[i]; yv[j] = C.Y[i]; } j++; b ^= t; }
-    if (j !== n) throw new Error(`the bitmap marks ${j} addresses, the header ${n}`);
-    const nn = new Uint16Array(buf, o, n), a = new Uint16Array(buf, o + 2 * n, n), f = new Uint16Array(buf, o + 4 * n, n), rv = new Uint16Array(buf, o + 6 * n, n), cls = new Uint8Array(buf, o + 8 * n, n);
-    const mixInd = [], mixSh = []; for (let k = 0; k < MK; k++) { mixInd.push(new Uint8Array(buf, o + (9 + 2 * k) * n, n)); mixSh.push(new Uint8Array(buf, o + (10 + 2 * k) * n, n)); }
-    const ind = mixInd[0], ish = mixSh[0], indCls = new Uint8Array(n), byInd = new Uint32Array(10);
-    const share = new Uint8Array(n); let sumN = 0;
-    for (let i = 0; i < n; i++) { sumN += nn[i]; const sh = 100 * a[i] / nn[i]; let c = 0; while (c < YEAR_BREAKS.length && sh >= YEAR_BREAKS[c]) c++; share[i] = c; const ic = IND_CLASS[ind[i]]; indCls[i] = ic; byInd[ic]++; }
-    if (sumN !== exp.firms) throw new Error(`firms ${sumN} differ from the manifest's ${exp.firms}`);
-    if (exp.by_ind && exp.by_ind.some((v, i) => v !== byInd[i])) throw new Error(`addresses by industry class differ from the manifest's for ${y}`);
-    return { year: +y, n, x, y: yv, nn, a, f, rv, cls, share, ind, ish, indCls, mixInd, mixSh, mk: MK };
+    const worker = workerForAddresses();
+    if (!coordsJob) coordsJob = readAddress(FM.coords.file).then(bytes => decodeAddress(worker, 'coords', bytes))
+      .catch(error => { if (addressWorker === worker) coordsJob = null; throw error; });
+    const [, bytes] = await Promise.all([coordsJob, readAddress(FM.files[y])]);
+    return decodeAddress(worker, y, bytes);
   }
   function ensureYear(y) {
     if (firmYears.has(y)) return Promise.resolve(firmYears.get(y));
