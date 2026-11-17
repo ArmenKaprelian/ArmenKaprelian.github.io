@@ -1,6 +1,6 @@
 # Visibility Atlas: a guide for AI agents
 
-Rebuilt from the atlas’s data when the atlas was published on 11 November 2026.
+Rebuilt from the atlas’s data when the atlas was published on 17 November 2026.
 
 You are helping someone who is looking at the Visibility Atlas, at https://armenkaprelian.com/atlas/ on the author's site. This guide describes everything the atlas shows: its data and terms, each view and layer, every panel and control, the findings it states and the limits it sets. Its paragraphs are numbered so you can cite them (for example, "guide 5.3").
 
@@ -57,7 +57,7 @@ You are helping someone who is looking at the Visibility Atlas, at https://armen
 
 2.15. Revenue. Nominal revenue is in current rubles. Real revenue is in constant 2021 rubles, deflated by the World Bank's linked GDP deflator for Russia, rebased to 2021. Revenue is counted where a firm is registered.
 
-2.16. The revenue cohort by cash share. Firms eligible in 2021 with usable 2021 statements for revenue, cash relative to assets and the controls: 1,503,198 firms. Membership is fixed in 2021. Later survival, filing and list membership do not change who belongs.
+2.16. The revenue cohort by cash share. The cohort contains 1,503,173 eligible nonfinancial firms whose unflagged 2021 statements report positive sales, positive assets, and cash. Firms remain members if they later stop filing or leave the register.
 
 2.17. The 50-firm support rule and disclosure. In the Cells view a share is shown only for cells, squares and regions with 50 or more firms. Those with fewer are grey. List counts under 5 in a cell are not shown. Counts under 10 in the 250 m city cells and the 5 km density cells are banded: they read "fewer than 10." The Firms view and the 1 km squares show exact counts, and the Firms view shows each coordinate pair's own share.
 
@@ -107,7 +107,7 @@ The LAYER card groups the layers under three tabs in a row under VIEW, COUNTS, S
 
 5.5. Usable 2021 accounts (REVENUE, fixed to 2021). The share of a cell's located eligible firms in 2021 with usable 2021 accounts, the firms in the revenue cohort by cash share (2.16), which the chapter calls cohort inclusion. Five classes, pooled over the supported cells: 5–33%, over 33–38, over 38–43, over 43–48 and over 48–68%. 100 km cells only. The next layer (5.6) uses the same cohort.
 
-5.6. Median revenue change (descriptive) (REVENUE, fixed). In the Cells view: the percent change of each cell's median real revenue among cohort firms observed in 2024, against the cell's 2021 median, in cells with 50 or more observed firms. Classes: more than +20%, +10 to +20, 0 to +10, −10 to 0, −20 to −10 and −20% or less. 100 km cells only. It is descriptive because the firms observed change from year to year: a cell's median can move because the set of firms observed changes, not only because their revenue changed. Its source line says it is "Not a Chapter 3 estimate." Example: in the 100 km cell over Moscow, the one with the most cohort firms, 193,993 of 271,277 cohort firms are observed in 2024, and their median real revenue is 27.4% above the cell's 2021 median.
+5.6. Median revenue change (descriptive) (REVENUE, fixed). The Cells view compares each cell's 2024 median real revenue with its 2021 median. Each year must have at least 50 cohort firms with positive sales from unflagged statements. Classes: more than +20%, +10 to +20, 0 to +10, −10 to 0, −20 to −10 and −20% or less. 100 km cells only. The median can change as firms' revenues change and as different firms report. Its source line says it is "Not a Chapter 3 estimate." In the 100 km cell over Moscow, the one with the most cohort firms, 193,985 of 271,272 cohort firms are observed in 2024, and their median real revenue is 27.4% above the cell's 2021 median.
 In the Firms view the layer follows the slider and colours firms on no list by a firm-level measure: each firm's real revenue against its own 2019–2021 average, minus the year's median. Classes: −50% or less, −50 to −20, −20 to 0, 0 to +50, +50 to +150 and more than +150%. Faint marks have no usable baseline. Pixels count filers, not firms.
 
 5.7. Leading industry by year (REVENUE, follows the slider). Per cell and year, the division with the largest share of nominal revenue among located eligible firms with a statement and a positive revenue value. The tile gives the share of the cell's revenue accounted for by firms matched to any of the five lists. Grids: 100 km and 25 km cells for 2014 to 2025, and 1 km squares for every year, coloured by the class with the largest revenue at their coordinate pairs. In the Firms view the colour is the leading class at each coordinate pair, over every firm there with a statement and a positive revenue value. Pairs without one are faint. The nine classes and their divisions:
