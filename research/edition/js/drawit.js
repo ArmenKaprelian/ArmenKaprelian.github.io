@@ -19,6 +19,7 @@
     var you = sec.querySelector('.you');
     var L = fig.dataset;
     var GY = [2022, 2023, 2024], Y0 = 2021;
+    var guessStarts = [45, 72, 60];               // illustrative positions only; a guess is recorded on interaction
     var st = { phase: 'draw', pop: 'eligible', show: 'share', range: 'short', guess: {}, prog: 1, seenReg: false };
     var W = 0, H = 0, m = { l: 40, r: 58, t: 24, b: 28 }, sx, sy, raf = 0, dragging = false;
     var clipId = 'h1clip' + Math.round(Math.random() * 1e6);
@@ -38,6 +39,7 @@
     var YA = d.years[0], YZ = d.years[d.years.length - 1];
     function span() { return st.range === 'long' ? [YA, YZ] : [2019, YZ]; }
     function complete() { return GY.every(function (y) { return st.guess[y] != null; }); }
+    function guessAt(y) { return st.guess[y] != null ? st.guess[y] : guessStarts[GY.indexOf(y)]; }
     function shareView() { return st.show === 'share'; }
 
     function layout() {
@@ -146,7 +148,7 @@
         if (!Object.keys(st.guess).length) E.svg('text', { x: zx + zw / 2, y: zy + 24, 'text-anchor': 'middle', 'class': 'hint' }, gDyn, (L.lHint || '').toUpperCase());
         GY.forEach(function (yy) {                  // a question mark over a year not yet drawn, the reader's value over a year drawn
           var set = st.guess[yy] != null;
-          E.svg('text', { x: sx(yy), y: sy(set ? st.guess[yy] : v0) - 14, 'text-anchor': 'middle', 'class': 'v you' }, gDyn, set ? st.guess[yy] + '%' : '?');
+          E.svg('text', { x: sx(yy), y: sy(guessAt(yy)) - 14, 'text-anchor': 'middle', 'class': 'v you' }, gDyn, set ? st.guess[yy] + '%' : '?');
         });
       } else {
         var clip = E.svg('clipPath', { id: clipId }, gDyn);
@@ -188,7 +190,7 @@
         }
       }
       handles.forEach(function (h, k) {
-        var yy = GY[k], set = st.guess[yy] != null, v = set ? st.guess[yy] : v0;
+        var yy = GY[k], set = st.guess[yy] != null, v = guessAt(yy);
         h.style.display = showGuess && (st.phase === 'draw' || set) ? '' : 'none';
         h.setAttribute('x', sx(yy) - 5.5); h.setAttribute('y', sy(v) - 5.5);
         h.setAttribute('fill', set ? FUCHSIA : '#03060E');
@@ -251,8 +253,8 @@
         var step = e.key === 'ArrowUp' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowDown' || e.key === 'ArrowLeft' ? -1 : e.key === 'PageUp' ? 10 : e.key === 'PageDown' ? -10 : 0;
         if (!step) return;
         e.preventDefault();
-        var yy = GY[k], prev = k && st.guess[GY[k - 1]] != null ? st.guess[GY[k - 1]] : Math.round(at('eligible', 'share', Y0));
-        st.guess[yy] = E.clamp((st.guess[yy] != null ? st.guess[yy] : prev) + step, 0, 100);
+        var yy = GY[k];
+        st.guess[yy] = E.clamp(guessAt(yy) + step, 0, 100);
         sync(); draw();
       });
     });
