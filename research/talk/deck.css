@@ -1,0 +1,209 @@
+/* The defense deck's stylesheet. It loads after the site's own css/site.css and takes its tokens from it (the stage, the three
+   text tones, the two accents, Geist Mono, the focus corners), with the web edition's data colours beside them. A slide is a
+   fixed 1600 by 900 box. deck.js scales the stage to the window; the overview, the reading form, the presenter window and
+   print lay the same boxes out at other sizes through --s, the scale of one slide. */
+
+:root {
+  --accent: #79CDBF; --accent-strong: #C7F8E7; --accent-deep: #1C8383; --slate: #6B7482; --below: #3C4852; --line: #2E333D;
+  --listed: #E31A1C; --amber: #F39523;
+  --s: 1;
+}
+
+body.deck { margin: 0; overflow: hidden; background: var(--stage); color: var(--ink); font-family: var(--font); }
+.stagewrap { position: fixed; inset: 0; overflow: hidden; }
+.stage { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; }
+.cell { position: absolute; inset: 0; display: none; }
+.cell.on { display: block; }
+.frame { position: relative; width: calc(1600px * var(--s)); height: calc(900px * var(--s)); overflow: hidden; background: var(--stage); }
+.slide { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform: scale(var(--s)); transform-origin: 0 0; box-sizing: border-box;
+         padding: 40px 64px 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto auto 40px; }
+.notes { display: none; }
+
+/* The parts of a slide: the kicker, the headline, the figure, the reading sentence, the reference line, the rail. */
+.kicker { margin: 0 0 14px; display: flex; justify-content: space-between; column-gap: 48px; font-size: 16px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+/* The thread: what the slide answers or picks up from an earlier one. It is read, so it takes the reading tone. */
+.kicker .thread { text-align: right; color: var(--context); }
+.head { margin: 0 0 22px; max-width: 1400px; font-size: 44px; line-height: 1.16; font-weight: 700; letter-spacing: 0; color: var(--ink); text-wrap: balance; }
+.head.long { font-size: 36px; line-height: 1.2; }
+.nb { white-space: nowrap; }
+.fig { margin: 0; min-height: 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.fig > svg { display: block; width: 100%; height: 100%; min-height: 0; }
+.fig > img { display: block; max-width: 100%; max-height: 100%; min-height: 0; object-fit: contain; }
+.fig .plate { background: #FFFFFF; padding: 14px 18px; box-sizing: border-box; }
+.fig .credit { flex: none; margin-top: 8px; font-size: 15px; line-height: 1.4; color: var(--dim); max-width: 1100px; }
+.read { margin: 16px 0 0; max-width: 1380px; font-size: 25px; line-height: 1.4; color: var(--muted); text-wrap: pretty; }
+.read b, .read strong { color: var(--ink); font-weight: 700; }
+/* The second sentence: what the result means for the question. */
+.read .mean { display: block; margin-top: 6px; color: var(--ink); }
+.foot { display: flex; align-items: baseline; justify-content: space-between; column-gap: 32px; margin: 12px 0 0; min-height: 24px; font-size: 14px; color: var(--dim); }
+.foot { flex-wrap: wrap; padding-bottom: 5px; }
+.foot .ref { letter-spacing: .02em; }
+/* The specification of the model behind the slide's estimates, on a line of its own over the reference line. */
+.foot .spec { flex: 0 0 100%; margin: 0 0 5px; font-size: 14px; letter-spacing: .02em; color: var(--muted); }
+.foot .spec b { margin-right: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.foot .go { flex: none; margin-right: 8px; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); }
+.foot .go::before { content: ""; background: var(--corners-dim); }
+.rail { display: flex; align-items: center; column-gap: 26px; margin: 0 -64px; padding: 0 64px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.rail .on { color: var(--context); }
+.rail .count { margin-left: auto; font-variant-numeric: tabular-nums; }
+.rail .star { color: var(--dim); text-transform: none; letter-spacing: 0; }
+
+/* Layouts. Wide: the figure under the headline, across the slide. Split: the words at the left, the figure at the right. */
+.slide.l-split { grid-template-columns: 540px minmax(0, 1fr); column-gap: 44px; grid-template-rows: auto auto minmax(0, 1fr) auto 40px; }
+.slide.l-split .kicker { grid-column: 1 / -1; }
+.slide.l-split .head { grid-column: 1; grid-row: 2; font-size: 38px; line-height: 1.18; margin-bottom: 20px; }
+.slide.l-split .head.long { font-size: 31px; line-height: 1.2; }
+.slide.l-split .read { grid-column: 1; grid-row: 3; align-self: start; margin-top: 0; font-size: 23px; }
+.slide.l-split .fig { grid-column: 2; grid-row: 2 / 4; }
+.slide.l-split .foot { grid-column: 1 / -1; grid-row: 4; }
+.slide.l-split .rail { grid-column: 1 / -1; grid-row: 5; }
+
+/* The title slide and the part titles: the site's striped display type, on large type only. */
+.slide.k-title, .slide.k-part { grid-template-rows: auto minmax(0, 1fr) auto 40px; }
+.slide.k-title .titlebox, .slide.k-part .titlebox { align-self: center; max-width: 1280px; }
+.slide.k-title h1 { margin: 0 0 14px; font-size: 54px; line-height: 1.08; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.slide.k-title .sub { margin: 0 0 40px; font-size: 27px; line-height: 1.25; color: var(--muted); }
+.slide.k-title .who { margin: 0; font-size: 22px; line-height: 1.5; color: var(--ink); }
+.slide.k-title .who span { color: var(--dim); }
+.slide.k-title { grid-template-columns: minmax(0, 1fr) 620px; column-gap: 52px; }
+.slide.k-title .kicker, .slide.k-title .foot, .slide.k-title .rail { grid-column: 1 / -1; }
+.slide.k-title .titlebox { grid-column: 1; grid-row: 2; }
+.slide.k-title .fig { grid-column: 2; grid-row: 2; align-self: center; }
+.slide.k-title .fig img { width: 100%; height: auto; }
+.slide.k-part h2 { margin: 0 0 18px; font-size: 84px; line-height: 1.02; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.slide.k-part .sub { margin: 0; max-width: 1100px; font-size: 32px; line-height: 1.3; color: var(--muted); }
+.slide.k-part .n { margin: 0 0 22px; font-size: 20px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--context); }
+
+/* Motion on entry. The data marks of a chart arrive when its slide is reached going forward, in the presenting view only:
+   a line is drawn, a bar grows from its zero line, an interval opens from its centre, a point fades in. Nothing else moves,
+   and every mark ends exactly where the still slide has it. M turns the motion off, and a browser set to reduce motion never plays it. */
+@media (prefers-reduced-motion: no-preference) {
+  /* backwards: a mark waits in its first state, and once it has arrived the animation lets go of it, so the slide at rest is the still slide */
+  body.present:not(.still) .cell.play [data-m] { animation: m-fade .35s cubic-bezier(.2, .7, .2, 1) backwards; animation-delay: calc(var(--i, 0) * 45ms + 140ms); }
+  body.present:not(.still) .cell.play [data-m="line"] { animation-name: m-draw; animation-duration: .9s; }
+  body.present:not(.still) .cell.play [data-m^="bar-"], body.present:not(.still) .cell.play [data-m="ci"] { animation-duration: .6s; transform-box: fill-box; }
+  body.present:not(.still) .cell.play [data-m="bar-l"] { animation-name: m-growx; transform-origin: left center; }
+  body.present:not(.still) .cell.play [data-m="bar-r"] { animation-name: m-growx; transform-origin: right center; }
+  body.present:not(.still) .cell.play [data-m="bar-u"] { animation-name: m-growy; transform-origin: center bottom; }
+  body.present:not(.still) .cell.play [data-m="bar-d"] { animation-name: m-growy; transform-origin: center top; }
+  body.present:not(.still) .cell.play [data-m="ci"] { animation-name: m-growx; transform-origin: center; }
+}
+@keyframes m-fade { from { opacity: 0; } }
+@keyframes m-draw { from { stroke-dasharray: 1; stroke-dashoffset: 1; } 99.9% { stroke-dasharray: 1; stroke-dashoffset: 0; } to { stroke-dashoffset: 0; } }
+@keyframes m-growx { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes m-growy { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* A live figure of the web edition. The slide's button or L puts the figure's own page in a frame where the still chart is,
+   and L or Escape takes it away. The script places the frame over the chart and sizes it to fit. */
+.livebox { position: absolute; overflow: hidden; }
+.livebox iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; background: var(--stage); }
+.slide.is-live .fig, .slide.l-wide.is-live .read { visibility: hidden; }
+.foot .livebtn { font: inherit; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); background: transparent; border: 0; padding: 0; margin-left: auto; margin-right: 34px; cursor: pointer; position: relative; }
+.foot .livebtn::before { content: ""; background: var(--corners-dim); }
+.slide.is-live .livebtn { color: var(--context); }
+body:not(.present) .livebtn { display: none; }
+
+/* Definitions of terms: a slide of their own (the term at the left, what it means beside it), or beside a part's title. */
+.terms { width: 100%; }
+.terms dl { margin: 0; display: grid; grid-template-columns: 310px minmax(0, 1fr); column-gap: 44px; row-gap: 24px; align-items: baseline; }
+.terms dt { margin: 0; font-size: 24px; line-height: 1.3; font-weight: 700; color: var(--ink); }
+.terms dd { margin: 0; max-width: 1060px; font-size: 21px; line-height: 1.42; color: var(--muted); text-wrap: pretty; }
+.slide.k-part.has-terms { grid-template-columns: minmax(0, 1fr) 720px; column-gap: 0; }
+.slide.k-part.has-terms .kicker, .slide.k-part.has-terms .foot, .slide.k-part.has-terms .rail { grid-column: 1 / -1; }
+.slide.k-part.has-terms .titlebox { grid-column: 1; grid-row: 2; padding-right: 56px; }
+.slide.k-part.has-terms .sub { font-size: 28px; }
+.slide.k-part .terms { grid-column: 2; grid-row: 2; align-self: center; box-sizing: border-box; padding-left: 48px; border-left: 1px solid var(--line); }
+.slide.k-part .terms .tl { margin: 0 0 20px; font-size: 16px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+.slide.k-part .terms dl { grid-template-columns: minmax(0, 1fr); row-gap: 0; }
+.slide.k-part .terms dt { font-size: 22px; }
+.slide.k-part .terms dd { margin: 4px 0 20px; font-size: 19px; line-height: 1.42; }
+.slide.k-part .terms dd:last-child { margin-bottom: 0; }
+
+/* A quotation: the words large, then the speaker, then one line of context. */
+.slide.k-quote { grid-template-rows: auto minmax(0, 1fr) auto auto 40px; }
+.slide.k-quote .quote { margin: 0; align-self: center; max-width: 1340px; }
+.slide.k-quote blockquote { margin: 0; }
+.slide.k-quote blockquote p { margin: 0 0 20px; font-size: 52px; line-height: 1.2; font-weight: 700; color: var(--ink); text-wrap: balance; }
+.slide.k-quote .by { margin: 30px 0 0; font-size: 22px; line-height: 1.4; color: var(--muted); }
+
+/* The closing slide: three pictures in a row, each a link to its page. */
+.slide.k-close { grid-template-rows: auto auto minmax(0, 1fr) auto auto 40px; }
+.closegrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 36px; align-items: start; align-self: center; }
+.closegrid a { display: block; text-decoration: none; color: inherit; }
+.closegrid img { display: block; width: 100%; height: auto; aspect-ratio: 1.42; object-fit: cover; object-position: top center; border: 1px solid var(--line); }
+.closegrid .go { display: inline-block; margin: 14px 8px 0; font-size: 15px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); position: relative; }
+.closegrid .go::before { content: ""; position: absolute; inset: -3px -7px; background: var(--corners-dim); }
+
+/* Steps: a part of a figure that arrives on a later key press. Shown at once everywhere but in the presenting view. */
+.later { opacity: 0; }
+body.deck:not(.present) .later { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) { body.present [data-at] { transition: opacity .25s linear; } }
+
+/* The heads-up line of the presenting view: keys, shown until the first move and on a pointer move. */
+.hud { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; padding: 8px 16px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); background: rgba(3, 6, 14, .88); opacity: 0; pointer-events: none; transition: opacity .2s linear; }
+.hud.show { opacity: 1; }
+.hud b { color: var(--muted); font-weight: 500; }
+body.deck:not(.present) .hud { display: none; }
+
+/* The overview: every slide small, in order. A click opens one. */
+body.overview { overflow: auto; }
+body.overview .stagewrap { position: static; overflow: visible; }
+body.overview .stage { position: static; width: auto; height: auto; transform: none !important; display: grid; grid-template-columns: repeat(auto-fill, 320px); gap: 18px 16px; padding: 24px; justify-content: center; --s: .2; }
+body.overview .cell { position: relative; display: block; cursor: pointer; outline: 1px solid var(--line); }
+body.overview .cell.on { outline: 2px solid var(--cursor); }
+body.overview .cell[data-path="x"] { opacity: .6; }
+body.overview .cell::after { content: attr(data-id); position: absolute; left: 6px; bottom: 4px; font-size: 11px; letter-spacing: .08em; color: var(--muted); background: rgba(3, 6, 14, .8); padding: 0 4px; }
+body.overview.core .cell[data-path="e"] { opacity: .25; }
+
+/* The reading form: each slide above its notes, as a page. This is also what prints as the notes. */
+body.read { overflow: auto; }
+body.read .stagewrap { position: static; overflow: visible; }
+body.read .stage { position: static; width: auto; height: auto; transform: none !important; padding: 28px 0 80px; --s: .6; }
+body.read .cell { position: relative; display: block; width: 960px; margin: 0 auto 44px; break-inside: avoid; }
+body.read .frame { outline: 1px solid var(--line); }
+body.read .notes { display: block; margin: 16px 0 0; max-width: 78ch; font-size: 15px; line-height: 1.55; color: var(--muted); }
+body.read .notes p { margin: 0 0 10px; text-wrap: pretty; }
+body.read .notes .id { font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+body.read .notes .switch { color: var(--context); }
+body.read.core .cell[data-path="e"] { display: none; }
+
+/* The presenter window: the slide on show, the next one, the notes and the clock. */
+body.presenter { overflow: hidden; }
+body.presenter .stagewrap { position: static; }
+body.presenter .stage { position: static; width: auto; height: 100vh; transform: none !important; display: grid; grid-template-columns: 800px minmax(0, 1fr); grid-template-rows: 450px minmax(0, 1fr); gap: 18px 24px; padding: 18px; box-sizing: border-box; }
+body.presenter .cell { position: relative; display: none; }
+body.presenter .cell.on { display: contents; }
+body.presenter .cell.on .frame { --s: .5; grid-column: 1; grid-row: 1; outline: 1px solid var(--line); }
+body.presenter .cell.on .notes { display: block; grid-column: 1 / -1; grid-row: 2; overflow: auto; font-size: 22px; line-height: 1.45; color: var(--ink); max-width: 100ch; }
+body.presenter .cell.on .notes p { margin: 0 0 14px; }
+body.presenter .cell.on .notes .id { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+body.presenter .cell.on .notes .switch { color: var(--context); }
+body.presenter .cell.next { display: block; grid-column: 2; grid-row: 1; align-self: end; }
+body.presenter .cell.next .frame { --s: .28; outline: 1px solid var(--line); opacity: .8; }
+body.presenter .clock { position: fixed; right: 18px; top: 18px; text-align: right; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; color: var(--dim); }
+body.presenter .clock b { display: block; font-size: 44px; line-height: 1.1; font-weight: 700; letter-spacing: 0; color: var(--context); font-variant-numeric: tabular-nums; }
+body.presenter .clock .plan { color: var(--muted); }
+body:not(.presenter) .clock { display: none; }
+
+/* Print: one slide a page from the presenting view, the reading form as pages of slide and notes. */
+@page slidepage { size: 1600px 900px; margin: 0; }
+@page notespage { size: 8.5in 11in; margin: .55in .6in; }
+@media print {
+  html, body.deck { overflow: visible !important; background: var(--stage); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .hud, .clock { display: none !important; }
+  .stagewrap { position: static !important; overflow: visible !important; }
+  .stage { position: static !important; transform: none !important; width: auto !important; height: auto !important; display: block !important; padding: 0 !important; }
+  .later { opacity: 1 !important; }
+  [data-m] { animation: none !important; }
+  .livebox, .livebtn { display: none !important; }
+  .slide.is-live .fig, .slide.is-live .read { visibility: visible !important; }
+  body.deck:not(.read) .stage { --s: 1; }
+  body.deck:not(.read) .cell { display: block !important; position: relative !important; width: 1600px; height: 900px; page: slidepage; break-after: page; break-inside: avoid; outline: none !important; opacity: 1 !important; }
+  body.deck:not(.read) .cell::after { content: none !important; }
+  body.read .stage { --s: .42; }
+  body.read .cell { page: notespage; width: 672px; margin: 0 0 22px; break-inside: avoid; }
+  /* On paper the slide is sized by zoom, which changes its layout box. Under a transform the box stays 1600 by 900, and the
+     browser pages that box: it cut the second slide of a page at the page's end and shrank every page to fit the box's width. */
+  body.read .slide { transform: none !important; zoom: .42; }
+  body.read .notes { font-size: 10.5px; line-height: 1.45; color: #B4C0D0; }
+}
