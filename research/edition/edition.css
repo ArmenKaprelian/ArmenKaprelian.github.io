@@ -1,0 +1,335 @@
+/* The web edition of the dissertation: the styles of the research pages' figures. Loaded after the site's own
+   css/site.css, whose tokens, type and focus corners it uses. The data colours are the Visibility Atlas's
+   (the cyan ramp's steps, the slate, the graticule line). Flat colour only: no shadow, gradient or blur. */
+
+:root {
+  --accent: #79CDBF;         /* the cyan ramp's step 4: data, a statement available */
+  --accent-strong: #C7F8E7;  /* step 6 */
+  --accent-deep: #1C8383;    /* step 1: a second series of the same quantity */
+  --slate: #6B7482;          /* firms removed from the register */
+  --below: #3C4852;
+  --line: #2E333D;           /* grid lines */
+}
+
+/* The outer gutter belongs to the whole spread. The reading measure and chart width are independent. */
+.shell {
+  --gutter: clamp(1rem, 2.4vw, 3rem);
+  max-width: 112rem;
+  margin-inline: auto;
+  padding-inline: max(var(--gutter), var(--safe-l)) max(var(--gutter), var(--safe-r));
+}
+.page.ed {
+  container: edition / inline-size;
+  min-width: 0;
+  max-width: none;
+  padding: clamp(1rem, 2vw, 2rem) 0 max(5rem, calc(var(--safe-b) + 4rem));
+}
+.ed .head h1 { min-width: 0; font-size: clamp(1.75rem, 3.2vw, 3.25rem); }
+.rail a { display: block; padding: 3px 0; font-size: 13px; line-height: 1.35; text-decoration: none; color: var(--muted); }
+.rail a.pg { margin-top: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); }
+.rail a.pg:first-child { margin-top: 0; }
+.rail a.pg[aria-current="page"] { color: var(--ink); }
+.rail ol { list-style: none; margin: 4px 0 8px; padding: 0 0 0 11px; border-left: 1px solid var(--line); }
+.rail ol a[aria-current="true"] { color: var(--context); }
+.rail a:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 2px; }
+@media (hover: hover) { .rail a:hover { color: var(--cursor-live); } }
+.readerbar { position: sticky; top: 0; z-index: 31; display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-width: 0; padding: 6px 0; background: var(--stage); border-bottom: 1px solid var(--line); }
+.reading-section { min-width: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
+.railbtn { flex: none; min-height: 44px; font: inherit; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); background: var(--stage); border: 2px solid var(--cursor); border-radius: 0; padding: 7px 10px; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.railbtn[aria-expanded="true"] { color: var(--stage); background: var(--cursor); }
+.railbtn:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 3px; }
+.rail { display: none; position: fixed; right: max(var(--gutter), var(--safe-r)); top: var(--reader-height, 57px); z-index: 30; width: min(360px, calc(100vw - 2 * var(--gutter))); max-height: calc(100dvh - var(--reader-height, 57px) - 1rem); overflow-y: auto; overscroll-behavior: contain; padding: 10px 16px; background: var(--panel); border: 2px solid var(--cursor); }
+.rail.open { display: block; }
+.rail.open a { display: flex; align-items: center; min-height: 44px; }
+.rail.open a.pg { margin-top: 0; }
+.motion-choice { display: flex; align-items: center; gap: 9px; min-height: 44px; margin-top: 14px; border-top: 1px solid var(--line); padding-top: 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
+.motion-choice[hidden] { display: none; }
+.motion-choice input { width: 18px; height: 18px; margin: 0; accent-color: var(--context); }
+.motion-choice input:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 3px; }
+/* Reserve enough space for the rail and the wide chapter layout together. */
+@media (min-width: 78rem) {
+  .shell { display: grid; grid-template-columns: clamp(9rem, 12vw, 12.5rem) minmax(0, 1fr); gap: clamp(1.5rem, 2.4vw, 3rem); align-items: start; }
+  .rail, .rail.open { display: block; position: sticky; top: 0; right: auto; bottom: auto; z-index: auto; width: auto; max-height: 100vh; padding: clamp(1rem, 2vw, 2rem) 0; background: none; border: 0; }
+  .rail.open a { display: block; min-height: 0; }
+  .rail.open a.pg:not(:first-child) { margin-top: 12px; }
+  .railbtn { display: none; }
+  .readerbar { display: none; }
+  .shell .ed .toc { display: none; }          /* the column carries the contents */
+  .page.ed { padding-bottom: max(48px, calc(var(--safe-b) + 24px)); }
+}
+
+/* The edition keeps this status in both preview and publication builds. */
+.preview-banner { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 1.15rem 0 0; font-size: 12px; color: var(--muted); }
+.preview-banner strong { padding: .35rem .65rem; border: 2px solid var(--context); color: var(--context); font-size: 13px; letter-spacing: .14em; }
+.ed .chapter-start { display: flex; flex-wrap: wrap; gap: .25rem 1.75rem; margin: 1.25rem 0 0; font-size: 13px; }
+.ed .chapter-start a { display: inline-flex; align-items: center; min-height: 44px; color: var(--cursor); }
+.ed h2 .section-link { display: inline-block; margin-inline-start: .5em; font-size: .65em; font-weight: 400; vertical-align: .1em; text-decoration: none; color: var(--dim); }
+.ed h2 .section-link:hover, .ed h2 .section-link:focus-visible { color: var(--cursor-live); }
+.ed h2 .section-link:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 3px; }
+
+/* The button at the foot of a page that leads to the next one. */
+.ed .next { margin: 40px 0 8px; }
+.ed a.btn.big { display: inline-block; padding: 12px 18px 13px; font-size: 15px; text-decoration: none; }
+.ed a.btn.big::after { content: " \2192"; }
+.ed a.btn.big:focus-visible { outline: none; border-color: var(--cursor-live); color: var(--cursor-live); }
+.ed .lead { color: var(--ink); max-width: 66ch; }
+.ed .body, .ed .interpretation, .ed.methods .finding { line-height: 1.55; }
+.ed section.finding { margin: clamp(2.25rem, 4vw, 4rem) 0 0; }
+.ed section.finding + section.finding { padding-top: clamp(1.6rem, 2.4vw, 2.5rem); border-top: 1px solid var(--line); }
+.ed h2 { margin: 0 0 .7em; max-width: 44ch; font-size: clamp(1.25rem, 1rem + .9vw, 1.9rem); line-height: 1.2; font-weight: 700; letter-spacing: 0; color: var(--ink); text-wrap: balance; }
+.ed h3.found { margin: 18px 0 8px; max-width: 40ch; font-size: 20px; line-height: 1.25; font-weight: 700; color: var(--ink); text-wrap: balance; }
+.ed section.finding p { margin: 0 0 10px; max-width: 66ch; color: var(--muted); text-wrap: pretty; }
+.ed section.finding p.ref, .ed p.ref { margin-top: 14px; font-size: 12px; color: var(--dim); }
+.ed [hidden] { display: none !important; }
+.ed section.finding p a.cornered, .ed .note a.cornered { color: var(--cursor); }      /* a link inside a finding's text is something to act on */
+.ed section.finding p.star { margin-top: 4px; }
+.ed .key { display: flex; flex-wrap: wrap; gap: 2px 20px; margin: 0 0 4px; font-size: 12px; color: var(--muted); }
+.ed .key i { display: inline-block; width: 18px; height: 3px; margin-right: 7px; vertical-align: 3px; }
+
+/* Numbers that name their source. The note is one shared element placed by edition/js/core.js. */
+.ed data.num { color: var(--ink); font-variant-numeric: tabular-nums; }
+.ed data.num[data-src] { border-bottom: 1px dotted var(--dim); cursor: help; }
+.ed data.num:focus-visible { outline: 2px solid var(--cursor); outline-offset: 2px; }
+.ed-note { position: absolute; z-index: 32; max-width: min(330px, calc(100vw - 24px)); padding: 8px 11px; font-size: 12px; line-height: 1.5; color: var(--muted); background: var(--panel); border: 2px solid var(--context); }
+
+/* Figures. A figure has no frame of its own: the marks are the figure. */
+.ed figure.fig { container: figure / inline-size; min-width: 0; margin: 18px 0 14px; }
+.ed .figure-layout + .figure-layout { margin-top: 1.75rem; }
+.ed .interpretation { min-width: 0; }
+/* The default reading order is heading, chart, explanation. On wider pages each explanation sits
+   alongside the chart it interprets. Dense paired charts stack only when their own panel needs it. */
+@container edition (min-width: 62rem) {
+  .figure-layout, .exercise {
+    display: grid;
+    gap: clamp(1.5rem, 3cqi, 3rem);
+    align-items: start;
+  }
+  .figure-layout { grid-template-columns: minmax(0, 1fr) clamp(20rem, 30%, 30rem); }
+  .ed .figure-layout > figure.fig, .ed .figure-layout > figure.still, .ed .exercise > figure { margin-block: 0; }
+  .figure-layout > .interpretation { border-inline-start: 1px solid var(--line); padding-inline-start: clamp(1rem, 1.6cqi, 1.75rem); }
+  .exercise { grid-template-columns: minmax(18rem, .85fr) minmax(0, 1.85fr); }
+  .exercise-intro h2 { margin-bottom: .65em; }
+  .ed .body:has(> p + p.lead) {
+    display: grid;
+    grid-template-columns: minmax(0, .85fr) minmax(0, 1.85fr);
+    gap: clamp(1.5rem, 3cqi, 3rem);
+    padding-block: .5rem;
+  }
+}
+.ed .plot { position: relative; }
+.ed .plot svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--font); }
+.ed svg text { font-size: 12px; fill: var(--dim); font-variant-numeric: tabular-nums; }
+.ed svg text.v { fill: var(--ink); font-weight: 500; font-size: 13px; }
+.ed svg text.s { fill: var(--muted); }
+.ed svg text.you { fill: var(--cursor); }
+.ed svg text.hint { fill: var(--cursor); font-weight: 500; letter-spacing: .08em; }
+.ed svg text.era { font-size: 10px; letter-spacing: .08em; }
+.ed svg .zone { cursor: crosshair; touch-action: none; }
+.ed svg .handle { cursor: grab; touch-action: none; }
+.ed svg .handle:active { cursor: grabbing; }
+.ed svg .handle:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 3px; }
+
+/* The cue that a figure is an exercise: a filled tag in the colour of what the reader acts on, then one line
+   that says what to do. */
+.ed figure.fig p.tryit, .ed section.finding p.tryit { margin: 0 0 10px; max-width: 70ch; color: var(--ink); }
+.ed .tryit .kick { display: inline-block; margin-right: 10px; padding: 2px 9px 3px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--stage); background: var(--cursor); }
+
+/* Controls. Fuchsia is what you act on: a 3 px border at rest, the solid fill when pressed (the Atlas's rule). */
+.ed .acts, .ed .ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 12px 0 0; }
+.ed .ctl .label { min-width: 13ch; }
+.ed .after { margin-bottom: 18px; }
+.ed .acts.first { margin: 12px 0; }
+.ed .btn { position: relative; min-height: 44px; font: inherit; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); background: transparent; border: 3px solid var(--cursor); border-radius: 0; padding: 6px 11px; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ed .chart-error { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-block: 1rem; color: var(--ink); }
+.ed .btn[aria-checked="true"], .ed .btn[aria-pressed="true"] { color: var(--stage); background: var(--cursor); }
+.ed .btn:disabled { opacity: .4; cursor: default; }
+.ed .btn:focus-visible { outline: none; }
+.ed .btn:focus-visible::before { content: ""; position: absolute; inset: -9px; background: var(--corners); pointer-events: none; }
+@media (hover: hover) { .ed .btn:not(:disabled):hover { border-color: var(--cursor-live); } .ed .btn:not(:disabled):not([aria-checked="true"]):not([aria-pressed="true"]):hover { color: var(--cursor-live); } }
+
+/* The year slider: a fuchsia track, the site's mark as its thumb in the reading green. */
+.ed input[type=range] { -webkit-appearance: none; appearance: none; flex: 1 1 220px; min-width: 0; height: 44px; margin: 0; background: transparent; cursor: pointer; }
+.ed input[type=range]::-webkit-slider-runnable-track { height: 3px; background: var(--cursor); }
+.ed input[type=range]::-moz-range-track { height: 3px; background: var(--cursor); }
+.ed input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -10px; border: 0; border-radius: 0; background: var(--stage) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M2 7V2h5M15 2h5v5M20 15v5h-5M7 20H2v-5' fill='none' stroke='%239CC466' stroke-width='2.5'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%239CC466'/%3E%3C/svg%3E") center / 22px no-repeat; }
+.ed input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 0; background: var(--stage) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 22'%3E%3Cpath d='M2 7V2h5M15 2h5v5M20 15v5h-5M7 20H2v-5' fill='none' stroke='%239CC466' stroke-width='2.5'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%239CC466'/%3E%3C/svg%3E") center / 22px no-repeat; }
+.ed input[type=range]:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 2px; }
+.ed .scrub { flex: 1 1 260px; min-width: 0; max-width: 620px; }
+.ed .scrub input[type=range] { display: block; width: 100%; }
+.ed .scrub .ticks { display: flex; justify-content: space-between; padding: 0 3px; font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* Values that only read are green. */
+.ed output, .ed .reads-v { color: var(--context); font-weight: 700; font-variant-numeric: tabular-nums; }
+.ed .you { color: var(--ink) !important; }
+.ed .you [data-you] { color: var(--cursor); font-weight: 700; }
+
+/* The dot flow. The canvas holds the dots only: every word and number is a page element laid over it. */
+.ed .flowhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 36px; margin: 0 0 6px; }
+.ed .flowhead .yr { font-size: 34px; line-height: 1; letter-spacing: .02em; }
+.ed .flowhead .sh { font-size: 34px; line-height: 1; }
+.ed .flowhead .label { display: block; margin-bottom: 4px; }
+.ed .stage { position: relative; }
+.ed .stage canvas { display: block; width: 100%; }
+.ed .stage .pile, .ed .stage .enter { position: absolute; font-size: 12px; line-height: 1.35; }
+.ed .stage .pile .label, .ed .stage .enter .label { display: block; font-size: 11px; }
+.ed .stage output { font-size: 14px; }
+.ed .trace { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 22px; margin: 6px 0 0; font-size: 12px; color: var(--dim); }
+.ed .trace .cells { display: inline-flex; gap: 3px; }
+.ed .trace .cells i { display: inline-block; width: 12px; height: 12px; box-sizing: border-box; }
+.ed .trace .cells i.A { background: var(--accent); }
+.ed .trace .cells i.N { border: 2px solid var(--accent); }
+.ed .trace .cells i.X { width: 8px; height: 8px; margin: 2px; background: var(--slate); }
+.ed .trace .cells i.O { width: 8px; height: 2px; margin: 5px 2px; background: var(--below); }
+.ed .legend { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.ed .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; box-sizing: border-box; vertical-align: -1px; }
+.ed .legend i.A { background: var(--accent); }
+.ed .legend i.N { border: 2px solid var(--accent); }
+.ed .legend i.X { width: 8px; height: 8px; margin: 0 7px 0 1px; background: var(--slate); vertical-align: 0; }
+.ed .legend i.U { border: 2px solid var(--dim); }
+.ed .legend i.P { background: var(--accent-strong); }
+.ed .legend i.D { background: #269C96; }
+.ed .key i.sq { width: 9px; height: 9px; vertical-align: 0; box-sizing: border-box; }
+.ed .key i.sq.a { background: var(--accent); }
+.ed .key i.sq.h { border: 1.5px solid var(--accent-strong); }
+.ed .yearline.est { margin-top: 22px; }
+.ed .eq sub, .ed .label sub { font-size: .75em; }
+.ed .units { margin: 2px 0 0; }
+.ed .units canvas { display: block; }
+
+/* The charts by year (edition/js/chart.js). Above a chart: what it measures, the selected year and, where the
+   lines need naming, a key that also carries the selected year's values. */
+.ed .yearline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin: 0 0 8px; }
+.ed .yearline .yr { font-size: 20px; line-height: 1; }
+.ed .hint { font-size: 12px; color: var(--dim); }
+.ed figure.fig p.labnote { margin: 10px 0 0; max-width: 66ch; font-size: 12px; color: var(--dim); }
+.ed .ctl + .ctl { margin-top: 8px; }
+.ed .readout { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; }
+.ed .readout output { margin-left: 4px; }
+.ed .key.vals output { margin-left: 5px; }
+.ed .key.rows { display: grid; grid-template-columns: minmax(0, max-content) max-content max-content; gap: 2px 12px; margin: 4px 0 6px; }
+.ed .key.rows [data-k] { display: contents; }
+.ed .key.rows .sh { text-align: right; }
+.ed .key.rows .nm { display: flex; }
+.ed .key.rows .nm i { flex: none; margin-top: .68em; }
+.ed .key .of, .ed .key .of output { color: var(--dim); font-weight: 400; }
+.ed .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr)); gap: 18px clamp(1rem, 2cqi, 2rem); }
+.ed .panel > .label { display: block; }
+.ed svg .hit { cursor: crosshair; touch-action: pan-y; }
+.ed svg .hit:focus-visible { outline: 2px solid var(--cursor-live); outline-offset: 2px; }
+
+/* Charts of rows (edition/js/opacity.js): a name, a track with a bar or an interval, the value. A track's
+   pieces are placed in percent of its width. */
+.ed .track { position: relative; display: block; height: 14px; }
+.ed .track i { position: absolute; display: block; }
+.ed .track .zero { top: -8px; bottom: -8px; width: 1px; background: var(--dim); }
+.ed .track .bar { top: 2px; bottom: 2px; }
+.ed .track .iv { top: 6px; height: 2px; }
+.ed .track .pt { top: 2px; width: 10px; height: 10px; margin-left: -5px; }
+.ed .track.ticks { height: 16px; }
+.ed .track.ticks b { position: absolute; top: 0; transform: translateX(-50%); font-size: 12px; font-weight: 400; color: var(--dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ed .rowchart { display: grid; grid-template-columns: minmax(0, max-content) minmax(140px, 420px) max-content; gap: 9px 16px; align-items: center; margin: 8px 0 0; font-size: 13px; color: var(--muted); }
+.ed .rowchart .rc { display: contents; }
+.ed .rowchart .val { white-space: nowrap; }
+.ed .rowchart .nm output { color: inherit; font-weight: inherit; }
+.ed .rowchart.yrs .nm { text-align: right; }
+.ed .rowchart .of, .ed .rowchart .of output { font-size: 12px; font-weight: 400; color: var(--dim); }
+.ed .rowchart .of { margin-left: 8px; }
+.ed table.chg { width: 100%; max-width: 860px; font-size: 13px; }
+.ed table.chg td:first-child { white-space: normal; color: var(--muted); }
+.ed table.chg td { padding: 4px 16px 4px 0; vertical-align: middle; }
+.ed table.chg th:last-child { text-align: left; }
+.ed table.chg td:last-child { width: 46%; padding-right: 0; }
+.ed table.chg .trw { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+.ed table.chg .trw .track { flex: 1 1 auto; }
+.ed table.chg .trw .dl { flex: none; width: 5ch; text-align: right; color: var(--ink); }
+.ed table.chg tfoot td { padding-top: 6px; }
+
+/* The contents strip under a page's lead. */
+.ed .toc { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 20px 0 0; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+.ed .toc a { color: var(--cursor); }
+.ed section.finding { scroll-margin-top: calc(var(--reader-height, 0px) + 14px); }
+
+/* The opacity index: the two equations, the curve's sliders and what they give. Symbols keep their case inside
+   the tracked capitals of a label. */
+.ed var { font-style: normal; text-transform: none; color: var(--ink); }
+.ed .eq { margin: 2px 0 16px; }
+.ed section.finding .eq p { margin: 0 0 2px; max-width: none; font-size: 19px; line-height: 1.4; color: var(--ink); }
+.ed .label.xl { display: block; margin: 2px 0 10px; text-align: center; }
+.ed .ctl.sl { display: grid; grid-template-columns: minmax(15rem, 1fr) minmax(8rem, 1.4fr) 5ch; max-width: 52rem; }
+.ed .ctl.sl .label { min-width: 0; }
+.ed .ctl.sl input[type=range] { width: 100%; }
+.ed .ctl.sl output { min-width: 3ch; }
+.ed figure.fig .readout { margin: 14px 0 0; }
+.ed figure.fig p.exline { margin: 12px 0 0; max-width: 66ch; color: var(--muted); }
+
+/* The methods page: a list of terms and the table of findings. */
+.ed dl.terms { margin: 0 0 6px; max-width: 78ch; }
+.ed dl.terms dt { margin: 14px 0 3px; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+.ed dl.terms dd { margin: 0; color: var(--muted); }
+.ed table.idx { width: 100%; }
+.ed table.idx td { font-size: 13px; }
+.ed table.idx td:first-child { white-space: nowrap; color: var(--dim); }
+.ed table.idx a { color: var(--cursor); }
+@container edition (min-width: 48rem) {
+  .ed.methods section.finding { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(0, 4fr); column-gap: clamp(1.75rem, 3cqi, 3.5rem); align-items: start; }
+  .ed.methods .finding > :not(h2) { grid-column: 2; }
+  .ed.methods .finding > .tablewrap, .ed.methods .finding > dl { margin-top: 0; }
+  .ed.methods dl.terms { max-width: none; display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(0, 3fr); gap: .9rem clamp(1rem, 2cqi, 2rem); }
+  .ed.methods dl.terms dt { margin: 0; }
+  .ed.methods dl.terms dd { max-width: 66ch; }
+}
+
+/* A table of words, and the still that leads to the Atlas. */
+.ed table.words th, .ed table.words td { text-align: left; white-space: normal; vertical-align: top; }
+.ed table.words td { padding: 5px 18px 5px 0; }
+.ed figure.still { margin: 18px 0 14px; }
+.ed figure.still > a { display: block; max-width: 720px; border: 3px solid var(--cursor); }
+.ed figure.still > a:focus-visible { outline: none; border-color: var(--cursor-live); }
+.ed figure.still figcaption.ref { margin-top: 8px; }
+.ed figure.still img { display: block; width: 100%; height: auto; }
+@media (hover: hover) { .ed figure.still > a:hover { border-color: var(--cursor-live); } }
+
+/* The closed block of numbers under a figure. */
+.ed details.nums { margin: 10px 0 0; }
+.ed details.nums summary { display: inline-flex; align-items: center; gap: .5em; min-height: 44px; position: relative; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--cursor); cursor: pointer; list-style: none; }
+.ed details.nums summary::-webkit-details-marker { display: none; }
+.ed details.nums summary::after { content: " +"; }
+.ed details.nums[open] summary::after { content: " \2212"; }
+.ed details.nums summary:focus-visible { outline: none; color: var(--cursor-live); }
+.ed details.nums summary:focus-visible::before { content: ""; position: absolute; inset: -4px -8px; background: var(--corners); pointer-events: none; }
+.ed .tablewrap { overflow-x: auto; margin: 10px 0 0; }
+.ed section.finding p.tcap { margin: 14px 0 0; max-width: 80ch; font-size: 12px; color: var(--dim); }
+.ed table { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ed th { padding: 4px 18px 5px 0; font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; text-align: right; color: var(--dim); border-bottom: 1px solid var(--line); white-space: nowrap; }
+.ed td { padding: 3px 18px 3px 0; text-align: right; white-space: nowrap; }
+.ed th:first-child, .ed td:first-child, .ed table.t2 th:nth-child(2), .ed table.t2 td:nth-child(2) { text-align: left; }
+
+/* The chapter cards of the hub: a label, the chapter's title and its finding. */
+.ed .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: clamp(.875rem, 1.5vw, 1.5rem); margin: 44px 0 0; padding: 0; list-style: none; }
+.ed .cards a { display: block; height: 100%; padding: 12px 14px 14px; text-decoration: none; border: 3px solid var(--cursor); color: var(--muted); }
+.ed .cards a .label { color: var(--cursor); }
+.ed .cards a b { display: block; margin: 4px 0 6px; font-size: 17px; line-height: 1.25; color: var(--ink); }
+.ed .cards a:focus-visible { outline: none; border-color: var(--cursor-live); }
+.ed .cards a[aria-disabled="true"] { border-color: var(--below); pointer-events: none; }
+.ed .cards a[aria-disabled="true"] .label { color: var(--dim); }
+@media (hover: hover) { .ed .cards a:hover { border-color: var(--cursor-live); } .ed .cards a:hover .label { color: var(--cursor-live); } }
+
+@container figure (max-width: 42rem) {
+  .ed .flowhead .yr, .ed .flowhead .sh { font-size: 28px; }
+  .ed .ctl .label { min-width: 100%; }
+  .ed .ctl.sl { grid-template-columns: minmax(0, 1fr) 5ch; gap: 0 .75rem; }
+  .ed .ctl.sl .label { grid-column: 1 / -1; }
+  .ed section.finding .eq p { font-size: 16px; }
+  .ed .key .of .w { display: none; }
+  .ed .rowchart { grid-template-columns: minmax(0, 1fr); gap: 3px 0; }
+  .ed .rowchart .val { margin-bottom: 9px; white-space: normal; }
+  .ed .rowchart .rc.axis .val { margin: 0; }
+  .ed .rowchart.yrs .nm { text-align: left; }
+  .ed table.chg td { padding-right: 10px; }
+  .ed table.chg .trw { min-width: 118px; }
+  .ed table.chg td:last-child { width: 40%; }
+}
+@media (max-width: 47.5rem) {
+  .ed h3.found { font-size: 18px; }
+  .ed a.btn.big { display: block; text-align: center; }
+}
