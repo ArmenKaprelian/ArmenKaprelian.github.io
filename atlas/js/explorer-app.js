@@ -2624,24 +2624,27 @@ void main() {
   addPreset('Central Moscow (250 m)', () => { const c = bmp.cities[0]; return fineTarget(c.x + 1.5, c.y + 0.5); }, false);   // retained for existing links and fine-cell checks; no menu button
 
   // ---- the minimap (round 10, the author's item 12; the GO TO card's ice-blue neutral, item 21) ---------------------------------------------------
-  // A 376 by 196 drawing before the horizontal crop: the national extent in a 272 by 154 box at the right (0.033397 px per km), a 100 px label column at the left and a 32 px band
-  // below. The outline is the basemap's land traced at 0.03 px per km (every component of four pixels or more; the mainland first) and simplified; the
-  // graticule is the basemap's own polylines clipped to the box. Each city is a focusable group (dot, leader, label box); the layout table below places
-  // the boxes by hand against the rules the audit checks (no box meets another box or a dot within 2 px, no leader crosses another, none passes within
-  // 4 px of another city's dot or through another box, every box inside the viewBox). Clicking a city flies to its preset.
-  const MM_W = 376, MM_H = 196, MM_X0 = 104, MM_Y0 = 10, MM_S = 272 / SPAN_X, MM_BOX_H = 12, MM_PAD = 4, MM_R = 3;
-  const mmX = x => MM_X0 + (x - BM.extents.national.x[0]) * MM_S, mmY = y => MM_Y0 + (BM.extents.national.y[1] - y) * MM_S;
-  // The 4 November follow-up uses the removed Central Moscow button's height for a larger minimap.
-  // Cropping to 376/1.19 units enlarges the map, labels, dots and leaders by 1.19/1.1 relative to the preceding layout.
-  // Western labels are repositioned below; minimapCheck() checks the visible crop and every label/leader clearance.
-  // The card graticule uses this same crop and scale, preserving its alignment with Russia.
-  const MM_F = 1.19, MM_VX0 = MM_W * (1 - 1 / MM_F);
-  const MM_LAYOUT_F = { 'Kaliningrad': ['X', 116, 0], 'St Petersburg': ['X', 202, 0], 'Moscow': ['X', 63, 22], 'Kazan': ['X', 63, 50], 'Voronezh': ['X', 63, 68], 'Rostov-on-Don': ['X', 60.1, 87.5], 'Krasnodar': ['X', 63, 108], 'Volgograd': ['X', 63, 122], 'Samara': ['X', 69, 144], 'Ufa': ['X', 79, 158], 'Khabarovsk': ['X', 302.5, 94] , 'Chelyabinsk': ['X', 99, 182] };   // city labels fitted to the enlarged crop; geographic city positions are unchanged
-  const MM_SHORT = { 'Rostov-on-Don': 'Rostov' };   // round 29: the minimap's label where the full name has no room (the group's title and the button keep the full name)
-  const MM_LAYOUT = {   // ['L', top]: the left column, the box's right edge at x 98; ['X', left, top]: the box's left edge and top; ['R', right, top]: the box's right edge and top
-    'St Petersburg': ['L', 0], 'Kaliningrad': ['L', 14], 'Moscow': ['L', 42], 'Kazan': ['L', 56], 'Voronezh': ['L', 70], 'Rostov-on-Don': ['L', 84], 'Krasnodar': ['L', 98], 'Volgograd': ['L', 112], 'Samara': ['L', 126], 'Ufa': ['L', 140],
-    'Murmansk': ['X', 190, 25], 'Nizhny Novgorod': ['X', 158, 60], 'Perm': ['X', 161, 74], 'Yekaterinburg': ['X', 196, 80], 'Tyumen': ['X', 196, 97], 'Krasnoyarsk': ['X', 206, 111], 'Omsk': ['X', 178, 127], 'Novosibirsk': ['X', 182, 141], 'Irkutsk': ['X', 272, 137], 'Khabarovsk': ['R', 372, 117],
-    'Chelyabinsk': ['X', 100, 182], 'Vladivostok': ['R', 372, 182] };   // the column holds the west and the Volga, the north-east the Urals and Siberia, the band two
+  // The national outline was traced in a 272 by 154 box at (104, 10). Enlarge the
+  // geography about its northeastern side, leaving space for the western city labels.
+  // The land, island clearance bounds, city dots and both graticules share this transform.
+  const MM_W = 376, MM_H = 196, MM_VX0 = MM_W * (1 - 1 / 1.19);
+  const MM_ZOOM = 1.1, MM_DX = 370 * (1 - MM_ZOOM), MM_DY = 45 * (1 - MM_ZOOM);
+  const mmLandX = x => MM_DX + x * MM_ZOOM, mmLandY = y => MM_DY + y * MM_ZOOM;
+  const MM_S = 272 / SPAN_X, MM_BOX_H = 12, MM_PAD = 4, MM_R = 3;
+  const mmX = x => mmLandX(104 + (x - BM.extents.national.x[0]) * MM_S);
+  const mmY = y => mmLandY(10 + (BM.extents.national.y[1] - y) * MM_S);
+  const MM_SHORT = { 'Rostov-on-Don': 'Rostov' };
+  // Fixed label-box origins in the SVG viewBox. Their type size and padding stay constant.
+  const MM_LAYOUT = {
+    'Kaliningrad': [65, 6], 'St Petersburg': [167, 12], 'Moscow': [105, 24],
+    'Murmansk': [173, 28], 'Voronezh': [61, 58], 'Volgograd': [129, 68],
+    'Nizhny Novgorod': [197, 70], 'Rostov-on-Don': [61, 76], 'Perm': [163, 88],
+    'Yekaterinburg': [201, 90], 'Tyumen': [179, 112], 'Krasnodar': [67, 114],
+    'Samara': [91, 130], 'Krasnoyarsk': [235, 132], 'Omsk': [163, 136],
+    'Kazan': [107, 146], 'Khabarovsk': [301, 150], 'Novosibirsk': [163, 152],
+    'Irkutsk': [245, 160], 'Ufa': [125, 162], 'Chelyabinsk': [159, 168],
+    'Vladivostok': [265, 178]
+  };
   // The graticule in the basemap's projection (spherical Lambert azimuthal equal-area at 60 N, 100 E, as data/basemap.json and the M passes), at the basemap's
   // spacing: meridians every 20 degrees, parallels every 10, from 50 S (the lines stop short of the antipode) to the pole. Polylines in km, made once.
   const GRAT_KM = (() => {
@@ -2669,15 +2672,18 @@ void main() {
     svg.setAttribute('viewBox', `${+MM_VX0.toFixed(3)} -2 ${+(MM_W - MM_VX0).toFixed(3)} ${MM_H + 2}`);   // round 15 (the author's item 5.3): the empty band under the lowest labels trimmed, the drawing centred with 2 units above and below; round 16: cropped to the size's right 376/f units
     const NS = 'http://www.w3.org/2000/svg', el = (t, at, parent) => { const e = document.createElementNS(NS, t); for (const [k, v] of Object.entries(at || {})) e.setAttribute(k, String(v)); (parent || svg).appendChild(e); return e; };
     MMAP = { cities: [], rings: 0, widths: {}, builds: ++mmBuilds };
-    const defs = el('defs'); el('clipPath', { id: 'mmclip' }, defs); el('rect', { x: MM_X0, y: MM_Y0, width: 272, height: 154 }, defs.firstChild);
+    const defs = el('defs'), transform = `translate(${MM_DX} ${MM_DY}) scale(${MM_ZOOM})`;
+    const frame = el('clipPath', { id: 'mmclip' }, defs);
+    el('rect', { x: 104, y: 10, width: 272, height: 154, transform }, frame);
     const land = el('g', { class: 'landg', 'clip-path': 'url(#mmclip)' });
     const { land: d, rings, isles } = window.ATLAS_OUTLINES;
-    MMAP.rings = rings; MMAP.isles = isles;
-    el('path', { class: 'land', d, 'fill-rule': 'evenodd' }, land);
+    MMAP.rings = rings;
+    MMAP.isles = isles.map(b => ({ x: mmLandX(b.x), y: mmLandY(b.y), x1: mmLandX(b.x1), y1: mmLandY(b.y1) }));
+    el('path', { class: 'land', d, transform, 'fill-rule': 'evenodd' }, land);
     // The graticule (round 15, the author's item 14A, revised): the basemap's own projection extended across the whole GO TO card (drawCardGraticule), and here
     // the same lines once more over the land, clipped to it, since the land is opaque. Round 10's minimap graticule had never drawn (Float64Array.prototype.map
     // turned every coordinate string into NaN); these lines are generated, not decoded.
-    { const clip = el('clipPath', { id: 'mmlandclip' }, defs); el('path', { d, 'clip-rule': 'evenodd' }, clip);
+    { const clip = el('clipPath', { id: 'mmlandclip' }, defs); el('path', { d, transform, 'clip-rule': 'evenodd' }, clip);
       el('path', { class: 'grat', d: GRAT_KM.map(l => 'M' + l.map(([x, y]) => mmX(x).toFixed(1) + ' ' + mmY(y).toFixed(1)).join('L')).join(''), 'clip-path': 'url(#mmlandclip)' }, land); }
     // The label widths come from the canvas, never from the SVG's own layout (the author's report of 25 October: a browser that lays the page out hidden at load
     // answered 0 from getComputedTextLength() on the published page and every box collapsed to its padding, the text spilling over the outline). The canvas measure
@@ -2686,11 +2692,12 @@ void main() {
     const measure = txt => { const w = Motion.measure(mctx, txt, 9, 500, 9 * 0.08); MMAP.widths[txt] = w; return w; };
     const labelBox = (g, txt, left, top) => { const w = Math.ceil(measure(txt) + 2 * MM_PAD); el('rect', { class: 'box', x: left, y: top, width: w, height: MM_BOX_H }, g); const t = el('text', { x: left + MM_PAD, y: top + MM_BOX_H / 2 }, g); t.textContent = txt; return { x: left, y: top, x1: left + w, y1: top + MM_BOX_H, w }; };
     for (const city of bmp.cities) {
-      const lay = MM_LAYOUT_F[city.label] || MM_LAYOUT[city.label]; if (!lay) continue; const txt = (MM_SHORT[city.label] || city.label).toUpperCase(), w = Math.ceil(measure(txt) + 2 * MM_PAD);
-      const left = lay[0] === 'L' ? 100 - w : lay[0] === 'R' ? lay[1] - w : lay[1], top = lay[0] === 'L' ? lay[1] : lay[2];
-      const dx = mmX(city.x), dy = mmY(city.y), box = { x: left, y: top, x1: left + w, y1: top + MM_BOX_H };
-      const mids = [[box.x, (box.y + box.y1) / 2], [box.x1, (box.y + box.y1) / 2], [(box.x + box.x1) / 2, box.y], [(box.x + box.x1) / 2, box.y1]];   // the edge midpoints: left, right, top, bottom
-      const ccx = (box.x + box.x1) / 2, ccy = (box.y + box.y1) / 2, end = Math.abs(dx - ccx) > Math.abs(dy - ccy) ? (dx < ccx ? mids[0] : mids[1]) : (dy < ccy ? mids[2] : mids[3]);   // the edge facing the dot
+      const origin = MM_LAYOUT[city.label]; if (!origin) continue;
+      const [left, top] = origin, txt = (MM_SHORT[city.label] || city.label).toUpperCase();
+      const w = Math.ceil(measure(txt) + 2 * MM_PAD), dx = mmX(city.x), dy = mmY(city.y);
+      const box = { x: left, y: top, x1: left + w, y1: top + MM_BOX_H };
+      // The shortest straight leader from the city to the edge of its label.
+      const end = [Math.max(left, Math.min(dx, box.x1)), Math.max(top, Math.min(dy, box.y1))];
       const g = el('g', { class: 'city', id: 'mm-' + slugOf(city.label).toLowerCase(), tabindex: 0, role: 'button', 'aria-label': 'Go to ' + city.label, 'aria-pressed': 'false' });
       if (MM_FACTS[city.label]) el('title', {}, g).textContent = MM_FACTS[city.label];   // the native tooltip (item 3)
       el('line', { class: 'ld', x1: dx.toFixed(1), y1: dy.toFixed(1), x2: end[0].toFixed(1), y2: end[1].toFixed(1), pathLength: 1 }, g);
