@@ -1,6 +1,6 @@
 /* The home page's pointer effects. While a mouse or a pen is over the photo, the slogan and its translation show in a green card
    above the caption; on a phone a tap shows or hides the card. Over the index, the row under the pointer or the keyboard shows its
-   page in the photo's frame and names it in the caption, only where the photo sits beside the index; the three preview pictures
+   page in the photo's frame and names it in the caption, only where the photo sits beside the index; the preview pictures
    load after the page, and only there. */
 (function () {
   const fig = document.querySelector('.home .photo'), index = document.querySelector('.home .index');
