@@ -124,7 +124,7 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 .content .id { display: grid; grid-template-columns: var(--shot) minmax(0, 1fr); gap: 26px; align-items: start; }
 .content .portrait { display: block; width: 100%; height: auto; aspect-ratio: 1; }
 .content .lede {
-  font-size: clamp(1rem, 1.04vw + var(--shot) * .03, 2.625rem);
+  font-size: clamp(1rem, 0.853vw + var(--shot) * .0246, 2.15rem);
   line-height: 1.27;
   margin-top: -.23em;
 }
