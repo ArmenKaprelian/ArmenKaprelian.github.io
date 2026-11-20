@@ -106,6 +106,7 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
    navigation it grows into the available height, leaving room for the title and rules. */
 .content .top {
   --shot: 198px;
+  --portrait-gap: 20px;
   padding: 26px max(44px, var(--safe-r)) 16px 40px;
 }
 @supports (height: 100dvh) and (width: 1cqw) {
@@ -120,7 +121,7 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
   text-transform: uppercase;
 }
 .content .degree { text-transform: none; }
-.content .top hr { margin: 0 0 20px; }
+.content .top hr { margin: 0 0 var(--portrait-gap); }
 .content .id { display: grid; grid-template-columns: var(--shot) minmax(0, 1fr); gap: 26px; align-items: start; }
 .content .portrait { display: block; width: 100%; height: auto; aspect-ratio: 1; }
 .content .lede {
@@ -131,6 +132,22 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 .content .lede p { margin: 0; text-wrap: pretty; }
 .content .lede .role { display: block; margin-bottom: .42em; }
 .nb { white-space: nowrap; }
+
+/* Split layout: the square uses the height between the two rules after the equal
+   gaps are reserved. Leave room for the bio beside it on tall, narrow windows. */
+@media (width > 1199px) and (height > 599px) {
+  .content .top { display: flex; flex-direction: column; padding-bottom: var(--portrait-gap); }
+  .content .top h1 { flex: none; margin-top: auto; }
+  .content .top hr { flex: none; }
+  .content .id {
+    display: flex;
+    flex: 1 1 0;
+    min-height: min-content;
+    max-height: calc((50cqw - 84px) * .6);
+  }
+  .content .portrait { contain: size; flex: none; width: auto; height: 100%; min-height: 132px; }
+  .content .lede { flex: 1; min-width: 0; }
+}
 
 /* The index: seven rows, each a number, the page and a dim note of what it opens; the whole row is the link. */
 .index { display: grid; grid-auto-rows: minmax(0, 80px); padding: 0 max(44px, var(--safe-r)) 0 40px; }
