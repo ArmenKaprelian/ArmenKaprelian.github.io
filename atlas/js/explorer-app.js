@@ -166,8 +166,8 @@
   const LAYERS = [
     { id: 'density', label: 'Firm density, 2021', prov: 'Located eligible firms at registered addresses in 2021, counted per 5 km cell nationally and per 250 m cell in 22 city windows (M3 pass over the production point layer), and closer in per 1 km square of the 2021 address file (firms on no list with a house- or street-level geocode, M9). Shares are shown only for cells with 50 or more firms.' },
     { id: 'share', label: 'Statement share by year', prov: 'Share of located eligible firms with a statement, per 100 km cell and closer in per 25 km cell, financial years 2014 to 2025 (M5 and M10 passes over the foundation registry and payload partitions, production projection and located rule). 2012 and 2013 carry no coordinates. Closer still, 1 km squares from the address files for every year (firms on no list with a house- or street-level geocode, M9), and 250 m cells in 22 city windows for 2021.' },
-    { id: 'change', label: 'Change, 2024 against 2021', prov: 'Figure 2.7 lower panel: change in the located share with a statement, 2024 against 2021, 100 km cells with 50 or more located firms in both years, in six classes at ±2 and ±5 points (presentation-finalization-20261019/data/availability-change-cells.csv). Closer in, 25 km cells under the same rule (M10 pass), which the chapter’s figure does not show.' },
-    { id: 'cohort', label: 'Usable 2021 accounts', prov: 'Figure 2.8 gives the share of each cell’s located eligible firms that entered the 2021 cash sample. These nonfinancial firms reported positive sales, positive assets, and cash on unflagged statements. The pooled quintile cutpoints for supported cells are 33.3%, 38.3%, 43.0%, and 47.6%.' },
+    { id: 'change', label: 'Change, 2024 against 2021', prov: 'Figure 2.7 lower panel: change in the located share with a statement, 2024 against 2021, 100 km cells with 50 or more located firms in both years, in six classes at ±2 and ±5 percentage points (presentation-finalization-20261019/data/availability-change-cells.csv). Closer in, 25 km cells under the same rule (M10 pass), which the chapter’s figure does not show.' },
+    { id: 'cohort', label: 'Usable 2021 accounts', prov: 'Figure 2.9 shows the share of each cell’s located eligible firms that entered the 2021 cash sample. These nonfinancial firms reported positive sales, positive assets, and cash on unflagged statements. The pooled quintile cutpoints for supported cells are 33.3%, 38.3%, 43.0%, and 47.6%.' },
     { id: 'lists', label: 'List members, 2021', prov: 'Located members of the sanctions list and of the government strategic list per 100 km cell in 2021 (geography-review-20261006 cells), and per 25 km cell closer in (M10 pass). Cells with fewer than 5 members of a list show no count. The lists are fixed memberships, not dated designations. Treated: a firm on at least one of the five lists (sanctions, decree, 2020 filing-exemption, government strategic, presidential strategic). The word names the study’s group, not an effect.' },
     { id: 'fin', label: 'Median revenue change (descriptive)', prov: 'The map compares each cell’s 2024 median real revenue with its 2021 median. Each year must have at least 50 firms from the fixed 2021 cash sample with positive sales from unflagged statements. The median can change as firms’ revenues change and as different firms report. Not a Chapter 3 estimate.' },
   ];
@@ -1358,7 +1358,7 @@ void main() {
   function applyStrip() { dropObstacles(); const open = stripOpen(), el = $('ctxstrip'), t = $('ctxtoggle'), zb = $('zoombox'); if (!narrow()) { if (zb.parentElement !== el) el.appendChild(zb); } else if (zb.parentElement === el) wrap.insertBefore(zb, el);   // round 37: the zoom buttons sit at the bar's right end on a wide map, in their own box above the line on a phone-width map
     el.classList.toggle('narrow', narrow()); wrap.classList.toggle('narrow', narrow()); el.classList.toggle('closed', !open); wrap.classList.toggle('strip-open', open); t.setAttribute('aria-expanded', String(open)); t.setAttribute('aria-label', open ? 'Collapse the context line' : 'Expand the context line'); }
   $('ctxtoggle').addEventListener('click', () => { const v = stripOpen() ? 'closed' : 'open'; writePref('atlas-context', v); ui.ctx = v; applyStrip(); syncNoteDefault(); if (v === 'open') updateContext(true); });
-  const pts = (n, d) => `${fmt.signed(d)} points`;
+  const pts = (n, d) => `${fmt.signed(d)} percentage points`;
   const shareOf = (a, n) => (n ? 100 * a / n : null);
   // The fact under the camera: {band, name, kind, text (HTML with the figures in .num spans), nums (the figures, for the tick)}
   function factFor(band, name, full) {   // full: the full form whatever the map's width
@@ -1396,7 +1396,7 @@ void main() {
   const SH_BREAKS = [2.5, 5, 10, 20], SH_LABELS = ['none', 'under 2.5%', '2.5–5%', '5–10%', '10–20%', '20% or more'];
   const sharedClass = (d, i) => { if (d.n[i] < 50) return 'below'; const s = 100 * d.n100[i] / d.n[i]; if (s === 0) return 0; let cl = 1; while (cl <= SH_BREAKS.length && s >= SH_BREAKS[cl - 1]) cl++; return cl; };
   const sharedCityA = k => Motion.step(k, 1.5, 1.0, Motion.ease.linear);   // the 1 km squares inside the city windows, faded in as the share layer's squares are
-  const GL_BREAKS = [-20, -10, 0, 10, 20], GL_LABELS = ['≤ −20 points', '−20 to −10', '−10 to 0', '0 to +10', '+10 to +20', '> +20 points'], GRP_NAME = 'state-related firms';   // the breaks symmetric about zero, as the CHANGE layer's three amber and three cyan steps are
+  const GL_BREAKS = [-20, -10, 0, 10, 20], GL_LABELS = ['≤ −20 percentage points', '−20 to −10', '−10 to 0', '0 to +10', '+10 to +20', '> +20 percentage points'], GRP_NAME = 'state-related firms';   // the breaks symmetric about zero, as the CHANGE layer's three amber and three cyan steps are
   const groupChange = s => (s && s.n21 >= 50 && s.n24 >= 50 ? 100 * s.a24 / s.n24 - 100 * s.a21 / s.n21 : null);
   const groupClass = s => { const ch = groupChange(s); if (ch == null) return 'below'; let cl = 0; while (cl < GL_BREAKS.length && ch > GL_BREAKS[cl]) cl++; return cl; };
   const BM_NAMES = new Set(BM.lod0.parts.map(p => p.name));   // the regions the basemap draws (regions.json also holds Russia and the firms outside the basemap's outline)
@@ -1584,18 +1584,25 @@ void main() {
       // The pixel field (round 14) below the dots zoom: the layer's statistic per pixel, the blocks, the faint backdrop where some firms carry no value; the dots above.
       const pix = dotsAlphas(c.k).pix >= 0.5, faint = col => sw(hexAlpha(col, PixelField.BACKDROP_ALPHA));
       title = L === 'fin' ? `<b>Firms on no list (comparison group), ${ys}</b>` : `<b>Firms at registered addresses, ${ys}</b>`;
-      if (pix && L === 'share') { read = `<div class="row p">Colour: share of the pixel’s firms with a ${ys} statement.</div>`; html = theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
-      else if (pix && L === 'fin') { read = `<div class="row p">Colour: the median revenue-change class of the pixel’s filers (each firm’s real revenue against its own 2019–2021 average, minus the year’s median).</div>`; html = theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no usable baseline</div>`; }
+      if (L === 'fin') {
+        const colour = pix
+          ? 'Colour shows the median address class, weighted by the number of firms with both the baseline and revenue for the selected year.'
+          : 'Colour shows the median change at the address among firms with both the baseline and revenue for the selected year.';
+        read = `<div class="row p">Each firm’s real revenue change from its 2019–2021 average is measured relative to the median change among mapped firms on no list that year. ${colour}</div>`;
+        html = theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('');
+        html += pix ? `<div class="row">${faint(theme.neutral)}faint background: all firms on no list</div>`
+          : `<div class="row">${sw(theme.zero)}no usable revenue change</div>`;
+      }
+      else if (pix && L === 'share') { read = `<div class="row p">Colour: share of the pixel’s firms with a ${ys} statement.</div>`; html = theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
       else if (pix && L === 'industry' && IND_T) { read = `<div class="row p">Colour: the class with the largest revenue in the pixel, each coordinate pair counted in its leading class.</div>`; html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${faint(theme.neutral)}faint: no revenue value</div>`; }
       else if (pix) { read = `<div class="row p">Brightness: firms on no list in the pixel (this layer is a cell layer).</div>`; html = MM.countClassLabels.map((lab, i) => `<div class="row">${bar(hexAlpha(theme.density, MM.countAlpha[i]))}${lab}</div>`).join(''); }
       else if (L === 'share') { read = `<div class="row p">Colour: share of the firms at the coordinate pair with a ${ys} statement. A single firm shows the first colour (no statement) or the last (statement available).</div>`; html = theme.ramp6.map((col, i) => `<div class="row">${bar(col)}${breakLabels(YEAR_BREAKS, 6)[i]}</div>`).join(''); }
-      else if (L === 'fin') { read = `<div class="row p">Colour: real revenue change since the firm’s own 2019–2021 average, minus the year’s median change.</div>`; html = theme.div6.map((col, i) => `<div class="row">${bar(col)}${CLASS_LABELS[i]}</div>`).join('') + `<div class="row">${sw(theme.zero)}no usable baseline</div>`; }
       else if (L === 'industry' && IND_T) { read = `<div class="row p">Colour: the division with the largest share of revenue at the coordinate pair, in nine classes.</div>`; html = IND_T.classes.label.map((lab, i) => `<div class="row">${sw(theme.ind9[i])}${lab}</div>`).join('') + `<div class="row">${sw(theme.neutral)}no revenue value</div>`; }
       else { read = '<div class="row p">This layer is a cell layer: the Firms view draws every coordinate pair in one colour.</div>'; html = `<div class="row">${sw(theme.neutral)}every coordinate pair</div>`; }
       // The listed marks as one group under its header (round 14: the rows had repeated "(treated)" and set the box's width).
       if (markShared) html += `<div class="row"><span class="sw" style="background:transparent;border:1.5px solid ${theme.ink};border-radius:50%"></span>a coordinate pair shared by 100 or more firms</div>`;   // round 16
       html += `<div class="row h">Any of the five lists</div><div class="row">${dot(theme.neutral, 'rgba(227,26,28,0.8)')}before list year shown</div><div class="row">${dot(theme.treated)}from that year, statement available</div><div class="row">${dot(theme.land, theme.treated)}from that year, no statement</div>`;
-      read += pix ? `<div class="row p">Blocks of 2 and 3 px: 10 and 100 or more ${L === 'fin' ? 'filers' : 'firms'} in the pixel.</div><div class="row p">Each pixel (about ${pixelSize(1 / c.k)} at this zoom) sums the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.</div>`
+      read += pix ? `<div class="row p">${L === 'fin' ? 'Coloured blocks are 2 px wide for 10–99 firms with both values and 3 px for 100 or more.' : 'Blocks of 2 and 3 px: 10 and 100 or more firms in the pixel.'}</div><div class="row p">Each pixel (about ${pixelSize(1 / c.k)} at this zoom) sums the firms on no list at the addresses inside it. Zoom in past 20 px per km for the dots.</div>`
         : '<div class="row p">Each dot is one coordinate pair. Larger dots hold more firms.</div>';
       read += FIVE_LISTS_ROW;
       note = firmStatus || `${ys}: ${fmt.int(by.firms)} firms on no list (comparison group) at ${fmt.int(by.addresses)} coordinate pairs and ${fmt.int(by.listed)} firms matched to any of the five lists. ${fmt.int(by.city_level)} firms with other geocodes, without a verified house or street match, are counted but not drawn.` + (TRN.name ? ' Hover a red mark for the firm’s name.' : '');
@@ -1613,7 +1620,7 @@ void main() {
       const t = totals[y]; note = t ? `${y}${y === 2025 ? '*' : ''}: ${t.located_stmt_share != null ? `${fmt.pct(t.located_stmt_share)} of the ${fmt.int(t.located)} located firms the map draws have a statement. Among all ${fmt.int(t.eligible)} eligible firms, located or not, the share is ${fmt.pct(t.share)}.` : `${fmt.pct(t.share)} of the ${fmt.int(t.eligible)} eligible firms have a statement, and ${fmt.pct(t.located_share)} are located.`} The statements for ${y} come from ${y <= 2018 ? 'Rosstat' : 'the FNS'}.` : '';   // round 32 (1 November 2026): the map's located share first and the chapter's eligible share beside it, so the two national figures on one screen are told apart
       if (micro && y !== 2021 && c.k >= 24) note += ' 250 m cells exist for 2021 only.';
     } else if (L === 'change') {
-      const labels = ['≤ −5 points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 points'];
+      const labels = ['≤ −5 percentage points', '−5 to −2', '−2 to 0', '0 to +2', '+2 to +5', '> +5 percentage points'];
       const grid25 = chg25 && alpha25(c.k) >= 0.5, counts = grid25 ? chg25.class_cells : C100.change_classes.cells;
       title = `<b>Change in the share, 2024 against 2021</b> <span class="u">(${grid25 ? '25' : '100'} km)</span>`;
       html = [5, 4, 3, 2, 1, 0].map(i => `<div class="row">${bar(theme.change6[i])}${labels[i]} (${fmt.int(counts[i])} cells)</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 firms in a year</div>`;
@@ -1633,7 +1640,7 @@ void main() {
     } else if (L === 'cohort') {
       title = '<b>Usable 2021 accounts: share per cell</b> <span class="u">(100 km)</span>';   // round 32: the plain label; the note names the cohort
       html = theme.ramp5.map((col, i) => `<div class="row">${bar(col)}${C100.cohort_class_labels[i]}</div>`).join('') + `<div class="row">${sw(theme.below)}fewer than 50 eligible firms</div>`;
-      note = `${fmt.int(F.cohorts.revenue_cash)} firms in the revenue cohort by cash share. Each cell shows its located cohort firms as a share of its located eligible firms in 2021, in five classes pooled over the supported cells.` + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
+      note = `${fmt.int(F.cohorts.revenue_cash)} firms entered the 2021 cash sample nationwide. Each cell shows the percentage of its located eligible firms that entered the sample. The five map classes group cells by this percentage.` + (c.k >= 1.5 ? ' 100 km cells are this layer’s finest resolution.' : '');
     } else if (L === 'industry' && IND_T) {
       const y = state.year, micro = microA(c.k, y) >= 0.5, grid25 = alpha25(c.k) >= 0.5 && !!ind25[y];
       title = `<b>Leading industry by revenue, ${y}${y === 2025 ? '*' : ''}</b> <span class="u">(${micro ? '1 km' : grid25 ? '25 km' : '100 km'})</span>`;
@@ -1802,24 +1809,27 @@ void main() {
   }
   function tipBody(h) {
     const L = state.layer; const lines = [];
+    const revenueLine = unit => unit.f
+      ? `${fmt.int(unit.f)} with a 2019–2021 revenue baseline and ${state.year} revenue` + (unit.cls ? `, median change class ${CLASS_LABELS[unit.cls - 1]}` : '')
+      : `No firm has both a 2019–2021 revenue baseline and ${state.year} revenue`;
     if (h.region) lines.push(`<b class="loc">${esc(h.region)}</b>`);
     if (h.gridStatus) { lines.push(esc(h.gridStatus)); return lines.join('<br>'); }   // the region line in tracked capitals (round 10)
     if (h.kind === 'firm' || h.kind === 'listed' || h.kind === 'none' || h.kind === 'bin' || h.kind === 'pixel') {
       const ad = h.kind === 'firm' ? h : h.address, bn = h.kind === 'bin' ? h : h.bin, pxh = h.kind === 'pixel' ? h : h.pixel;
       if (pxh) {   // the pixel under the cursor (round 14): its firms on no list, their statements, the layer's statistic
         lines.push(`Pixel at the cursor, about ${pixelSize(pxh.kmPx)}: ${num(fmt.int(pxh.n))} firm${pxh.n === 1 ? '' : 's'} on no list at ${num(fmt.int(pxh.p))} coordinate pair${pxh.p === 1 ? '' : 's'}, ${num(fmt.int(pxh.a))} with a statement${pxh.n ? ` (${num(fmt.pct(100 * pxh.a / pxh.n))})` : ''}`);
-        if (state.layer === 'fin') lines.push(pxh.f && pxh.cls ? `${fmt.int(pxh.f)} with a baseline and a value, median class ${CLASS_LABELS[pxh.cls - 1]}` : 'No firm with a usable baseline and a value');
+        if (state.layer === 'fin') lines.push(revenueLine(pxh));
         if (state.layer === 'industry') lines.push(pxh.lead ? `${esc(divShort(pxh.lead.div))} (${divPad(pxh.lead.div)}), ${pxh.lead.share}% of revenue in the pixel` : 'No firm with a revenue value in the pixel');
       }
       if (bn) {   // the square under the cursor (round 13): its firms on no list, their statements, the layer's statistic
         lines.push(`${bn.T} km square, ${num(state.year)}: ${num(fmt.int(bn.n))} firms on no list at ${num(fmt.int(bn.p))} coordinate pair${bn.p === 1 ? '' : 's'}, ${num(fmt.int(bn.a))} with a statement${bn.n ? ` (${num(fmt.pct(100 * bn.a / bn.n))})` : ''}`);
-        if (state.layer === 'fin') lines.push(bn.f ? `${fmt.int(bn.f)} with a baseline and a value, median class ${CLASS_LABELS[bn.cls - 1]}` : 'No firm with a usable baseline and a value');
+        if (state.layer === 'fin') lines.push(revenueLine(bn));
         if (state.layer === 'industry') lines.push(bn.lead ? `${esc(divShort(bn.lead.div))} (${divPad(bn.lead.div)}), ${bn.lead.share}% of revenue in the square` : 'No firm with a revenue value in the square');   // the short label with the code wherever the tile names a division (the author's rule of 25 October 2026); the full NACE title stays in the panel and the METHOD block
       }
       if (ad) {   // the glance view (author's rule, 25 October 2026): one figures line, one listed line, the named lines in their short form; the detail stays in the panel
         if (markShared && ad.n >= 100) lines.push('A coordinate pair shared by 100 or more firms on no list');   // round 16
         lines.push(ad.n === 1 ? `1 firm, ${ad.a ? '' : 'no '}${num(state.year)} statement` : `${num(fmt.int(ad.n))} firms, ${num(fmt.int(ad.a))} with a ${num(state.year)} statement, ${num(fmt.pct(100 * ad.a / ad.n))}`);
-        if (state.layer === 'fin') lines.push(ad.f ? `${fmt.int(ad.f)} with a baseline and a value, median change ${CLASS_LABELS[ad.cls - 1]}` : 'No firm with a usable baseline and a value');
+        if (state.layer === 'fin') lines.push(revenueLine(ad));
         if (state.layer === 'industry' && ad.ind != null) lines.push(ad.ind === 255 ? 'No firm with a revenue value at this coordinate pair' : `${esc(divShort(ad.ind))} (${divPad(ad.ind)}), ${ad.ish}% of revenue at this coordinate pair`);
       }
       if (h.listed) {
@@ -1851,7 +1861,7 @@ void main() {
       if (!v || !(v.n21 || v.n24)) { lines.push(`No ${name} registered here`); return lines.join('<br>'); }
       lines.push(`${name[0].toUpperCase() + name.slice(1)}, 2021: ${num(fmt.int(v.n21))} firms, ${s(v.n21, v.a21)} with a statement`);
       lines.push(`2024: ${num(fmt.int(v.n24))} firms, ${s(v.n24, v.a24)}`);
-      const ch = groupChange(v); lines.push(ch == null ? 'Fewer than 50 state-related firms in a year: not classed' : `Change <b>${fmt.signed(ch)} points</b>`);
+      const ch = groupChange(v); lines.push(ch == null ? 'Fewer than 50 state-related firms in a year: not classed' : `Change <b>${fmt.signed(ch)} percentage points</b>`);
       return lines.join('<br>');
     }
     if (h.micro) {   // a 1 km square from the address files (round 14): their population, firms on no list at house- and street-level geocodes
@@ -1876,8 +1886,8 @@ void main() {
     if (h.fine && h.n == null) { lines.push(`No located firms in this ${h.grid < 1 ? '250 m' : h.grid + ' km'} cell`); return lines.join('<br>'); }
     if (h.fine) { lines.push(`${h.grid < 1 ? '250 m' : h.grid + ' km'} cell: ${band(h.n)} located firms` + (h.a != null ? `, ${fmt.int(h.a)} with a ${h.yearShown || 2021} statement${cellShareSuffix(h.a, h.n)}` : h.n >= 50 ? '' : '. Share not shown under 50 firms')); return lines.join('<br>'); }
     if (L === 'share') { if (h.n == null) lines.push(`No located firms in this ${h.grid} km cell`); else { lines.push(`${state.year}: ${fmt.int(h.n)} located eligible firms, ${fmt.int(h.a)} with a statement` + (h.n >= 50 ? ` (<b>${fmt.pct(100 * h.a / h.n)}</b>)` : ' (share not shown under 50 firms)')); if (h.nr) lines.push(`Registered at year-end: ${fmt.int(h.nr)}, ${fmt.int(h.ar)} with a statement${cellShareSuffix(h.ar, h.nr)}`); if (h.ns != null && h.ns > 0) lines.push(`Sanctions-list members: ${fmt.int(h.ns)}`); } }
-    else if (L === 'change') { if (h.n21 == null) lines.push('No located firms'); else lines.push(`2021: ${fmt.int(h.a21)} of ${fmt.int(h.n21)}${cellShareSuffix(h.a21, h.n21)}<br>2024: ${fmt.int(h.a24)} of ${fmt.int(h.n24)}${cellShareSuffix(h.a24, h.n24)}<br>` + (h.supported ? `Change <b>${fmt.signed(h.change)} points</b>` : 'Fewer than 50 firms in a year: not classed')); }
-    else if (L === 'cohort') { if (h.n == null) lines.push('No located firms'); else lines.push(`${fmt.int(h.c)} of ${fmt.int(h.n)} located eligible firms in the revenue cohort by cash share` + (h.supported ? ` (<b>${fmt.pct(h.pct)}</b>)` : ' (fewer than 50 eligible: not classed)')); }
+    else if (L === 'change') { if (h.n21 == null) lines.push('No located firms'); else lines.push(`2021: ${fmt.int(h.a21)} of ${fmt.int(h.n21)}${cellShareSuffix(h.a21, h.n21)}<br>2024: ${fmt.int(h.a24)} of ${fmt.int(h.n24)}${cellShareSuffix(h.a24, h.n24)}<br>` + (h.supported ? `Change <b>${fmt.signed(h.change)} percentage points</b>` : 'Fewer than 50 firms in a year: not classed')); }
+    else if (L === 'cohort') { if (h.n == null) lines.push('No located firms'); else lines.push(`${fmt.int(h.c)} of ${fmt.int(h.n)} located eligible firms entered the 2021 cash sample` + (h.supported ? ` (<b>${fmt.pct(h.pct)}</b>)` : ' (fewer than 50 eligible: not classed)')); }
     else if (L === 'lists') { if (h.n == null) lines.push('No list members shown'); else lines.push(`${fmt.int(h.n)} located eligible firms<br>Sanctions list: ${h.sanctioned == null ? 'under 5 or none' : fmt.int(h.sanctioned)}<br>Government strategic list: ${h.gov == null ? 'under 5 or none' : fmt.int(h.gov)}`); }
     else if (L === 'fin') { if (h.n_base == null) lines.push('No supported cohort cell'); else lines.push(`${fmt.int(h.n_obs)} of ${fmt.int(h.n_base)} cohort firms observed in 2024<br>Median real revenue <b>${fmt.signed(h.change)}%</b> against the cell’s 2021 median`); }
     else lines.push(`100 km cell ${h.ix}, ${h.iy}`);
@@ -2291,6 +2301,10 @@ void main() {
     // of state, memberships and revenue; the cell-series provenance lives in the method block. The tooltip keeps the glance view; this is the detail view.
     const info = $('cellinfo'); const rows = [], y = state.year, L = state.layer;
     const row = (k, v, t) => rows.push([k, v, t]);
+    const revenueRows = unit => {
+      row('Revenue sample', `${fmt.int(unit.f)} with a 2019–2021 baseline and ${y} revenue`);
+      if (unit.f && unit.cls) row('Median change', CLASS_LABELS[unit.cls - 1]);
+    };
     const pct = (a, n) => fmt.pct(100 * a / n);
     const lead = (code, share) => (code === 0 ? `no OKVED 2 division code&nbsp;·&nbsp;${share}%` : `<span class="ksw" style="background:${mixColour(code)}"></span>${esc(divShort(code))} (${divPad(code)})&nbsp;·&nbsp;${share}%<span class="sub">${esc(indClassLabel(code))}</span>`);
     const mixRows = (list, rest) => '<div class="mix">' + list.map(m => `<div class="r"><span class="ksw" style="background:${mixColour(m.code)}"></span><span class="nm" title="${esc(m.title)} (${divPad(m.code)})">${esc(m.short)} (${divPad(m.code)})</span><span class="pc">${m.share ? m.share + '%' : '<1%'}</span></div>`).join('') + (rest ? `<div class="r"><span class="ksw"></span><span class="nm">other divisions</span><span class="pc">${rest}%</span></div>` : '') + '</div>';
@@ -2298,12 +2312,12 @@ void main() {
     const cellHit = !!h && !h.micro && h.kind !== 'firm' && h.kind !== 'listed' && h.kind !== 'none' && h.kind !== 'bin' && h.kind !== 'pixel', ad = h && (h.kind === 'firm' ? h : h.address), bn = h && (h.kind === 'bin' ? h : h.bin), pxh = h && (h.kind === 'pixel' ? h : h.pixel);
     if (pxh) {   // the pixel under the cursor (round 14)
       row('Pixel', `about ${pixelSize(pxh.kmPx)}`); row('Firms', `${fmt.int(pxh.n)} on no list at ${fmt.int(pxh.p)} pair${pxh.p === 1 ? '' : 's'}`); row(`${y} statement`, pxh.n ? `${fmt.int(pxh.a)} (${pct(pxh.a, pxh.n)})` : 'none');
-      if (L === 'fin') { if (pxh.f && pxh.cls) { row('Baseline', `${fmt.int(pxh.f)} with a value`); row('Median class', CLASS_LABELS[pxh.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
+      if (L === 'fin') revenueRows(pxh);
       if (L === 'industry') row('Leading', pxh.lead ? lead(pxh.lead.div, pxh.lead.share) : 'no firm with a revenue value');
     }
     if (bn) {   // the square under the cursor (round 13)
       row('Square', `${bn.T} km`); row('Firms', `${fmt.int(bn.n)} on no list at ${fmt.int(bn.p)} pair${bn.p === 1 ? '' : 's'}`); row(`${y} statement`, bn.n ? `${fmt.int(bn.a)} (${pct(bn.a, bn.n)})` : 'none');
-      if (L === 'fin') { if (bn.f) { row('Baseline', `${fmt.int(bn.f)} with a value`); row('Median class', CLASS_LABELS[bn.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
+      if (L === 'fin') revenueRows(bn);
       if (L === 'industry') row('Leading', bn.lead ? lead(bn.lead.div, bn.lead.share) : 'no firm with a revenue value');
     }
     if (h && h.micro) {   // a 1 km square from the address files (round 14)
@@ -2322,7 +2336,7 @@ void main() {
     else if (cellHit && h.grp) {   // round 16
       const v = h.gv; row('Group', GRP_NAME);
       if (!v || !(v.n21 || v.n24)) row('Firms', 'none registered here');
-      else { row('2021', `${fmt.int(v.a21)} of ${fmt.int(v.n21)}` + (v.n21 >= 50 ? ` (${pct(v.a21, v.n21)})` : ', share not shown')); row('2024', `${fmt.int(v.a24)} of ${fmt.int(v.n24)}` + (v.n24 >= 50 ? ` (${pct(v.a24, v.n24)})` : ', share not shown')); const ch = groupChange(v); row('Change', ch == null ? 'not classed, under 50 firms in a year' : `${fmt.signed(ch)} points`); }
+      else { row('2021', `${fmt.int(v.a21)} of ${fmt.int(v.n21)}` + (v.n21 >= 50 ? ` (${pct(v.a21, v.n21)})` : ', share not shown')); row('2024', `${fmt.int(v.a24)} of ${fmt.int(v.n24)}` + (v.n24 >= 50 ? ` (${pct(v.a24, v.n24)})` : ', share not shown')); const ch = groupChange(v); row('Change', ch == null ? 'not classed, under 50 firms in a year' : `${fmt.signed(ch)} percentage points`); }
     }
     else if (cellHit) {
       row('Cell', h.fine ? (h.grid < 1 ? '250 m' : `${h.grid} km`) : `${h.grid} km (${h.ix}, ${h.iy})`);
@@ -2332,8 +2346,8 @@ void main() {
       }
       else if (h.fine) { const ys = h.yearShown || 2021; if (h.n == null) row('Firms', 'none located'); else { row('Firms', `${band(h.n)} located`); row(`${ys} statement`, h.a != null ? `${fmt.int(h.a)}${cellShareSuffix(h.a, h.n)}` : h.n >= 50 ? 'not available' : 'share not shown under 50 firms'); } }
       else if (L === 'share') { if (h.n == null) row('Firms', 'none located'); else { row('Firms', `${fmt.int(h.n)} located`); row(`${y} statement`, `${fmt.int(h.a)}` + (h.n >= 50 ? ` (${pct(h.a, h.n)})` : ', share not shown under 50 firms')); if (h.ns) row('Sanctions', `${fmt.int(h.ns)} members`); } }
-      else if (L === 'change') { if (h.n21 == null) row('Firms', 'none located'); else { row('2021', `${fmt.int(h.a21)} of ${fmt.int(h.n21)}${cellShareSuffix(h.a21, h.n21)}`); row('2024', `${fmt.int(h.a24)} of ${fmt.int(h.n24)}${cellShareSuffix(h.a24, h.n24)}`); row('Change', h.supported ? `${fmt.signed(h.change)} points` : 'not classed, under 50 firms in a year'); } }
-      else if (L === 'cohort') { if (h.n == null) row('Firms', 'none located'); else row('Cohort', `${fmt.int(h.c)} of ${fmt.int(h.n)} eligible` + (h.supported ? ` (${fmt.pct(h.pct)})` : ', not classed under 50')); }
+      else if (L === 'change') { if (h.n21 == null) row('Firms', 'none located'); else { row('2021', `${fmt.int(h.a21)} of ${fmt.int(h.n21)}${cellShareSuffix(h.a21, h.n21)}`); row('2024', `${fmt.int(h.a24)} of ${fmt.int(h.n24)}${cellShareSuffix(h.a24, h.n24)}`); row('Change', h.supported ? `${fmt.signed(h.change)} percentage points` : 'not classed, under 50 firms in a year'); } }
+      else if (L === 'cohort') { if (h.n == null) row('Firms', 'none located'); else row('2021 cash sample', `${fmt.int(h.c)} of ${fmt.int(h.n)} located eligible firms` + (h.supported ? ` (${fmt.pct(h.pct)})` : ', not classed under 50')); }
       else if (L === 'lists') { if (h.n == null) row('Firms', 'no list members shown'); else { row('Firms', `${fmt.int(h.n)} located`); row('Sanctions', h.sanctioned == null ? 'under 5 or none' : `${fmt.int(h.sanctioned)} members`); row('Gov strategic', h.gov == null ? 'under 5 or none' : `${fmt.int(h.gov)} members`); } }
       else if (L === 'fin') { if (h.n_base == null) row('Cohort', 'no supported cell'); else { row('Observed', `${fmt.int(h.n_obs)} of ${fmt.int(h.n_base)} cohort firms in 2024`); row('Median revenue', `${fmt.signed(h.change)}% against the cell’s 2021 median`); } }
       else if (h.n != null) { row('Firms', `${fmt.int(h.n)} located`); if (h.a != null) row(`${y} statement`, `${fmt.int(h.a)}${cellShareSuffix(h.a, h.n)}`); }
@@ -2341,7 +2355,7 @@ void main() {
     if (ad) {
       row('Coordinate pair', `${fmt.int(ad.n)} firm${ad.n === 1 ? '' : 's'}`);
       row(`${y} statement`, ad.n === 1 ? (ad.a ? 'available' : 'absent') : `${fmt.int(ad.a)} (${pct(ad.a, ad.n)})`);
-      if (L === 'fin') { if (ad.f) { row('Baseline', `${fmt.int(ad.f)} with a value`); row('Median change', CLASS_LABELS[ad.cls - 1]); } else row('Baseline', 'no usable baseline and value'); }
+      if (L === 'fin') revenueRows(ad);
       if (L === 'industry' && ad.ind != null) row('Leading', ad.ind === 255 ? 'no firm with a revenue value' : lead(ad.ind, ad.ish));
     }
     if (h && h.listed && h.listed.top && TRN.name) {   // the detail view (author's rule, 25 October 2026): the display name, the filed name beneath, the listing year, one line of state, memberships and revenue
@@ -2443,7 +2457,7 @@ void main() {
     const top = [{ label: 'joint-stock', a: F.legal.joint_stock[0], b: F.legal.joint_stock[1] }, { label: 'state-related', a: F.own.state[0], b: F.own.state[1] }, { label: 'private', a: F.own.private[0], b: F.own.private[1] }]
       .map(col).sort((p, q) => (q.b - q.a) - (p.b - p.a));
     const items = top.flatMap(it => it.label === 'state-related' ? [it, col({ label: COPY.state_municipal_label.toLowerCase(), a: SU.share[0], b: SU.share[1] })] : [it]);
-    CH.changes(ctx, { x: 8, y: big ? 34 : 26, w: w - 16, h: hh - (big ? 44 : 32) }, items, { theme, size: sz, bar: big ? 8 : 6 });
+    CH.changes(ctx, { x: 8, y: big ? 34 : 26, w: w - 16, h: hh - (big ? 44 : 32) }, items, { theme, size: sz, bar: big ? 8 : 6, heads: ['2021', '2024', 'change (pp)'] });
     if (!big && pop.id === 'groups') drawGroups('pochart');
   }
   function drawOdds(target) {
@@ -2456,10 +2470,10 @@ void main() {
     const left = big ? 52 : 40, line = sz * 1.4, panelH = (hh - 36) / 2;
     Motion.text(ctx, 'Adjusted odds ratio · logarithmic scale', 4, sz + 2, { size: sz, color: theme.muted });
     const panels = [
-      { heading: 'Size: continued statement availability', population: 'Previously available, still registered and eligible', reference: 'Reference: smallest asset fifth (Q1)', series: [
-        { label: 'Q5 vs Q1', color: theme.accentStrong, points: sz5.Q5 || [], whiskers: true, dot: 4 * d, width: 2 * d },
+      { heading: 'Continued availability by preceding-year asset quintile', population: 'Firms with a statement the year before, still registered and eligible', reference: 'Reference: Q1 (smallest)', series: [
+        { label: 'Q5 (largest) vs Q1', color: theme.accentStrong, points: sz5.Q5 || [], whiskers: true, dot: 4 * d, width: 2 * d },
         { label: 'Q2 vs Q1', color: theme.accent, points: sz5.Q2 || [], dot: 3 * d, width: 1.5 * d }] },
-      { heading: 'Membership: annual statement availability', population: 'Eligible firms retained in the model', reference: 'Reference: comparison group', series: [
+      { heading: 'Annual statement availability by list membership', population: 'Eligible firms in the annual model', reference: 'Reference: firms on no list', series: [
         { label: listLabel, color: theme.fall, points: ls, whiskers: true, dot: 4 * d, width: 2 * d }] }
     ];
     panels.forEach((panel, i) => {
@@ -2896,7 +2910,7 @@ void main() {
     if (GLOSS && GLOSS.terms) S.push(['definitions', 'Definitions', GLOSS.terms.map(t => `<b>${esc(t.term)}</b>: ${esc(t.text)}`)]);   // the glossary (the author's pick of 27 October 2026)
     S.push(['methods', 'Methods', [
       `<b>The chapter</b>: Armen G. Kaprelian, Opacity and Adaptation under Sanctions: Geoeconomics in the Universe of Russian Firms, PhD dissertation, Claremont Graduate University, chapter 2.`,
-      `<b>Its tables and figures behind the panels</b>: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.5 and Tables B.4 and B.5 (adjusted odds ratios), Table B.7 (the lists), Figure 2.7 (the eligible map) and Figure 2.8 (cohort inclusion, the Usable 2021 accounts layer).`,
+      `<b>Its tables and figures behind the panels</b>: Table B.1 (availability), Figures 2.2 and 2.3 (groups), Figure 2.6 and Tables B.4 and B.5 (asset quintiles), Figure 2.8 and Table B.6 (sanctions list), Figure 2.7 (statement availability on the map), and Figure 2.9 (entry into the 2021 cash sample).`,
       `<b>Models</b>: binary logits with industry, region, legal-form and ownership fixed effects, standard errors two-way clustered by industry and region. Descriptive and conditional associations, not effects.`]]);
     if (INS) {   // the profiles' sources (round 16): publisher, document type and date with the link, never a title
       const items = []; for (const [kind, set] of [['region', INS.regions || {}], ['window', INS.cities || {}]]) for (const [u, v] of Object.entries(set)) {
@@ -2980,7 +2994,7 @@ void main() {
     applyReads(); if (id === 'cursor') drawCellPanel(state.hover); else if (CARD_LIST.find(c => c.id === id).chart) redrawCharts();   // the block moves the chart down: redraw at its new place
   }));
   const P = (...xs) => xs.filter(Boolean).map(x => `<p>${x}</p>`).join(''), H = t => `<span class="h">${esc(t)}</span> `;
-  const pct1 = v => fmt.pct(v), ci = (lo, hi) => `95% confidence interval ${fmt.dec(lo, 3)} to ${fmt.dec(hi, 3)}`;
+  const pct1 = v => fmt.pct(v);
   function fillReads() {
     $('cr-goto').innerHTML = P(H('Mouse') + 'Scroll, or the + and − buttons, to zoom. Drag to pan. A click on a cell flies to it, and Shift+click steps back out.',
       H('Keys, map focused') + '+ and − zoom, 0 fits the country, the arrows pan.',
@@ -2997,24 +3011,26 @@ void main() {
     // chapter's question, in the chapter's own sentences and standard terms.
     $('cr-national').innerHTML = P(H('What it shows') + 'The share of firms with a statement in the RFSD, by financial year, among all eligible firms and among those of them registered at year-end (Table B.1).',
       H('Findings') + `${pct1(e21)} of eligible firms have a statement for 2021 and ${pct1(e24)} for 2024. The shaded years are the FNS era, from 2019, and the years before it Rosstat’s. 2011 has no statements, and 2025* is the flagged latest-year extension.`,
-      H('The question') + 'The chapter asks whether sanctions increase the value of withholding financial information, and it measures withholding through statement availability. This series is the national level against which the group, size and list comparisons are read. A missing statement is absent from the RFSD release, which does not recover the public archive as it stood in each year.',
+      H('The question') + 'The chapter asks whether sanctions increase the incentive to withhold financial information. The chart measures which statements appear in the RFSD release. A statement may be absent for several reasons, including a failure to file or a restriction on public access. What appears in the release may differ from what was public at the time.',
       'Source: ' + esc(S.sources.avail) + '.');
     const SS = D.statesplit;   // the state-run row's figures (round 24, M14)
     const groupNote = COPY.state_municipal_note.replace('{municipal}', Math.round(SS.municipal_share[1]));
     $('groupnote').textContent = groupNote; $('pogroupnote').textContent = groupNote;
-    $('cr-groups').innerHTML = P(H('What it shows') + 'The share of eligible firms with a statement in 2021 and in 2024, by ownership and by legal form. Each year’s population is compared, not the same firms.',
+    $('cr-groups').innerHTML = P(H('What it shows') + 'The share of eligible firms with a statement in 2021 and in 2024, by ownership and legal form. Each year counts the firms eligible that year. Change is the 2024 share minus the 2021 share, in percentage points (pp).',
       H(COPY.state_municipal_label) + COPY.state_municipal_definition + ` In 2024, ${Math.round(SS.municipal_share[1])} percent of them were municipal.`,
       H('Findings') + `Availability falls among state-related firms (${pct1(F.own.state[0])} to ${pct1(F.own.state[1])}) and rises among private firms and joint-stock companies. The state and municipal enterprises shown here are about half of the state-related firms and carry the whole decline (${pct1(SS.state_unitary.share[0])} to ${pct1(SS.state_unitary.share[1])}). The other state-related firms rise (${pct1(SS.state_other.share[0])} to ${pct1(SS.state_other.share[1])}). The declines are concentrated in 2024.`,
       H('The question') + 'These population comparisons carry the chapter’s clearest findings on the sanctions period. Its opacity model organizes them without predicting them, and the ownership codes do not establish operational control or disclosure protection.',
       'Source: the data behind Figures 2.2 and 2.3.');
     const later = (() => { const sc = S.size_changes; for (let i = 0; i < sc.id.length; i++) if (sc.quintile[i] === 'Q5' && /^2023/.test(sc.window[i])) return { r: sc.ratio[i], lo: sc.low[i], hi: sc.high[i] }; return null; })();
-    const r22 = `the ratio of odds ratios is ${fmt.dec(F.size_q5_2022_ratio, 3)} (${ci(F.size_q5_2022_low, F.size_q5_2022_high)})`;
-    const sizeLine = `The Q5 vs Q1 odds ratio rises in 2022 against 2021: ${r22}.` + (later ? ` The 2023–2024 increase, a ratio of odds ratios of ${fmt.dec(later.r, 3)} (${ci(later.lo, later.hi)}), is smaller when wholesale trade is excluded.` : '');   // P-C, the author's pick (26 October 2026)
+    const percentChange = ratio => pct1(100 * (ratio - 1));
+    const changeInterval = (lo, hi) => `95% confidence interval, ${percentChange(lo)} to ${percentChange(hi)}`;
+    const sizeLine = `Compared with 2021, the Q5 vs Q1 odds ratio was ${percentChange(F.size_q5_2022_ratio)} higher in 2022 (${changeInterval(F.size_q5_2022_low, F.size_q5_2022_high)})` +
+      (later ? ` and ${percentChange(later.r)} higher on average in 2023–2024 (${changeInterval(later.lo, later.hi)}). Excluding wholesale trade reduced the estimated increase for 2023–2024.` : '.');
     $('cr-odds').innerHTML = P(H('What it shows') + 'Adjusted odds ratios from the chapter’s binary logit models, on a logarithmic scale. A ratio of 1 means equal conditional odds. Values below 1 mean lower odds and values above 1 mean higher odds. These are odds comparisons, not availability probabilities.',
-      H('The panels') + 'The upper panel compares the largest and second asset quintiles with the smallest, among firms with an available preceding-year statement that remain registered and eligible (Table B.4). The lower panel compares firms matched only to the sanctions list with the comparison group, among eligible firms retained in the annual model. “Only” excludes matches to the other four lists (Table B.7).',
+      H('The panels') + 'The upper panel covers firms that had a statement the year before and remained registered and eligible. Each year, firms are ranked by their preceding-year total assets. The chart compares Q2 and Q5 (largest) with Q1 (smallest) for 2020–2024 (Table B.4). The lower panel compares eligible firms on the sanctions list alone with firms on none of the five lists in the annual model (Figure 2.8 and Table B.6).',
       H('Inference') + 'Whiskers show 95% confidence intervals. Standard errors are two-way clustered by industry and region.',
-      H('Findings') + 'Larger asset quintiles have greater conditional availability in both the Rosstat years (2013 to 2018) and the FNS years (2019 on). ' + sizeLine + ' Among eligible firms retained in the 2024 model, firms matched to the sanctions list alone had 43% lower adjusted odds of an available statement than the comparison group (95% interval: 10% to 64% lower).',
-      H('The question') + 'The list comparison tests the chapter’s opacity prediction most directly: under its assumptions, firms exposed to sanctions value withholding more. The size comparison describes financial selection: the largest firms stay visible, and their advantage rises modestly after 2021. These are descriptive and conditional associations.');
+      H('Findings') + 'In 2014–2018 and 2020–2024, larger firms had higher adjusted odds of having a statement again the following year. ' + sizeLine + ' Among eligible firms in the 2024 model, firms on the sanctions list alone had 43% lower adjusted odds of an available statement than firms on no list (95% confidence interval, 10% to 64% lower).',
+      H('The question') + 'Under the chapter’s opacity model, firms exposed to sanctions have more to gain from withholding a statement. The list comparison tests this prediction most directly. Both panels report associations after adjustment for registry characteristics.');
     $('mixread').innerHTML = P('The revenue mix of what lies under the cursor, or of the whole view when the cursor is off the map: each division’s share of nominal revenue among firms with a statement and a positive revenue value, eight divisions and then the rest.',
       'The colours are the industry layer’s nine classes. Revenue is counted where firms are registered.');
   }
