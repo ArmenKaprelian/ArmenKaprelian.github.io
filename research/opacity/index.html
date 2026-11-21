@@ -17,7 +17,7 @@
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Armen G. Kaprelian: the name, the headshot and the bio beside the 1982 pipeline photo and the data stream of the home page.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="../../css/site.css">
-<link rel="stylesheet" href="../edition/edition.css?v=e30ee42e68">
+<link rel="stylesheet" href="../edition/edition.css?v=6e42775d56">
 </head>
 <body>
 <div class="shell">
@@ -158,16 +158,16 @@
   </section>
 
   <section class="finding" id="industries">
-    <h2>Across industries the rise was broad.</h2>
+    <h2>From 2021 to 2024, the share of eligible firms with a public statement rose in <data class="num" value="19" data-src="Computed from Figure 2.4">19</data> of the <data class="num" value="20" data-src="Figure 2.4">20</data> largest industries.</h2>
     <div class="figure-layout">
       <figure class="fig" data-fig="o10" data-script="chart opacity" data-json="industry-shares">
         <div class="yearline"><span class="label">Share of all eligible firms with a statement, in the twenty largest industries</span></div>
         <div class="tablewrap"><table class="chg">
-          <thead><tr><th>Industry</th><th>2021</th><th><output class="endyr"></output></th><th>Change, points</th></tr></thead>
+          <thead><tr><th>Industry</th><th>2021</th><th><output class="endyr"></output></th><th>Change (percentage points)</th></tr></thead>
           <tbody></tbody>
           <tfoot><tr><td></td><td></td><td></td><td><span class="trw"><span class="track ticks"></span><span class="dl"></span></span></td></tr></tfoot>
         </table></div>
-        <div class="ctl" role="radiogroup" aria-label="Year compared with 2021"><span class="label">2021 against</span>
+        <div class="ctl" role="radiogroup" aria-label="Year compared with 2021"><span class="label">Compare 2021 with</span>
           <button type="button" class="btn" role="radio" data-set="end" data-v="2022" aria-checked="false">2022</button>
           <button type="button" class="btn" role="radio" data-set="end" data-v="2023" aria-checked="false">2023</button>
           <button type="button" class="btn" role="radio" data-set="end" data-v="2024" aria-checked="true">2024</button>
@@ -175,7 +175,7 @@
         </div>
       </figure>
       <div class="interpretation">
-        <p>From 2021 to 2024 the share with a statement rose in <data class="num" value="19" data-src="Computed from Figure 2.4">19</data> of the <data class="num" value="20" data-src="Figure 2.4">20</data> largest industries. It rose from <data class="num" value="61.027395" data-src="Section 2.5.2, Figure 2.4">61.0%</data> to <data class="num" value="65.390949" data-src="Section 2.5.2, Figure 2.4">65.4%</data> in wholesale trade, from <data class="num" value="56.422765" data-src="Section 2.5.2, Figure 2.4">56.4%</data> to <data class="num" value="59.218228" data-src="Section 2.5.2, Figure 2.4">59.2%</data> in building construction, and from <data class="num" value="71.184182" data-src="Section 2.5.2, Figure 2.4">71.2%</data> to <data class="num" value="73.988658" data-src="Section 2.5.2, Figure 2.4">74.0%</data> in real estate. The industries are fixed across years, so each row compares the same industry, though not the same firms within it.</p>
+        <p>The share rose from <data class="num" value="61.027395" data-src="Section 2.5.2, Figure 2.4">61.0%</data> to <data class="num" value="65.390949" data-src="Section 2.5.2, Figure 2.4">65.4%</data> in wholesale trade, from <data class="num" value="56.422765" data-src="Section 2.5.2, Figure 2.4">56.4%</data> to <data class="num" value="59.218228" data-src="Section 2.5.2, Figure 2.4">59.2%</data> in building construction, and from <data class="num" value="71.184182" data-src="Section 2.5.2, Figure 2.4">71.2%</data> to <data class="num" value="73.988658" data-src="Section 2.5.2, Figure 2.4">74.0%</data> in real estate. The table follows the industries with the most distinct eligible firms over 2013–2025. The firms counted within each industry can change from year to year.</p>
         <p class="ref">In the dissertation: Section 2.5.2, Figure 2.4</p>
       </div>
     </div>
@@ -217,43 +217,45 @@
   </section>
 
   <section class="finding" id="size">
-    <h2>The firms whose statements stay public are the larger ones.</h2>
+    <h2>Larger firms were more likely to have a public statement again the following year.</h2>
     <div class="figure-layout">
-      <figure class="fig" data-fig="o3" data-script="chart opacity" data-json="size" data-l-rosstat="Rosstat years" data-l-fns="FNS years" data-l-pick="Year" data-l-ref="Lowest fifth = 1">
-        <div class="yearline"><span class="label" data-when="share">Share with a statement, among firms that had one the year before</span><span class="label" data-when="odds" hidden>Odds of a statement relative to the lowest fifth, with 95% confidence intervals</span> <output class="yr"></output> <span class="hint">Point at a year, or tap one, to read it.</span></div>
+      <figure class="fig" data-fig="o3" data-script="chart opacity" data-json="size" data-l-rosstat="Rosstat years" data-l-fns="FNS years" data-l-pick="Year" data-l-ref="Q1 = 1">
+        <div class="yearline"><span class="label" data-when="share">Share with a public statement among firms that had one the year before</span><span class="label" data-when="odds" hidden>Adjusted odds ratios for continued statement availability, with 95% confidence intervals</span> <output class="yr"></output> <span class="hint">Point at a year, or tap one, to read it.</span></div>
+        <span class="label">Preceding-year asset quintile</span>
         <div class="key vals">
-          <span data-k="1"><i></i>Lowest fifth by assets <output></output></span>
-          <span data-k="2"><i></i>Second <output></output></span>
-          <span data-k="3"><i></i>Third <output></output></span>
-          <span data-k="4"><i></i>Fourth <output></output></span>
-          <span data-k="5"><i></i>Highest fifth <output></output></span>
+          <span data-k="1"><i></i>Q1 (smallest) <output></output></span>
+          <span data-k="2"><i></i>Q2 <output></output></span>
+          <span data-k="3"><i></i>Q3 <output></output></span>
+          <span data-k="4"><i></i>Q4 <output></output></span>
+          <span data-k="5"><i></i>Q5 (largest) <output></output></span>
         </div>
-        <div class="plot" aria-label="Share of firms with a statement by year, for five groups of firms ordered by total assets. The table under the figure gives the shares."></div>
+        <div class="plot" aria-label="Annual statement availability by preceding-year asset quintile. Choose observed shares or adjusted odds ratios relative to Q1."></div>
         <div class="ctl" role="radiogroup" aria-label="What the chart shows"><span class="label">Show</span>
           <button type="button" class="btn" role="radio" data-set="show" data-v="share" aria-checked="true">Share with a statement</button>
-          <button type="button" class="btn" role="radio" data-set="show" data-v="odds" aria-checked="false">Odds against the lowest fifth</button>
+          <button type="button" class="btn" role="radio" data-set="show" data-v="odds" aria-checked="false">Adjusted odds ratios (Q1 = 1)</button>
         </div>
       </figure>
       <div class="interpretation">
-        <p>Among firms that had a statement the year before and remained eligible and registered, a statement remained available in 2022 for <data class="num" value="95.053105" data-src="Section 2.5.4, Figure 2.6, Table B.4">95.1%</data> of firms in the highest fifth by assets and for <data class="num" value="83.932901" data-src="Section 2.5.4, Figure 2.6, Table B.4">83.9%</data> in the lowest, an observed gap of <data class="num" value="11.1" data-src="Section 2.5.4">11.1</data> percentage points. With the registry characteristics held constant, the odds of continued availability were <data class="num" value="3.835274" data-src="Section 2.5.4, Figure 2.6, Table B.4">3.84</data> times as high in the highest fifth as in the lowest, and between <data class="num" value="3.206677" data-src="Section 2.5.4, Figure 2.6, Table B.4">3.21</data> and <data class="num" value="3.898647" data-src="Section 2.5.4, Figure 2.6, Table B.4">3.90</data> times in each year from 2020 to 2024. In 2014 to 2018 the same ratio lay between <data class="num" value="2.314342" data-src="Section 2.5.4, Table B.5">2.31</data> and <data class="num" value="2.475195" data-src="Section 2.5.4, Table B.5">2.48</data>.</p>
+        <p>Among firms that had a statement in 2021 and remained eligible and registered, <data class="num" value="95.053105" data-src="Section 2.5.4, Figure 2.6, Table B.4">95.1%</data> of firms in the largest asset quintile (Q5) and <data class="num" value="83.932901" data-src="Section 2.5.4, Figure 2.6, Table B.4">83.9%</data> in the smallest (Q1) also had a statement in 2022. The observed gap was <data class="num" value="11.1" data-src="Section 2.5.4">11.1</data> percentage points. After adjustment for registry characteristics, the odds of continued availability in 2022 were <data class="num" value="3.835274" data-src="Section 2.5.4, Figure 2.6, Table B.4">3.84</data> times as high in Q5 as in Q1. This odds ratio ranged from <data class="num" value="3.206677" data-src="Section 2.5.4, Figure 2.6, Table B.4">3.21</data> to <data class="num" value="3.898647" data-src="Section 2.5.4, Figure 2.6, Table B.4">3.90</data> in 2020–2024 and from <data class="num" value="2.314342" data-src="Section 2.5.4, Table B.5">2.31</data> to <data class="num" value="2.475195" data-src="Section 2.5.4, Table B.5">2.48</data> in 2014–2018.</p>
         <p>In the opacity index a larger firm has more business with counterparties that require public accounts, which raises its cost of opacity. Smaller firms are also the firms most likely to be winding down, and the comparison cannot separate the two.</p>
         <p class="ref">In the dissertation: Section 2.5.4, Figure 2.6, Table B.4, Table B.5</p>
       </div>
     </div>
-    <details class="nums"><summary>Numbers</summary><div class="tablewrap"><table><thead><tr><th>Year</th><th>Lowest fifth</th><th>Second</th><th>Third</th><th>Fourth</th><th>Highest fifth</th></tr></thead><tbody><tr><td>2014</td><td>76.2%</td><td>82.7%</td><td>85.1%</td><td>86.3%</td><td>88.3%</td></tr><tr><td>2015</td><td>80.0%</td><td>86.2%</td><td>88.2%</td><td>88.9%</td><td>89.9%</td></tr><tr><td>2016</td><td>74.5%</td><td>82.9%</td><td>85.8%</td><td>86.9%</td><td>87.1%</td></tr><tr><td>2017</td><td>76.9%</td><td>84.1%</td><td>87.1%</td><td>87.9%</td><td>87.4%</td></tr><tr><td>2018</td><td>77.1%</td><td>84.3%</td><td>87.0%</td><td>87.8%</td><td>88.0%</td></tr><tr><td>2020</td><td>84.5%</td><td>91.6%</td><td>93.0%</td><td>93.6%</td><td>94.5%</td></tr><tr><td>2021</td><td>84.2%</td><td>91.1%</td><td>92.9%</td><td>93.6%</td><td>94.6%</td></tr><tr><td>2022</td><td>83.9%</td><td>90.9%</td><td>92.9%</td><td>93.9%</td><td>95.1%</td></tr><tr><td>2023</td><td>85.9%</td><td>92.3%</td><td>93.9%</td><td>94.9%</td><td>95.8%</td></tr><tr><td>2024</td><td>87.1%</td><td>92.8%</td><td>94.1%</td><td>94.9%</td><td>95.8%</td></tr><tr><td>2025*</td><td>84.9%</td><td>91.2%</td><td>92.6%</td><td>93.8%</td><td>95.2%</td></tr></tbody></table></div></details>
+    <details class="nums"><summary>Numbers</summary><p class="tcap">Share with a public statement by preceding-year asset quintile, among firms with a statement the year before</p><div class="tablewrap"><table><thead><tr><th>Year</th><th>Q1 (smallest)</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5 (largest)</th></tr></thead><tbody><tr><td>2014</td><td>76.2%</td><td>82.7%</td><td>85.1%</td><td>86.3%</td><td>88.3%</td></tr><tr><td>2015</td><td>80.0%</td><td>86.2%</td><td>88.2%</td><td>88.9%</td><td>89.9%</td></tr><tr><td>2016</td><td>74.5%</td><td>82.9%</td><td>85.8%</td><td>86.9%</td><td>87.1%</td></tr><tr><td>2017</td><td>76.9%</td><td>84.1%</td><td>87.1%</td><td>87.9%</td><td>87.4%</td></tr><tr><td>2018</td><td>77.1%</td><td>84.3%</td><td>87.0%</td><td>87.8%</td><td>88.0%</td></tr><tr><td>2020</td><td>84.5%</td><td>91.6%</td><td>93.0%</td><td>93.6%</td><td>94.5%</td></tr><tr><td>2021</td><td>84.2%</td><td>91.1%</td><td>92.9%</td><td>93.6%</td><td>94.6%</td></tr><tr><td>2022</td><td>83.9%</td><td>90.9%</td><td>92.9%</td><td>93.9%</td><td>95.1%</td></tr><tr><td>2023</td><td>85.9%</td><td>92.3%</td><td>93.9%</td><td>94.9%</td><td>95.8%</td></tr><tr><td>2024</td><td>87.1%</td><td>92.8%</td><td>94.1%</td><td>94.9%</td><td>95.8%</td></tr><tr><td>2025*</td><td>84.9%</td><td>91.2%</td><td>92.6%</td><td>93.8%</td><td>95.2%</td></tr></tbody></table></div></details>
   </section>
 
   <section class="finding" id="followed">
-    <h2>The same ordering appears when firms are followed from before the invasion.</h2>
+    <h2>Smaller firms were more likely to stay registered without a public statement throughout 2022–2024.</h2>
     <div class="figure-layout">
       <figure class="fig" data-fig="o7" data-script="chart opacity" data-json="followed">
-        <div class="yearline"><span class="label">Firms with statements for 2019 to 2021: the share with none for 2022 to 2024 while still registered</span></div>
+        <div class="yearline"><span class="label">Among firms with statements in 2019, 2020, and 2021, share still eligible and registered with no statement in any of the next three years</span></div>
+        <span class="label" data-when="size">2021 asset quintile</span><span class="label" data-when="own" hidden>2021 ownership</span>
         <div class="rowchart" data-when="size">
-          <div class="rc" data-k="Q1"><span class="nm">Lowest fifth by 2021 assets</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
-          <div class="rc" data-k="Q2"><span class="nm">Second fifth</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
-          <div class="rc" data-k="Q3"><span class="nm">Third fifth</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
-          <div class="rc" data-k="Q4"><span class="nm">Fourth fifth</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
-          <div class="rc" data-k="Q5"><span class="nm">Highest fifth</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
+          <div class="rc" data-k="Q1"><span class="nm">Q1 (smallest)</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
+          <div class="rc" data-k="Q2"><span class="nm">Q2</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
+          <div class="rc" data-k="Q3"><span class="nm">Q3</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
+          <div class="rc" data-k="Q4"><span class="nm">Q4</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
+          <div class="rc" data-k="Q5"><span class="nm">Q5 (largest)</span><span class="track"></span><span class="val"><output class="sh"></output><span class="of"><output class="a"></output> of <output class="n"></output> firms</span></span></div>
           <div class="rc axis"><span class="nm"></span><span class="track ticks"></span><span class="val"></span></div>
         </div>
         <div class="rowchart" data-when="own" hidden>
@@ -269,12 +271,12 @@
         </div>
       </figure>
       <div class="interpretation">
-        <p>Of the firms with a statement in each of 2019, 2020, and 2021, <data class="num" value="4.783167" data-src="Section 2.5.4, Table 2.3">4.8%</data> of those in the lowest fifth by 2021 assets remained eligible and registered through 2024 and had no statement in any of 2022, 2023, or 2024. The share falls with size, to <data class="num" value="2.044839" data-src="Section 2.5.4, Table 2.3">2.0%</data> in the highest fifth. Here each firm keeps its 2021 fifth and is followed for three years, where the yearly comparison above forms the fifths anew each year.</p>
-        <p>By ownership the share is <data class="num" value="3.415893" data-src="Section 2.5.4, Table 2.3">3.4%</data> for firms with foreign or joint ownership, <data class="num" value="2.793192" data-src="Section 2.5.4, Table 2.3">2.8%</data> for private firms, and <data class="num" value="1.631794" data-src="Section 2.5.4, Table 2.3">1.6%</data> for state-related firms.</p>
+        <p>Among firms with a statement in each year from 2019 to 2021, <data class="num" value="4.783167" data-src="Section 2.5.4, Table 2.3">4.8%</data> of those in Q1 stayed eligible and registered through 2024 without a statement for any of the three years after 2021. The share fell with firm size, reaching <data class="num" value="2.044839" data-src="Section 2.5.4, Table 2.3">2.0%</data> in Q5. Here firms are grouped using the 2021 asset cutoffs from the size sample and keep that quintile throughout. The annual chart ranks firms anew each year by the preceding year’s assets.</p>
+        <p>By 2021 ownership, the corresponding shares were <data class="num" value="3.415893" data-src="Section 2.5.4, Table 2.3">3.4%</data> for firms with foreign or joint ownership, <data class="num" value="2.793192" data-src="Section 2.5.4, Table 2.3">2.8%</data> for private firms, and <data class="num" value="1.631794" data-src="Section 2.5.4, Table 2.3">1.6%</data> for state-related firms.</p>
         <p class="ref">In the dissertation: Section 2.5.4, Table 2.3</p>
       </div>
     </div>
-    <details class="nums"><summary>Numbers</summary><div class="tablewrap"><table><thead><tr><th>Group in 2021</th><th>Firms</th><th>No statement, 2022 to 2024</th><th>Share</th></tr></thead><tbody><tr><td>Lowest fifth by 2021 assets</td><td>240,761</td><td>11,516</td><td>4.78%</td></tr><tr><td>Second fifth</td><td>290,974</td><td>8,138</td><td>2.80%</td></tr><tr><td>Third fifth</td><td>321,702</td><td>7,466</td><td>2.32%</td></tr><tr><td>Fourth fifth</td><td>343,754</td><td>7,404</td><td>2.15%</td></tr><tr><td>Highest fifth</td><td>368,342</td><td>7,532</td><td>2.04%</td></tr><tr><td>Private firms</td><td>1,492,092</td><td>41,677</td><td>2.79%</td></tr><tr><td>Firms with foreign or joint ownership</td><td>47,279</td><td>1,615</td><td>3.42%</td></tr><tr><td>State-related firms</td><td>15,198</td><td>248</td><td>1.63%</td></tr><tr><td>Other ownership</td><td>37,346</td><td>1,083</td><td>2.90%</td></tr></tbody></table></div></details>
+    <details class="nums"><summary>Numbers</summary><div class="tablewrap"><table><thead><tr><th>2021 asset quintile or ownership</th><th>Firms</th><th>No statement, 2022 to 2024</th><th>Share</th></tr></thead><tbody><tr><td>Q1 (smallest)</td><td>240,761</td><td>11,516</td><td>4.78%</td></tr><tr><td>Q2</td><td>290,974</td><td>8,138</td><td>2.80%</td></tr><tr><td>Q3</td><td>321,702</td><td>7,466</td><td>2.32%</td></tr><tr><td>Q4</td><td>343,754</td><td>7,404</td><td>2.15%</td></tr><tr><td>Q5 (largest)</td><td>368,342</td><td>7,532</td><td>2.04%</td></tr><tr><td>Private firms</td><td>1,492,092</td><td>41,677</td><td>2.79%</td></tr><tr><td>Firms with foreign or joint ownership</td><td>47,279</td><td>1,615</td><td>3.42%</td></tr><tr><td>State-related firms</td><td>15,198</td><td>248</td><td>1.63%</td></tr><tr><td>Other ownership</td><td>37,346</td><td>1,083</td><td>2.90%</td></tr></tbody></table></div></details>
   </section>
 
   <section class="finding" id="finance">
@@ -324,7 +326,7 @@
   </section>
 
   <section class="finding" id="prior">
-    <h2>Sanctioned firms did not withdraw uniformly.</h2>
+    <h2>At firms on the sanctions list, public statements were more likely to stay available and less likely to reappear once missing.</h2>
     <div class="figure-layout">
       <figure class="fig" data-fig="o9" data-script="chart opacity" data-json="lists">
         <div class="yearline"><span class="label">Odds of a statement for firms on the sanctions list, relative to comparable firms on no list, 2020 to 2024</span></div>
@@ -363,7 +365,7 @@
   <hr>
 </main>
 </div>
-<script src="../edition/js/core.js?v=e30ee42e68" defer></script>
+<script src="../edition/js/core.js?v=6e42775d56" defer></script>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "78b9bd8de7fc4aeda663357ef41abbd4"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
