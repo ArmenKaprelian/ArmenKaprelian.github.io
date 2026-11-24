@@ -77,7 +77,9 @@ hr { border: 0; height: 2px; margin: 0; background: var(--dim); }
 /* The photo on the floor at the centre line, its caption bar above it. Inside its frame, bottom to top: the photo, the previews of
    the index's pages, and the scan lines. */
 .photo { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; margin: 0; height: var(--photo); aspect-ratio: 10 / 7; }   /* the column's width; where the window is short the photo's top sits above the index's rule (round 32) */
-.photo > img, .photo .pv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.home picture { display: contents; }
+.home picture > source { display: none; }
+.photo > img, .photo > picture > img, .photo .pv { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .photo .pv { opacity: 0; transition: opacity .15s linear; }
 .photo .lines { position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, rgba(3, 6, 14, .19) 0 1px, transparent 1px 3px); }
 .photo .pv.live { opacity: 1; }   /* js/home.js marks the preview of the row under the pointer or the keyboard */

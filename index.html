@@ -23,7 +23,11 @@
   <div class="visual">
     <canvas class="stream" aria-hidden="true"></canvas>
     <figure class="photo">
-      <img src="img/home-pipeline-1982.webp" width="1000" height="700" alt="Soviet pipeline workers in 1982 beside a pipe painted with the slogan: Your sanctions are done for, Mr. Reagan!">
+      <picture>
+        <source type="image/webp" srcset="img/home-pipeline-1982-800.webp 800w, img/home-pipeline-1982.webp 1000w"
+                sizes="(min-width: 1200px) and (min-height: 600px) 50vw, 100vw">
+        <img src="img/home-pipeline-1982.png" width="1000" height="700" alt="Soviet pipeline workers in 1982 beside a pipe painted with the slogan: Your sanctions are done for, Mr. Reagan!">
+      </picture>
       <img class="pv" data-k="resume" data-src="img/preview-resume.webp" alt="" aria-hidden="true">
       <img class="pv" data-k="atlas" data-src="img/preview-atlas.webp" alt="" aria-hidden="true">
       <img class="pv" data-k="film" data-src="img/preview-film.webp" alt="" aria-hidden="true">
@@ -48,7 +52,11 @@
       <h1><span class="striped">Armen G. Kaprelian, <span class="degree">PhD</span></span></h1>
       <hr>
       <div class="id">
-        <img class="portrait" src="img/headshot.jpg" width="860" height="860" alt="Armen G. Kaprelian">
+        <picture>
+          <source type="image/webp" srcset="img/headshot-520.webp 520w, img/headshot-860.webp 860w"
+                  sizes="(min-width: 1200px) and (min-height: 600px) 30vw, clamp(106px, calc(43vw - 2px), 260px)">
+          <img class="portrait" src="img/headshot.jpg" width="860" height="860" alt="Armen G. Kaprelian">
+        </picture>
         <div class="lede">
           <p class="lead"><span class="role">Economist.</span> I research geoeconomics in the emerging multipolar world: Sanctions, <span class="nb">export controls,</span> international trade, and how firms adapt to them.</p>
         </div>
